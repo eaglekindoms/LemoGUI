@@ -1,0 +1,31 @@
+[package]
+name = "LemoGUI"
+version = "0.0.1"
+authors = ["eaglekindoms <huyongmao35@outlook.com>"]
+edition = "2018"
+
+[[example]]
+name = "rectangle_T_draw"
+path = "example/rectangle_T_draw.rs"
+
+[dependencies]
+#wgpu = "0.6.2"
+winit = "0.24.0"
+simple_logger = "1.9"
+futures = "0.3.10"
+cgmath = "0.17"
+env_logger = "*"
+rand = "0.8.2"
+bytemuck = { version = "1.4", features = ["derive"] }
+image = "0.23.12"
+ab_glyph = "0.2.9"
+
+[dependencies.wgpu]
+path = "./wgpu-rs_v0.6"
+#features = ["vulkan-portability"]
+
+[build-dependencies]
+shaderc = "0.7.0"
+anyhow = "1.0"
+fs_extra = "1.1"
+glob = "0.3"
