@@ -1,7 +1,5 @@
 use std::iter;
-use ab_glyph::{point, Font, FontRef, FontVec, PxScale, ScaleFont, Point, Glyph};
 
-const TEXT: &str = "test_button";
 const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
     r: 0.9,
     g: 0.9,
@@ -15,10 +13,12 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
     window::{Window, WindowBuilder},
 };
-use wgpu::{BlendFactor, BlendOperation, RenderPipeline, BindGroup, BindGroupLayout, ShaderModule};
-use super::shape::*;
-use super::mywgpu;
-
+use wgpu::*;
+use crate::backend::shape::*;
+use crate::backend::mywgpu;
+use crate::backend::shader::Shader;
+use crate::backend::bufferState::*;
+use crate::backend::render::*;
 const INDICES: &[u16] = &[0, 2, 1, 3];
 
 pub struct GlobeState {
@@ -103,22 +103,23 @@ impl GlobeState {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
-        // 渲染文字纹理配置
+        // 纹理渲染配置：纹理着色器，文字着色器，矩形着色器。
         let texture_state = TextureState::create_texture_group(&self);
-
-        // let rect = Rectangle::new(20.0, 10.0, 400, 40);
         let font_shader = Shader::create_font_shader(&self);
         let shape_shader = Shader::create_shape_shader(&self);
 
+        // 固定渲染管道配置：纹理管道，矩形管道，边框管道。
+        // 全局设置
         let render_pipeline =
             PipelineState::create_pipeline_state(&self, &font_shader, RenderType::Texture(&texture_state.texture_bind_group_layout));
-        let vertex_buffer = VertexBuffer::create_tex_vertex_buf(&self, &rect);
-
         let shape_pipeline =
             PipelineState::create_pipeline_state(&self, &shape_shader, RenderType::Shape);
-        let shape_vertex_buffer = VertexBuffer::create_shape_vertex_buf(&self, &rect);
         let border_pipeline =
             PipelineState::create_pipeline_state(&self, &shape_shader, RenderType::Border);
+        // 顶点缓冲配置：纹理顶点缓冲，矩形纹理缓冲，边框矩形缓冲。
+        // 自定义设置
+        let vertex_buffer = VertexBuffer::create_tex_vertex_buf(&self, &rect);
+        let shape_vertex_buffer = VertexBuffer::create_shape_vertex_buf(&self, &rect);
         let boder_vertex_buffer = VertexBuffer::create_border_vertex_buf(&self, &rect);
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -132,28 +133,14 @@ impl GlobeState {
             }],
             depth_stencil_attachment: None,
         });
-        render_pass.set_pipeline(&shape_pipeline);
-        render_pass.set_vertex_buffer(0, shape_vertex_buffer.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(shape_vertex_buffer.index_buffer.slice(..));
-        render_pass.draw_indexed(0..shape_vertex_buffer.num_indices, 0, 0..1);
 
-        render_pass.set_pipeline(&render_pipeline);
-        render_pass.set_bind_group(0, &texture_state.diffuse_bind_group, &[]); // NEW!
-        render_pass.set_vertex_buffer(0, vertex_buffer.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(vertex_buffer.index_buffer.slice(..));
-        render_pass.draw_indexed(0..vertex_buffer.num_indices, 0, 0..1);
-
-        render_pass.set_pipeline(&border_pipeline);
-        render_pass.set_vertex_buffer(0, boder_vertex_buffer.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(boder_vertex_buffer.index_buffer.slice(..));
-        render_pass.draw_indexed(0..boder_vertex_buffer.num_indices, 0, 0..1);
+        render_shape(&mut render_pass, &shape_pipeline, &shape_vertex_buffer);
+        render_shape(&mut render_pass, &border_pipeline, &boder_vertex_buffer);
+        render_texture(&mut render_pass,&texture_state,&render_pipeline,&vertex_buffer);
         if self.use_complex {
-            render_pass.set_pipeline(&shape_pipeline);
-            render_pass.set_vertex_buffer(0, shape_vertex_buffer.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(shape_vertex_buffer.index_buffer.slice(..));
-            render_pass.draw_indexed(0..shape_vertex_buffer.num_indices, 0, 0..1);
+            render_shape(&mut render_pass, &shape_pipeline, &shape_vertex_buffer);
         }
-        std::mem::drop(render_pass);
+        drop(render_pass);
         self.queue.submit(iter::once(encoder.finish()));
 
         Ok(())
@@ -161,6 +148,7 @@ impl GlobeState {
 
     pub fn render_a_button() {}
 }
+
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
 /// 主要用在创建渲染管道方法中定义渲染管道[`create_pipeline_state`]
@@ -234,251 +222,3 @@ impl<'a> PipelineState {
     }
 }
 
-pub struct VertexBuffer {
-    pub vertex_buffer: wgpu::Buffer,
-    pub index_buffer: wgpu::Buffer,
-    pub num_indices: u32,
-}
-
-impl<'a> VertexBuffer {
-    pub fn default(globe_state: &'a GlobeState, rect: &'a Rectangle, indices: &'a [u16], test_color: RGBA) -> Self {
-        let vect = rect.to_buff(globe_state.sc_desc.width, globe_state.sc_desc.height, test_color);
-        let vertex_buffer = globe_state.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(vect.as_slice()),
-            usage: wgpu::BufferUsage::VERTEX,
-        });
-        let index_buffer = globe_state.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(indices),
-            usage: wgpu::BufferUsage::INDEX,
-        });
-        let num_indices = indices.len() as u32;
-        Self {
-            vertex_buffer,
-            num_indices,//11
-            index_buffer,
-        }
-    }
-    pub fn create_shape_vertex_buf(globe_state: &'a GlobeState, rect: &'a Rectangle) -> Self {
-        let test_color = RGBA([0.5, 0.0, 0.5, 0.5]);
-        let indices: &[u16] = &[0, 2, 1, 3];
-        Self::default(globe_state, rect, indices, test_color)
-    }
-
-    pub fn create_border_vertex_buf(globe_state: &'a GlobeState, rect: &'a Rectangle) -> Self {
-        let test_color = RGBA([0.5, 0.0, 0.5, 1.0]);
-        let indices: &[u16] = &[0, 1, 3, 2, 0];
-        Self::default(globe_state, rect, indices, test_color)
-    }
-
-    pub fn create_tex_vertex_buf(globe_state: &'a GlobeState, rect: &'a Rectangle) -> Self {
-        let vect = rect.to_tex(globe_state.sc_desc.width, globe_state.sc_desc.height);
-
-        let indices: &[u16] = &[0, 2, 1, 3];
-        let vertex_buffer = globe_state.device
-            .create_buffer_init(&mywgpu::description::
-            create_buffer_init_descriptor(
-                bytemuck::cast_slice(vect.as_slice()), wgpu::BufferUsage::VERTEX)
-            );
-        let index_buffer = globe_state.device.create_buffer_init(
-            &mywgpu::description::create_buffer_init_descriptor(
-                bytemuck::cast_slice(indices), wgpu::BufferUsage::INDEX)
-        );
-        let num_indices = indices.len() as u32;
-        Self {
-            vertex_buffer,
-            num_indices,//11
-            index_buffer,
-        }
-    }
-}
-
-pub struct Shader {
-    pub vs_module: ShaderModule,
-    pub fs_module: ShaderModule,
-}
-
-impl<'a> Shader {
-    pub fn create_font_shader(globe_state: &'a GlobeState) -> Self {
-        let vs_module = globe_state.device
-            .create_shader_module(wgpu::include_spirv!("../../shader_c/font.vert.spv"));
-        let fs_module = globe_state.device
-            .create_shader_module(wgpu::include_spirv!("../../shader_c/font.frag.spv"));
-
-        Self {
-            vs_module,
-            fs_module,
-        }
-    }
-
-    pub fn create_shape_shader(globe_state: &'a GlobeState) -> Self {
-        let vs_module = globe_state.device
-            .create_shader_module(wgpu::include_spirv!("../../shader_c/rect.vert.spv"));
-        let fs_module = globe_state.device
-            .create_shader_module(wgpu::include_spirv!("../../shader_c/rect.frag.spv"));
-
-        Self {
-            vs_module,
-            fs_module,
-        }
-    }
-}
-
-pub struct TextureState {
-    pub texture_bind_group_layout: BindGroupLayout,
-    pub diffuse_bind_group: BindGroup,
-}
-
-pub struct TextureBuffer<'a> {
-    pub x: u32,
-    pub y: u32,
-    pub buf: &'a [u8],
-}
-
-impl<'a> TextureState {
-    pub fn default(globe_state: &'a GlobeState, texture_buf: &'a TextureBuffer) -> Self {
-        let texture_size = mywgpu::texture::create_texture_size(texture_buf.x, texture_buf.y);
-        let diffuse_texture = globe_state.device.create_texture(
-            &mywgpu::texture::create_texture_descriptor(&texture_size)
-        );
-        globe_state.queue.write_texture(
-            // Tells wgpu where to copy the pixel data
-            mywgpu::texture::create_texture_copy_view(&diffuse_texture),
-            // The actual pixel data
-            // diffuse_rgba,
-            texture_buf.buf,
-            // The layout of the texture
-            mywgpu::texture::create_texture_data_layout(texture_buf.x, texture_buf.y),
-            texture_size,
-        );
-
-        /// 默认纹理渲染配置
-        let diffuse_texture_view = diffuse_texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-        let diffuse_sampler = globe_state.device.create_sampler(&mywgpu::description::create_sample_descriptor());
-        let texture_bind_group_layout = globe_state.device.create_bind_group_layout(
-            &mywgpu::description::create_bind_group_layout_descriptor()
-        );
-        /// 描述纹理顶点数据布局,用于着色器识别数据
-        let diffuse_bind_group = globe_state.device.create_bind_group(
-            &wgpu::BindGroupDescriptor {
-                layout: &texture_bind_group_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&diffuse_texture_view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&diffuse_sampler),
-                    }
-                ],
-                label: Some("diffuse_bind_group"),
-            }
-        );
-        Self {
-            texture_bind_group_layout,
-            diffuse_bind_group,
-        }
-    }
-
-    pub fn create_texture_group(globe_state: &'a GlobeState) -> Self {
-        let (x, y, buf) = draw_image(65.0);
-        let dimensions = (x, y);
-        println!("dimensions:{:?}", dimensions);
-        let texture_buf = TextureBuffer { x, y, buf: buf.as_slice() };
-        Self::default(globe_state, &texture_buf)
-    }
-}
-
-fn draw_image(f_scale: f32) -> (u32, u32, Vec<u8>) {
-    let font = FontRef::try_from_slice(include_bytes!("../../shader_c/SourceHanSansCN-Regular.otf")).unwrap();
-
-    // The font size to use
-    let scale = PxScale::from(f_scale);
-
-    let scaled_font = font.as_scaled(scale);
-
-    let mut glyphs = Vec::new();
-    layout_paragraph(scaled_font, point(20.0, 20.0), 9999.0, TEXT, &mut glyphs);
-
-    // Use a dark red colour
-    let colour = (150, 0, 0);
-
-    // work out the layout size
-    let glyphs_height = scaled_font.height().ceil() as u32;
-    let glyphs_width = {
-        let min_x = glyphs.first().unwrap().position.x;
-        let last_glyph = glyphs.last().unwrap();
-        let max_x = last_glyph.position.x + scaled_font.h_advance(last_glyph.id);
-        (max_x - min_x).ceil() as u32
-    };
-    println!("gl x: {} gly: {}", glyphs_width, glyphs_height);
-
-    // Create a new rgba image with some padding
-    // let mut image = DynamicImage::new_rgba8(glyphs_width + 20, glyphs_height-15).to_rgba8();
-    let size = (glyphs_width + 20) * (glyphs_height);
-    let mut bufs1 = vec![0; (size * 4) as usize];
-
-    // Loop through the glyphs in the text, positing each one on a line
-    for glyph in glyphs {
-        if let Some(outlined) = scaled_font.outline_glyph(glyph) {
-            let bounds = outlined.px_bounds();
-            println!("max y:{}", bounds.min.y);
-            // Draw the glyph into the image per-pixel by using the draw closure
-            outlined.draw(|x, y, v| {
-                // Offset the position by the glyph bounding box
-                // println!("x: {} y: {}", x, y);
-                let index = x + bounds.min.x as u32 - 20 + (glyphs_width + 20) * (y + bounds.min.y as u32 - 29);
-                bufs1[(index * 4) as usize] = colour.0;
-                bufs1[(index * 4) as usize + 1] = colour.1;
-                bufs1[(index * 4) as usize + 2] = colour.2;
-                bufs1[(index * 4) as usize + 3] = (v * 255.0) as u8;
-            });
-        }
-    }
-
-    // println!("bufst{:?}",bufst.as_slice());
-    (glyphs_width + 20, glyphs_height, bufs1)
-}
-
-pub fn layout_paragraph<F, SF>(
-    font: SF,
-    position: Point,
-    max_width: f32,
-    text: &str,
-    target: &mut Vec<Glyph>,
-) where
-    F: Font,
-    SF: ScaleFont<F>,
-{
-    let v_advance = font.height() + font.line_gap();
-    let mut caret = position + point(0.0, font.ascent());
-    let mut last_glyph: Option<Glyph> = None;
-    for c in text.chars() {
-        if c.is_control() {
-            if c == '\n' {
-                caret = point(position.x, caret.y + v_advance);
-                last_glyph = None;
-            }
-            continue;
-        }
-        let mut glyph = font.scaled_glyph(c);
-        if let Some(previous) = last_glyph.take() {
-            caret.x += font.kern(previous.id, glyph.id);
-        }
-        glyph.position = caret;
-
-        last_glyph = Some(glyph.clone());
-        caret.x += font.h_advance(glyph.id);
-
-        if !c.is_whitespace() && caret.x > position.x + max_width {
-            caret = point(position.x, caret.y + v_advance);
-            glyph.position = caret;
-            last_glyph = None;
-        }
-
-        target.push(glyph);
-    }
-}
