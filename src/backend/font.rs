@@ -1,5 +1,6 @@
 use ab_glyph::{point, Font, FontRef, FontVec, PxScale, ScaleFont, Point, Glyph};
 
+#[deprecated]
 pub fn draw_image(f_scale: f32, text: &str) -> (u32, u32, Vec<u8>) {
     let font = FontRef::try_from_slice(include_bytes!("../../shader_c/SourceHanSansCN-Regular.otf")).unwrap();
 

@@ -5,7 +5,7 @@ use winit::{
 };
 
 use LemoGUI::backend::shape::*;
-use LemoGUI::backend::globeSetting as setting;
+use LemoGUI::backend::globe_setting as setting;
 
 fn main() {
     let rec = Rectangle::new(2.0, 1.0, 200, 20).to_tex(300, 200);

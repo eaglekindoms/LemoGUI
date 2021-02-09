@@ -1,5 +1,5 @@
 use wgpu::ShaderModule;
-use crate::backend::globeSetting::GlobeState;
+use crate::backend::globe_setting::GlobeState;
 
 pub struct Shader {
     pub vs_module: ShaderModule,

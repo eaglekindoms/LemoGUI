@@ -1,9 +1,9 @@
 pub mod mywgpu;
 pub mod style;
 pub mod shape;
-pub mod globeSetting;
+pub mod globe_setting;
 pub mod font;
 pub mod shader;
-pub mod bufferState;
+pub mod buffer_state;
 pub mod render;
-pub mod button;
+pub mod pipeline_state;

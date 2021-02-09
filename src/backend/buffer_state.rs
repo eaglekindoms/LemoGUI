@@ -1,4 +1,4 @@
-use crate::backend::globeSetting::GlobeState;
+use crate::backend::globe_setting::GlobeState;
 use crate::backend::shape::*;
 use wgpu::util::DeviceExt;
 use crate::backend::mywgpu;
@@ -31,16 +31,28 @@ impl<'a> VertexBuffer {
             index_buffer,
         }
     }
+    #[deprecated]
     pub fn create_shape_vertex_buf(globe_state: &'a GlobeState, rect: &'a Rectangle) -> Self {
         let test_color = RGBA([0.5, 0.0, 0.5, 0.5]);
         let indices: &[u16] = &[0, 2, 1, 3];
         Self::default(globe_state, rect, indices, test_color)
     }
 
+    pub fn create_background_buf(globe_state: &'a GlobeState, rect: &'a Rectangle, color: RGBA) -> Self {
+        let indices: &[u16] = &[0, 2, 1, 3];
+        Self::default(globe_state, rect, indices, color)
+    }
+    #[deprecated]
     pub fn create_border_vertex_buf(globe_state: &'a GlobeState, rect: &'a Rectangle) -> Self {
         let test_color = RGBA([0.5, 0.0, 0.5, 1.0]);
         let indices: &[u16] = &[0, 1, 3, 2, 0];
         Self::default(globe_state, rect, indices, test_color)
+    }
+
+    pub fn create_border_buf(globe_state: &'a GlobeState, rect: &'a Rectangle, color: RGBA) -> Self {
+        let test_color = RGBA([0.5, 0.0, 0.5, 1.0]);
+        let indices: &[u16] = &[0, 1, 3, 2, 0];
+        Self::default(globe_state, rect, indices, color)
     }
 
     pub fn create_tex_vertex_buf(globe_state: &'a GlobeState, rect: &'a Rectangle) -> Self {
@@ -123,10 +135,10 @@ impl<'a> TextureState {
             diffuse_bind_group,
         }
     }
-
-    pub fn create_texture_group(globe_state: &'a GlobeState) -> Self {
-        let text = "hello button";
-        let (x, y, buf) = draw_image(45.0,text);
+    #[deprecated]
+    pub fn create_text_texture(globe_state: &'a GlobeState,text:&'a str) -> Self {
+        // let text = "hello button";
+        let (x, y, buf) = draw_image(45.0, text);
         let texture_buf = TextureBuffer { x, y, buf: buf.as_slice() };
         Self::default(globe_state, &texture_buf)
     }
