@@ -1,8 +1,7 @@
-use wgpu::{BindGroupLayout, RenderPipeline};
+use wgpu::{BindGroupLayout, RenderPipeline, VertexState, BlendFactor, BlendOperation};
 use crate::backend::global_setting::GlobalState;
 use crate::backend::buffer_state::TextureState;
 use crate::backend::shader::Shader;
-use crate::backend::mywgpu;
 use crate::backend::shape::{TexturePoint, BufferPoint};
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
@@ -82,19 +81,41 @@ impl<'a> PipelineState {
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some("Render Pipeline"),
                 layout: Some(&render_pipeline_layout),
-                vertex_stage: mywgpu::description::create_shader_descriptor(&shader.vs_module),
-                fragment_stage: Some(mywgpu::description::create_shader_descriptor(&shader.fs_module)),
-                rasterization_state: Some(mywgpu::description::create_rasterization_state_descriptor()),
-                primitive_topology: fill_pology,
-                color_states: &[mywgpu::description::be_blend_color_state_descriptor(global_state.sc_desc.format)],
-                depth_stencil_state: None,
-                vertex_state: wgpu::VertexStateDescriptor {
-                    index_format: wgpu::IndexFormat::Uint16,
-                    vertex_buffers: &vertex_desc,
+                vertex: VertexState {
+                    module: &shader.vs_module,
+                    entry_point: "main",
+                    buffers: &vertex_desc,
                 },
-                sample_count: 1,
-                sample_mask: !0,
-                alpha_to_coverage_enabled: false,
+                primitive: wgpu::PrimitiveState {
+                    topology: fill_pology,
+                    front_face: wgpu::FrontFace::Ccw,
+                    cull_mode: wgpu::CullMode::None,
+                    ..Default::default()
+                },
+                depth_stencil: None,
+                multisample: wgpu::MultisampleState {
+                    count: 1,
+                    mask: !0,
+                    alpha_to_coverage_enabled: false,
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &shader.fs_module,
+                    entry_point: "main",
+                    targets: &[wgpu::ColorTargetState {
+                        format: global_state.sc_desc.format,
+                        color_blend: wgpu::BlendState {
+                            src_factor: BlendFactor::SrcAlpha,
+                            dst_factor: BlendFactor::OneMinusSrcAlpha,
+                            operation: BlendOperation::Add,
+                        },
+                        alpha_blend: wgpu::BlendState {
+                            src_factor: BlendFactor::SrcAlpha,
+                            dst_factor: BlendFactor::OneMinusSrcAlpha,
+                            operation: BlendOperation::Add,
+                        },
+                        write_mask: wgpu::ColorWrite::ALL,
+                    }],
+                }),
             });
         return render_pipeline;
     }

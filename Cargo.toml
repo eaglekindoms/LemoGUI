@@ -21,7 +21,7 @@ image = "0.23.12"
 ab_glyph = "0.2.9"
 
 [dependencies.wgpu]
-path = "./wgpu-rs_v0.6"
+path = "./wgpu-rs_v0.7"
 #features = ["vulkan-portability"]
 
 [build-dependencies]

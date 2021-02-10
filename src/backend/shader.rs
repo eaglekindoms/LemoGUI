@@ -9,9 +9,9 @@ pub struct Shader {
 impl<'a> Shader {
     pub fn create_font_shader(globe_state: &'a GlobalState) -> Self {
         let vs_module = globe_state.device
-            .create_shader_module(wgpu::include_spirv!("../../shader_c/font.vert.spv"));
+            .create_shader_module(&wgpu::include_spirv!("../../shader_c/font.vert.spv"));
         let fs_module = globe_state.device
-            .create_shader_module(wgpu::include_spirv!("../../shader_c/font.frag.spv"));
+            .create_shader_module(&wgpu::include_spirv!("../../shader_c/font.frag.spv"));
 
         Self {
             vs_module,
@@ -21,9 +21,9 @@ impl<'a> Shader {
 
     pub fn create_shape_shader(globe_state: &'a GlobalState) -> Self {
         let vs_module = globe_state.device
-            .create_shader_module(wgpu::include_spirv!("../../shader_c/rect.vert.spv"));
+            .create_shader_module(&wgpu::include_spirv!("../../shader_c/rect.vert.spv"));
         let fs_module = globe_state.device
-            .create_shader_module(wgpu::include_spirv!("../../shader_c/rect.frag.spv"));
+            .create_shader_module(&wgpu::include_spirv!("../../shader_c/rect.frag.spv"));
 
         Self {
             vs_module,

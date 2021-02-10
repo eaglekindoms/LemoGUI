@@ -1,9 +1,10 @@
 use crate::backend::global_setting::GlobalState;
 use crate::backend::shape::*;
-use wgpu::util::DeviceExt;
+
 use crate::backend::mywgpu;
-use wgpu::{BindGroupLayout, BindGroup};
 use crate::backend::font::draw_image;
+use wgpu::{BindGroupLayout, BindGroup};
+use wgpu::util::DeviceExt;
 
 pub struct VertexBuffer {
     pub vertex_buffer: wgpu::Buffer,

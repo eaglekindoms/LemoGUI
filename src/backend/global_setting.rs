@@ -131,6 +131,7 @@ impl GlobalState {
         let glob_pipeline = PipelineState::create_glob_pipeline(&self, &button.font_buffer);
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: None,
             color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
                 attachment: &frame.view,
                 resolve_target: None,

@@ -37,17 +37,17 @@ impl BufferPoint {
             color,
         }
     }
-    pub fn desc<'a>() -> wgpu::VertexBufferDescriptor<'a> {
-        wgpu::VertexBufferDescriptor {
-            stride: std::mem::size_of::<BufferPoint>() as wgpu::BufferAddress,
+    pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<BufferPoint>() as wgpu::BufferAddress,
             step_mode: wgpu::InputStepMode::Vertex,
             attributes: &[
-                wgpu::VertexAttributeDescriptor {
+                wgpu::VertexAttribute {
                     offset: 0,
                     shader_location: 0,
                     format: wgpu::VertexFormat::Float2,
                 },
-                wgpu::VertexAttributeDescriptor {
+                wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float4,
@@ -85,17 +85,17 @@ impl Rectangle {
 }
 
 impl TexturePoint {
-    pub fn desc<'a>() -> wgpu::VertexBufferDescriptor<'a> {
-        wgpu::VertexBufferDescriptor {
-            stride: std::mem::size_of::<TexturePoint>() as wgpu::BufferAddress,
+    pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<TexturePoint>() as wgpu::BufferAddress,
             step_mode: wgpu::InputStepMode::Vertex,
             attributes: &[
-                wgpu::VertexAttributeDescriptor {
+                wgpu::VertexAttribute {
                     offset: 0,
                     shader_location: 0,
                     format: wgpu::VertexFormat::Float2,
                 },
-                wgpu::VertexAttributeDescriptor {
+                wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float2,

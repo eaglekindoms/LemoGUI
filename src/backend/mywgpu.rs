@@ -12,6 +12,7 @@ pub struct description;
 pub struct texture;
 
 impl<'a> description {
+    #[deprecated]
     /// 创建使用高性能gpu的适配器配置
     /// 用途：配置渲染选项使用gpu or cpu
     /// 此配置为：gpu渲染
@@ -21,15 +22,17 @@ impl<'a> description {
             compatible_surface: Some(&surface),
         }
     }
+    #[deprecated]
     /// 创建默认的图形设备描述符
     /// 用途：不了解 应该是限制渲染数据量的
-    pub fn create_device_descriptor() -> DeviceDescriptor {
+    pub fn create_device_descriptor() -> DeviceDescriptor<'a> {
         DeviceDescriptor {
+            label: None,
             features: wgpu::Features::empty(),
             limits: wgpu::Limits::default(),
-            shader_validation: true,
         }
     }
+    #[deprecated]
     /// 创建默认采样器描述符
     /// 用途：配置纹理采样方式（环绕、过滤，多级渐远纹理过滤）
     /// 此配置为：环绕=ClampToEdge纹理被约束到0-1之间，造成拉伸效果（大图缩小，小图边缘重复填充）
@@ -48,7 +51,7 @@ impl<'a> description {
             ..Default::default()
         }
     }
-
+    #[deprecated]
     /// 创建着色器绑定组描述符
     /// 用途：设定片段着色器程序传入参数在数据中的位置
     /// 此配置为：指定纹理二维坐标，及默认采样器配置
@@ -59,10 +62,10 @@ impl<'a> description {
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
                     visibility: wgpu::ShaderStage::FRAGMENT,
-                    ty: wgpu::BindingType::SampledTexture {
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
                         multisampled: false,
-                        dimension: wgpu::TextureViewDimension::D2,
-                        component_type: wgpu::TextureComponentType::Uint,
                     },
                     count: None,
                 },
@@ -70,6 +73,7 @@ impl<'a> description {
                     binding: 1,
                     visibility: wgpu::ShaderStage::FRAGMENT,
                     ty: wgpu::BindingType::Sampler {
+                        filtering: false,
                         comparison: false,
                     },
                     count: None,
@@ -78,13 +82,13 @@ impl<'a> description {
             label: Some("texture_bind_group_layout"),
         }
     }
-
+    #[deprecated]
     /// 交换链描述符
     /// 用途：类似于opengl的context，
     /// 此配置：指定交换缓冲区的尺寸（x,y），颜色格式为rgba，结果为屏幕输出
     pub fn be_rgba_swap_chain_descriptor(w: u32, h: u32) -> SwapChainDescriptor {
         SwapChainDescriptor {
-            usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
+            usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
             format: wgpu::TextureFormat::Bgra8UnormSrgb,
             width: w,
             height: h,
@@ -92,29 +96,7 @@ impl<'a> description {
         }
     }
 
-    /// 创建光栅场景描述符
-    /// 用途：定义光栅化方式：前面背面面片显示模式？？
-    /// 默认配置，无需修改
-    pub fn create_rasterization_state_descriptor() -> RasterizationStateDescriptor {
-        RasterizationStateDescriptor {
-            front_face: wgpu::FrontFace::Ccw,
-            cull_mode: wgpu::CullMode::Back,
-            depth_bias: 0,
-            depth_bias_slope_scale: 0.0,
-            depth_bias_clamp: 0.0,
-            clamp_depth: false,
-        }
-    }
-
-    /// 创建着色器模式符
-    /// 参数：经编译过后的着色器程序(.vert/.frag/...)
-    pub fn create_shader_descriptor(shader_model: &'a ShaderModule) -> ProgrammableStageDescriptor<'a> {
-        ProgrammableStageDescriptor {
-            module: shader_model,
-            entry_point: "main",
-        }
-    }
-
+    #[deprecated]
     /// 创建初始化缓冲区描述符
     /// 参数：储存在[u8]类型数组中的顶点数据或顶点索引数据
     pub fn create_buffer_init_descriptor(data: &'a [u8], _usage: BufferUsage) -> BufferInitDescriptor<'a> {
@@ -124,19 +106,19 @@ impl<'a> description {
             usage: _usage,
         }
     }
-
+    #[deprecated]
     /// 用途： 定义纹理颜色混合模式
     /// 此配置：支持alpha混合透明效果，可根据需求另用其他方法
     /// 参考文档：['https://learnopengl-cn.github.io/04%20Advanced%20OpenGL/03%20Blending/']
-    pub fn be_blend_color_state_descriptor(_format: TextureFormat) -> ColorStateDescriptor {
-        ColorStateDescriptor {
+    pub fn be_blend_color_state_descriptor(_format: TextureFormat) -> ColorTargetState {
+        ColorTargetState {
             format: _format,
-            color_blend: wgpu::BlendDescriptor {
+            color_blend: wgpu::BlendState {
                 src_factor: BlendFactor::SrcAlpha,
                 dst_factor: BlendFactor::OneMinusSrcAlpha,
                 operation: BlendOperation::Add,
             },
-            alpha_blend: wgpu::BlendDescriptor {
+            alpha_blend: wgpu::BlendState {
                 src_factor: BlendFactor::SrcAlpha,
                 dst_factor: BlendFactor::OneMinusSrcAlpha,
                 operation: BlendOperation::Add,
@@ -144,7 +126,6 @@ impl<'a> description {
             write_mask: wgpu::ColorWrite::ALL,
         }
     }
-
 }
 
 impl<'a> texture {
@@ -202,30 +183,30 @@ impl<'a> texture {
     }
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct Vertex {
-    pub position: [f32; 3],
-    pub tex_coords: [f32; 2], // NEW!
-}
-
-impl Vertex {
-    pub fn desc<'a>() -> wgpu::VertexBufferDescriptor<'a> {
-        wgpu::VertexBufferDescriptor {
-            stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Vertex,
-            attributes: &[
-                wgpu::VertexAttributeDescriptor {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float3,
-                },
-                wgpu::VertexAttributeDescriptor {
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float2,
-                },
-            ],
-        }
-    }
-}
+// #[repr(C)]
+// #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+// pub struct Vertex {
+//     pub position: [f32; 3],
+//     pub tex_coords: [f32; 2], // NEW!
+// }
+//
+// impl Vertex {
+//     pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+//         wgpu::VertexBufferLayout {
+//             array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+//             step_mode: wgpu::InputStepMode::Vertex,
+//             attributes: &[
+//                 wgpu::VertexAttribute {
+//                     offset: 0,
+//                     shader_location: 0,
+//                     format: wgpu::VertexFormat::Float3,
+//                 },
+//                 wgpu::VertexAttribute {
+//                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+//                     shader_location: 1,
+//                     format: wgpu::VertexFormat::Float2,
+//                 },
+//             ],
+//         }
+//     }
+// }
