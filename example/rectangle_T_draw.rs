@@ -5,13 +5,12 @@ use winit::{
 };
 
 use LemoGUI::backend::shape::*;
-use LemoGUI::backend::globe_setting as setting;
+use LemoGUI::backend::global_setting as setting;
 
 fn main() {
     let rec = Rectangle::new(2.0, 1.0, 200, 20).to_tex(300, 200);
     let buf: &[u8] = bytemuck::cast_slice(rec.as_slice());
     println!("{:?}", &rec);
-
 
     env_logger::init();
     let event_loop = EventLoop::new();
@@ -20,7 +19,7 @@ fn main() {
 
     use futures::executor::block_on;
 
-    let mut state = block_on(setting::GlobeState::new(&window));
+    let mut state = block_on(setting::GlobalState::new(&window));
 
     event_loop.run(move |event, _, control_flow| {
         match event {

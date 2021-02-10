@@ -25,17 +25,17 @@ use crate::widget::button::*;
 
 const INDICES: &[u16] = &[0, 2, 1, 3];
 
-pub struct GlobeState {
+pub struct GlobalState {
     pub surface: wgpu::Surface,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub sc_desc: wgpu::SwapChainDescriptor,
     pub swap_chain: wgpu::SwapChain,
     pub size: winit::dpi::PhysicalSize<u32>,
-    use_complex: bool,
+    use_complex: u8,
 }
 
-impl GlobeState {
+impl GlobalState {
     pub async fn new(window: &Window) -> Self {
         // ---
         let size = window.inner_size();
@@ -58,7 +58,7 @@ impl GlobeState {
 
         let sc_desc = mywgpu::description::be_rgba_swap_chain_descriptor(size.width, size.height);
         let swap_chain = device.create_swap_chain(&surface, &sc_desc);
-        let use_complex = false;
+        let use_complex = 0;
         Self {
             surface,
             device,
@@ -77,7 +77,6 @@ impl GlobeState {
         self.swap_chain = self.device.create_swap_chain(&self.surface, &self.sc_desc);
     }
 
-    #[allow(unused_variables)]
     pub fn input(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::KeyboardInput {
@@ -89,7 +88,27 @@ impl GlobeState {
                 },
                 ..
             } => {
-                self.use_complex = *state == ElementState::Pressed;
+                if *state == ElementState::Pressed {
+                    self.use_complex = 1;
+                } else if *state == ElementState::Released {
+                    self.use_complex = 0;
+                }
+                true
+            }
+            WindowEvent::KeyboardInput {
+                input:
+                KeyboardInput {
+                    state,
+                    virtual_keycode: Some(VirtualKeyCode::LAlt),
+                    ..
+                },
+                ..
+            } => {
+                if *state == ElementState::Pressed {
+                    self.use_complex = 2;
+                } else if *state == ElementState::Released {
+                    self.use_complex = 0;
+                }
                 true
             }
             _ => false,
@@ -107,8 +126,8 @@ impl GlobeState {
                 label: Some("Render Encoder"),
             });
         // 自定义设置
-        let button = Button::default(rect,"button1").to_graph(&self);
-        let button1 = Button::default( &Rectangle::new(20.0, 200.0, 300, 42),"button2").to_graph(&self);
+        let button = Button::default(rect, "button1").to_graph(&self);
+        let button1 = Button::default(&Rectangle::new(20.0, 200.0, 300, 42), "button2").to_graph(&self);
         let glob_pipeline = PipelineState::create_glob_pipeline(&self, &button.font_buffer);
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -122,11 +141,9 @@ impl GlobeState {
             }],
             depth_stencil_attachment: None,
         });
-        render_button(&mut render_pass,&glob_pipeline,&button);
-        render_button(&mut render_pass,&glob_pipeline,&button1);
-        if self.use_complex {
-            render_shape(&mut render_pass, &glob_pipeline.shape_pipeline, &button.hover_buffer);
-        }
+        render_button(&mut render_pass, &glob_pipeline, &button, self.use_complex == 1);
+        render_button(&mut render_pass, &glob_pipeline, &button1, self.use_complex == 2);
+
         drop(render_pass);
         self.queue.submit(iter::once(encoder.finish()));
 

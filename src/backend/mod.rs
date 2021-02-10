@@ -1,7 +1,7 @@
 pub mod mywgpu;
 pub mod style;
 pub mod shape;
-pub mod globe_setting;
+pub mod global_setting;
 pub mod font;
 pub mod shader;
 pub mod buffer_state;

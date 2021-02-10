@@ -1,6 +1,6 @@
 use crate::backend::shape::{Rectangle, RGBA};
 use crate::backend::buffer_state::{VertexBuffer, TextureState};
-use crate::backend::globe_setting::GlobeState;
+use crate::backend::global_setting::GlobalState;
 
 /// 按钮属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
 pub struct Button<'a> {
@@ -12,6 +12,7 @@ pub struct Button<'a> {
     text: &'a str,
 }
 
+/// 按钮渲染中间结构体
 pub struct ButtonGraph {
     pub vertex_buffer: VertexBuffer,
     pub back_buffer: VertexBuffer,
@@ -38,12 +39,12 @@ impl<'a> Button<'a> {
         let hover_color = RGBA([0.5, 0.0, 0.5, 0.5]);
         Self::new(rect, font_color, background_color, border_color, hover_color, text)
     }
-    pub fn to_graph(&self,globe_state: &'a GlobeState) -> ButtonGraph {
-        let vertex_buffer = VertexBuffer::create_tex_vertex_buf(globe_state, self.size);
-        let shape_vertex_buffer = VertexBuffer::create_background_buf(globe_state, self.size, self.background_color);
-        let hover_vertex_buffer = VertexBuffer::create_background_buf(globe_state, self.size, self.hover_color);
-        let boder_vertex_buffer = VertexBuffer::create_border_buf(globe_state, self.size, self.border_color);
-        let texture_state = TextureState::create_text_texture(globe_state,self.text);
+    pub fn to_graph(&self, global_state: &'a GlobalState) -> ButtonGraph {
+        let vertex_buffer = VertexBuffer::create_tex_vertex_buf(global_state, self.size);
+        let shape_vertex_buffer = VertexBuffer::create_background_buf(global_state, self.size, self.background_color);
+        let hover_vertex_buffer = VertexBuffer::create_background_buf(global_state, self.size, self.hover_color);
+        let boder_vertex_buffer = VertexBuffer::create_border_buf(global_state, self.size, self.border_color);
+        let texture_state = TextureState::create_text_texture(global_state, self.text);
 
         ButtonGraph {
             vertex_buffer,
