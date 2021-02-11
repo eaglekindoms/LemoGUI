@@ -1,13 +1,13 @@
-use wgpu::{BindGroupLayout, RenderPipeline, VertexState, BlendFactor, BlendOperation};
+use wgpu::{BindGroupLayout, RenderPipeline, VertexState, BlendFactor, BlendOperation, BindGroupLayoutDescriptor};
 use crate::backend::global_setting::GlobalState;
-use crate::backend::buffer_state::TextureState;
+use crate::backend::texture_state::TextureState;
 use crate::backend::shader::Shader;
 use crate::backend::shape::{TexturePoint, BufferPoint};
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
 /// 主要用在创建渲染管道方法中定义渲染管道[`create_pipeline_state`]
-pub enum RenderType<'a> {
-    Texture(&'a BindGroupLayout),
+pub enum RenderType {
+    Texture,
     Shape,
     Border,
 }
@@ -20,7 +20,7 @@ pub struct PipelineState {
 }
 
 impl<'a> PipelineState {
-    pub fn create_glob_pipeline(global_state: &'a GlobalState, texture_state: &'a TextureState) -> Self {
+    pub fn create_glob_pipeline(global_state: &'a GlobalState) -> Self {
         // 纹理渲染配置：纹理着色器，文字着色器，矩形着色器。
         let font_shader = Shader::create_font_shader(global_state);
         let shape_shader = Shader::create_shape_shader(global_state);
@@ -28,7 +28,7 @@ impl<'a> PipelineState {
         // 固定渲染管道配置：纹理管道，矩形管道，边框管道。
         // 全局设置
         let render_pipeline =
-            PipelineState::create_pipeline_state(global_state, &font_shader, RenderType::Texture(&texture_state.texture_bind_group_layout));
+            PipelineState::create_pipeline_state(global_state, &font_shader, RenderType::Texture);
         let shape_pipeline =
             PipelineState::create_pipeline_state(global_state, &shape_shader, RenderType::Shape);
         let border_pipeline =
@@ -45,11 +45,14 @@ impl<'a> PipelineState {
         let render_pipeline_layout;
         let vertex_desc;
         let fill_pology;
+        let texture_bind_group_layout = global_state.device.create_bind_group_layout(
+            &Self::create_bind_group_layout_descriptor()
+        );
         match render_type {
-            RenderType::Texture(texture_bind_group_layout) => {
+            RenderType::Texture => {
                 render_pipeline_layout = global_state.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[texture_bind_group_layout],
+                    bind_group_layouts: &[&texture_bind_group_layout],
                     push_constant_ranges: &[],
                 });
                 vertex_desc = [TexturePoint::desc()];
@@ -118,5 +121,31 @@ impl<'a> PipelineState {
                 }),
             });
         return render_pipeline;
+    }
+    fn create_bind_group_layout_descriptor() -> BindGroupLayoutDescriptor<'a> {
+        BindGroupLayoutDescriptor {
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStage::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStage::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler {
+                        filtering: false,
+                        comparison: false,
+                    },
+                    count: None,
+                },
+            ],
+            label: Some("texture_bind_group_layout"),
+        }
     }
 }

@@ -15,7 +15,6 @@ use winit::{
 };
 use wgpu::*;
 use crate::backend::shape::*;
-use crate::backend::mywgpu;
 use crate::backend::shader::Shader;
 use crate::backend::buffer_state::*;
 use crate::backend::render::*;
@@ -44,19 +43,32 @@ impl GlobalState {
         let instance = wgpu::Instance::new(wgpu::BackendBit::DX11);
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
-            .request_adapter(&mywgpu::description::create_adapter_descriptor(&surface))
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: Some(&surface),
+            })
             .await
             .unwrap();
 
         let (device, queue) = adapter
             .request_device(
-                &mywgpu::description::create_device_descriptor(),
+                &wgpu::DeviceDescriptor {
+                    label: None,
+                    features: wgpu::Features::empty(),
+                    limits: wgpu::Limits::default(),
+                },
                 None, // Trace path
             )
             .await
             .unwrap();
 
-        let sc_desc = mywgpu::description::be_rgba_swap_chain_descriptor(size.width, size.height);
+        let sc_desc = wgpu::SwapChainDescriptor {
+            usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
+            format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            width: size.width,
+            height: size.height,
+            present_mode: wgpu::PresentMode::Fifo,
+        };
         let swap_chain = device.create_swap_chain(&surface, &sc_desc);
         let use_complex = 0;
         Self {
@@ -119,17 +131,17 @@ impl GlobalState {
 
     pub fn render(&mut self, rect: &Rectangle) -> Result<(), wgpu::SwapChainError> {
         let frame = self.swap_chain.get_current_frame()?.output;
+        let glob_pipeline = PipelineState::create_glob_pipeline(&self);
+
+        // 自定义设置
+        let button = Button::default(rect, "button1").to_graph(&self);
+        let button1 = Button::default(&Rectangle::new(20.0, 200.0, 300, 42), "button2").to_graph(&self);
 
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
-        // 自定义设置
-        let button = Button::default(rect, "button1").to_graph(&self);
-        let button1 = Button::default(&Rectangle::new(20.0, 200.0, 300, 42), "button2").to_graph(&self);
-        let glob_pipeline = PipelineState::create_glob_pipeline(&self, &button.font_buffer);
-
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
@@ -142,9 +154,9 @@ impl GlobalState {
             }],
             depth_stencil_attachment: None,
         });
-        render_button(&mut render_pass, &glob_pipeline, &button, self.use_complex == 1);
-        render_button(&mut render_pass, &glob_pipeline, &button1, self.use_complex == 2);
 
+        button.render(&mut render_pass, &glob_pipeline, self.use_complex == 1);
+        button1.render(&mut render_pass, &glob_pipeline, self.use_complex == 2);
         drop(render_pass);
         self.queue.submit(iter::once(encoder.finish()));
 

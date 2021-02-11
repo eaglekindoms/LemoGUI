@@ -1,6 +1,9 @@
 use crate::backend::shape::{Rectangle, RGBA};
-use crate::backend::buffer_state::{VertexBuffer, TextureState};
+use crate::backend::buffer_state::VertexBuffer;
+use crate::backend::texture_state::TextureState;
 use crate::backend::global_setting::GlobalState;
+use crate::backend::render::*;
+use crate::backend::pipeline_state::PipelineState;
 
 /// 按钮属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
 pub struct Button<'a> {
@@ -10,15 +13,6 @@ pub struct Button<'a> {
     border_color: RGBA,
     hover_color: RGBA,
     text: &'a str,
-}
-
-/// 按钮渲染中间结构体
-pub struct ButtonGraph {
-    pub vertex_buffer: VertexBuffer,
-    pub back_buffer: VertexBuffer,
-    pub hover_buffer: VertexBuffer,
-    pub boder_buffer: VertexBuffer,
-    pub font_buffer: TextureState,
 }
 
 impl<'a> Button<'a> {
@@ -39,19 +33,19 @@ impl<'a> Button<'a> {
         let hover_color = RGBA([0.5, 0.0, 0.5, 0.5]);
         Self::new(rect, font_color, background_color, border_color, hover_color, text)
     }
-    pub fn to_graph(&self, global_state: &'a GlobalState) -> ButtonGraph {
+    pub fn to_graph(&self, global_state: &'a GlobalState) -> RenderGraph {
         let vertex_buffer = VertexBuffer::create_tex_vertex_buf(global_state, self.size);
         let shape_vertex_buffer = VertexBuffer::create_background_buf(global_state, self.size, self.background_color);
         let hover_vertex_buffer = VertexBuffer::create_background_buf(global_state, self.size, self.hover_color);
         let boder_vertex_buffer = VertexBuffer::create_border_buf(global_state, self.size, self.border_color);
         let texture_state = TextureState::create_text_texture(global_state, self.text);
 
-        ButtonGraph {
+        RenderGraph {
             vertex_buffer,
             back_buffer: shape_vertex_buffer,
-            hover_buffer: hover_vertex_buffer,
-            boder_buffer: boder_vertex_buffer,
-            font_buffer: texture_state,
+            hover_buffer: Some(hover_vertex_buffer),
+            border_buffer: boder_vertex_buffer,
+            context_buffer: texture_state,
         }
     }
 }

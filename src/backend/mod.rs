@@ -7,3 +7,4 @@ pub mod shader;
 pub mod buffer_state;
 pub mod render;
 pub mod pipeline_state;
+pub mod texture_state;
