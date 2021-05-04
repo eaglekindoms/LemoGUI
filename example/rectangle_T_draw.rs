@@ -1,75 +1,25 @@
-use winit::{
-    event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::{Window, WindowBuilder},
-};
+use log::{debug, error, info, Level, log_enabled};
+use simple_logger::SimpleLogger;
 
-use LemoGUI::backend::shape::*;
-use LemoGUI::backend::global_setting as setting;
+use global_setting::GlobalState;
+use LemoGUI::device::display_window::DisplayWindow;
+use LemoGUI::device::painter::Painter;
+
+pub mod global_setting;
 
 fn main() {
-    let rec = Rectangle::new(2.0, 1.0, 200, 20).to_tex(300, 200);
-    let buf: &[u8] = bytemuck::cast_slice(rec.as_slice());
-    println!("{:?}", &rec);
+    SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
+    info!("hh");
+    run::<GlobalState>("hello");
+}
 
-    env_logger::init();
-    let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
-    let rect = Rectangle::new(20.0, 10.0, 400, 40);
+fn run<E: Painter>(title: &str) {
+    let event_loop = winit::event_loop::EventLoop::new();
+    let mut builder = winit::window::WindowBuilder::new();
+    builder = builder.with_title(title)
+        .with_inner_size(winit::dpi::LogicalSize::new(428.0, 128.0));
 
     use futures::executor::block_on;
-
-    let mut state = block_on(setting::GlobalState::new(&window));
-
-    event_loop.run(move |event, _, control_flow| {
-        match event {
-            Event::WindowEvent {
-                ref event,
-                window_id,
-            } if window_id == window.id() => {
-                if !state.input(event) {
-                    match event {
-                        WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                        WindowEvent::KeyboardInput { input, .. } => match input {
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            } => *control_flow = ControlFlow::Exit,
-                            _ => {}
-                        },
-                        WindowEvent::Resized(physical_size) => {
-                            state.resize(*physical_size);
-                        }
-                        WindowEvent::ScaleFactorChanged
-                        {
-                            new_inner_size, ..
-                        } => {
-                            // new_inner_size is &mut so w have to dereference it twice
-                            state.resize(**new_inner_size);
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            Event::RedrawRequested(_) => {
-                state.update();
-                match state.render(&rect) {
-                    Ok(_) => {}
-                    // Recreate the swap_chain if lost
-                    Err(wgpu::SwapChainError::Lost) => state.resize(state.size),
-                    // The system is out of memory, we should probably quit
-                    Err(wgpu::SwapChainError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                    // All other errors (Outdated, Timeout) should be resolved by the next frame
-                    Err(e) => eprintln!("{:?}", e),
-                };
-            }
-            Event::MainEventsCleared => {
-                // RedrawRequested will only trigger once, unless we manually
-                // request it.
-                window.request_redraw();
-            }
-            _ => {}
-        }
-    });
+    let display_device = block_on(DisplayWindow::init::<E>(builder, &event_loop));
+    DisplayWindow::start::<E>(display_device, event_loop);
 }

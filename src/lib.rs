@@ -1,2 +1,4 @@
-pub mod backend;
-pub mod widget;
+pub mod graphic;
+pub mod model;
+pub mod device;
+pub mod design;

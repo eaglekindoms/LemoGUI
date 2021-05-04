@@ -1,7 +1,8 @@
 use wgpu::RenderPipeline;
-use crate::backend::buffer_state::VertexBuffer;
-use crate::backend::texture_state::TextureState;
-use crate::backend::pipeline_state::PipelineState;
+
+use crate::graphic::render_type::buffer_state::VertexBuffer;
+use crate::graphic::render_type::pipeline_state::PipelineState;
+use crate::graphic::render_type::texture_state::TextureState;
 
 /// 组件渲染中间结构体
 pub struct RenderGraph {
@@ -34,7 +35,7 @@ pub fn render_button<'a>(render_pass: &mut wgpu::RenderPass<'a>,
                          glob_pipeline: &'a PipelineState, button_graph: &'a RenderGraph, focused: bool) {
     render_shape(render_pass, &glob_pipeline.shape_pipeline, &button_graph.back_buffer);
     render_shape(render_pass, &glob_pipeline.border_pipeline, &button_graph.border_buffer);
-    render_texture(render_pass, &button_graph.context_buffer, &glob_pipeline.render_pipeline, &button_graph.vertex_buffer);
+    render_texture(render_pass, &button_graph.context_buffer, &glob_pipeline.texture_pipeline, &button_graph.vertex_buffer);
     if focused {
         render_shape(render_pass, &glob_pipeline.shape_pipeline, button_graph.hover_buffer.as_ref().unwrap());
     }
@@ -50,7 +51,7 @@ impl Render for RenderGraph {
                   glob_pipeline: &'a PipelineState, focused: bool) {
         render_shape(render_pass, &glob_pipeline.shape_pipeline, &self.back_buffer);
         render_shape(render_pass, &glob_pipeline.border_pipeline, &self.border_buffer);
-        render_texture(render_pass, &self.context_buffer, &glob_pipeline.render_pipeline, &self.vertex_buffer);
+        render_texture(render_pass, &self.context_buffer, &glob_pipeline.texture_pipeline, &self.vertex_buffer);
         if focused && !self.hover_buffer.is_none() {
             render_shape(render_pass, &glob_pipeline.shape_pipeline, self.hover_buffer.as_ref().unwrap());
         }

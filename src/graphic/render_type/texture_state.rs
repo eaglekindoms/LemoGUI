@@ -1,7 +1,6 @@
-use crate::backend::global_setting::GlobalState;
-use crate::backend::mywgpu;
-use crate::backend::font::draw_image;
 use wgpu::*;
+
+use crate::graphic::font::draw_image;
 
 pub struct TextureState {
     // pub texture_bind_group_layout: BindGroupLayout,
@@ -15,12 +14,12 @@ pub struct TextureBuffer<'a> {
 }
 
 impl<'a> TextureState {
-    pub fn default(global_state: &'a GlobalState, texture_buf: &'a TextureBuffer) -> Self {
+    pub fn default(device: &Device, queue: &wgpu::Queue, texture_buf: &'a TextureBuffer) -> Self {
         let texture_size = Self::create_texture_size(texture_buf.x, texture_buf.y);
-        let diffuse_texture = global_state.device.create_texture(
+        let diffuse_texture = device.create_texture(
             &Self::create_texture_descriptor(&texture_size)
         );
-        global_state.queue.write_texture(
+        queue.write_texture(
             // Tells wgpu where to copy the pixel data
             Self::create_texture_copy_view(&diffuse_texture),
             // The actual pixel data
@@ -31,15 +30,15 @@ impl<'a> TextureState {
             texture_size,
         );
 
-        /// 默认纹理渲染配置
+        // 默认纹理渲染配置
         let diffuse_texture_view = diffuse_texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let diffuse_sampler = global_state.device.create_sampler(&Self::create_sample_descriptor());
-        let texture_bind_group_layout = global_state.device.create_bind_group_layout(
+        let diffuse_sampler = device.create_sampler(&Self::create_sample_descriptor());
+        let texture_bind_group_layout = device.create_bind_group_layout(
             &Self::create_bind_group_layout_descriptor()
         );
-        /// 描述纹理顶点数据布局,用于着色器识别数据
-        let diffuse_bind_group = global_state.device.create_bind_group(
+        // 描述纹理顶点数据布局,用于着色器识别数据
+        let diffuse_bind_group = device.create_bind_group(
             &wgpu::BindGroupDescriptor {
                 layout: &texture_bind_group_layout,
                 entries: &[
@@ -55,17 +54,18 @@ impl<'a> TextureState {
                 label: Some("diffuse_bind_group"),
             }
         );
+        log::info!("create the TextureState obj");
         Self {
             // texture_bind_group_layout,
             diffuse_bind_group,
         }
     }
     #[deprecated]
-    pub fn create_text_texture(global_state: &'a GlobalState, text: &'a str) -> Self {
+    pub fn create_text_texture(device: &Device, queue: &wgpu::Queue, text: &'a str) -> Self {
         // let text = "hello button";
         let (x, y, buf) = draw_image(45.0, text);
         let texture_buf = TextureBuffer { x, y, buf: buf.as_slice() };
-        Self::default(global_state, &texture_buf)
+        Self::default(device, queue, &texture_buf)
     }
     #[deprecated]
     /// 创建默认采样器描述符

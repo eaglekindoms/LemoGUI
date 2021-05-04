@@ -1,8 +1,10 @@
-use wgpu::{BindGroupLayout, RenderPipeline, VertexState, BlendFactor, BlendOperation, BindGroupLayoutDescriptor};
-use crate::backend::global_setting::GlobalState;
-use crate::backend::texture_state::TextureState;
-use crate::backend::shader::Shader;
-use crate::backend::shape::{TexturePoint, BufferPoint};
+use wgpu::{BindGroupLayout, BindGroupLayoutDescriptor, BlendFactor, BlendOperation, Device, RenderPipeline, VertexState};
+
+use crate::graphic::render_type::texture_state::TextureState;
+use crate::graphic::shader::Shader;
+use crate::graphic::shape::round_rect::RectVertex;
+use crate::graphic::shape::text::TexturePoint;
+use crate::graphic::shape::triangle::BufferPoint;
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
 /// 主要用在创建渲染管道方法中定义渲染管道[`create_pipeline_state`]
@@ -10,47 +12,55 @@ pub enum RenderType {
     Texture,
     Shape,
     Border,
+    RoundShape,
 }
 
 /// 渲染管道状态元结构体
 pub struct PipelineState {
-    pub render_pipeline: RenderPipeline,
+    pub texture_pipeline: RenderPipeline,
     pub shape_pipeline: RenderPipeline,
     pub border_pipeline: RenderPipeline,
+    pub round_shape_pipeline: RenderPipeline,
 }
 
 impl<'a> PipelineState {
-    pub fn create_glob_pipeline(global_state: &'a GlobalState) -> Self {
+    pub fn create_glob_pipeline(device: &Device) -> Self {
         // 纹理渲染配置：纹理着色器，文字着色器，矩形着色器。
-        let font_shader = Shader::create_font_shader(global_state);
-        let shape_shader = Shader::create_shape_shader(global_state);
+        let font_shader = Shader::create_font_shader(device);
+        let shape_shader = Shader::create_shape_shader(device);
+        let round_shader = Shader::create_round_shape_shader(device);
 
         // 固定渲染管道配置：纹理管道，矩形管道，边框管道。
         // 全局设置
-        let render_pipeline =
-            PipelineState::create_pipeline_state(global_state, &font_shader, RenderType::Texture);
+        let texture_pipeline =
+            PipelineState::create_pipeline_state(device, &font_shader, RenderType::Texture);
         let shape_pipeline =
-            PipelineState::create_pipeline_state(global_state, &shape_shader, RenderType::Shape);
+            PipelineState::create_pipeline_state(device, &shape_shader, RenderType::Shape);
         let border_pipeline =
-            PipelineState::create_pipeline_state(global_state, &shape_shader, RenderType::Border);
+            PipelineState::create_pipeline_state(device, &shape_shader, RenderType::Border);
+        let round_shape_pipeline =
+            PipelineState::create_pipeline_state(device, &round_shader, RenderType::RoundShape);
+
+        log::info!("create the PipelineState obj");
         Self {
-            render_pipeline,
+            texture_pipeline,
             shape_pipeline,
             border_pipeline,
+            round_shape_pipeline,
         }
     }
     /// 创建渲染管道
     /// 参数：全局状态，着色器，渲染类型
-    pub fn create_pipeline_state(global_state: &'a GlobalState, shader: &'a Shader, render_type: RenderType) -> RenderPipeline {
+    pub fn create_pipeline_state(device: &Device, shader: &'a Shader, render_type: RenderType) -> RenderPipeline {
         let render_pipeline_layout;
         let vertex_desc;
         let fill_pology;
-        let texture_bind_group_layout = global_state.device.create_bind_group_layout(
+        let texture_bind_group_layout = device.create_bind_group_layout(
             &Self::create_bind_group_layout_descriptor()
         );
         match render_type {
             RenderType::Texture => {
-                render_pipeline_layout = global_state.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
                     bind_group_layouts: &[&texture_bind_group_layout],
                     push_constant_ranges: &[],
@@ -59,7 +69,7 @@ impl<'a> PipelineState {
                 fill_pology = wgpu::PrimitiveTopology::TriangleStrip;
             }
             RenderType::Shape => {
-                render_pipeline_layout = global_state.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
                     bind_group_layouts: &[],
                     push_constant_ranges: &[],
@@ -68,7 +78,7 @@ impl<'a> PipelineState {
                 fill_pology = wgpu::PrimitiveTopology::TriangleStrip;
             }
             RenderType::Border => {
-                render_pipeline_layout = global_state.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
                     bind_group_layouts: &[],
                     push_constant_ranges: &[],
@@ -76,11 +86,20 @@ impl<'a> PipelineState {
                 vertex_desc = [BufferPoint::desc()];
                 fill_pology = wgpu::PrimitiveTopology::LineStrip;
             }
+            RenderType::RoundShape => {
+                render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    label: Some("Render Pipeline Layout"),
+                    bind_group_layouts: &[],
+                    push_constant_ranges: &[],
+                });
+                vertex_desc = [RectVertex::desc()];
+                fill_pology = wgpu::PrimitiveTopology::TriangleStrip;
+            }
             _ => panic!(),
         };
 
         // 作用：绑定着色器，图形填充
-        let render_pipeline = global_state.device
+        let render_pipeline = device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some("Render Pipeline"),
                 layout: Some(&render_pipeline_layout),
@@ -105,7 +124,7 @@ impl<'a> PipelineState {
                     module: &shader.fs_module,
                     entry_point: "main",
                     targets: &[wgpu::ColorTargetState {
-                        format: global_state.sc_desc.format,
+                        format: wgpu::TextureFormat::Bgra8UnormSrgb,
                         color_blend: wgpu::BlendState {
                             src_factor: BlendFactor::SrcAlpha,
                             dst_factor: BlendFactor::OneMinusSrcAlpha,

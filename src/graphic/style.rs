@@ -29,20 +29,22 @@ pub struct Style {
     border: Bordering,
     label: Label,
 }
-impl Style{
-    pub fn default()-> Style{
-        Style{
-            border: Bordering::Border(1.0,Color::Rgbau(0,0,0,255)),
-            label: Label::Label(Color::Rgbau(255,255,255,255))
+
+impl Style {
+    pub fn default() -> Style {
+        Style {
+            border: Bordering::Border(1.0, Color::Rgbau(0, 0, 0, 255)),
+            label: Label::Label(Color::Rgbau(255, 255, 255, 255)),
         }
     }
-    pub fn set_border(&mut self,border: Bordering)->Self{
-        Style{
-            border: Bordering::Border(1.0,Color::Rgbau(0,0,0,255)),
-            label: Label::Label(Color::Rgbau(255,255,255,255))
+    pub fn set_border(&mut self, border: Bordering) -> Self {
+        Style {
+            border: Bordering::Border(1.0, Color::Rgbau(0, 0, 0, 255)),
+            label: Label::Label(Color::Rgbau(255, 255, 255, 255)),
         }
     }
 }
+
 impl Bordering {
     /// Set the width of the widget's border.
     pub fn border(self, width: f64, color: Color) -> Self {

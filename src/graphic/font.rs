@@ -1,4 +1,4 @@
-use ab_glyph::{point, Font, FontRef, FontVec, PxScale, ScaleFont, Point, Glyph};
+use ab_glyph::{Font, FontRef, FontVec, Glyph, point, Point, PxScale, ScaleFont};
 
 #[deprecated]
 pub fn draw_image(f_scale: f32, text: &str) -> (u32, u32, Vec<u8>) {

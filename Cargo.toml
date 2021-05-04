@@ -8,13 +8,19 @@ edition = "2018"
 name = "rectangle_T_draw"
 path = "example/rectangle_T_draw.rs"
 
+[[example]]
+name = "example"
+path = "example/example.rs"
+
 [dependencies]
 #wgpu = "0.6.2"
+async-trait="*"
 winit = "0.24.0"
-simple_logger = "1.9"
 futures = "0.3.10"
 cgmath = "0.17"
-env_logger = "*"
+log = "*"
+simple_logger = "1.11.0"
+
 rand = "0.8.2"
 bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
