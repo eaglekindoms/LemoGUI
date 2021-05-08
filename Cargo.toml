@@ -13,7 +13,7 @@ name = "example"
 path = "example/example.rs"
 
 [dependencies]
-#wgpu = "0.6.2"
+wgpu = "0.7.1"
 async-trait="*"
 winit = "0.24.0"
 futures = "0.3.10"
@@ -26,8 +26,8 @@ bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
 ab_glyph = "0.2.9"
 
-[dependencies.wgpu]
-path = "./wgpu-rs_v0.7"
+#[dependencies.wgpu]
+#path = "./wgpu-rs_v0.7"
 #features = ["vulkan-portability"]
 
 [build-dependencies]
