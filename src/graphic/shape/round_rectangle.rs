@@ -2,8 +2,8 @@ use wgpu::*;
 use wgpu::util::DeviceExt;
 
 use crate::graphic::render_type::pipeline_state::PipelineState;
-use crate::graphic::shape::point::{Rectangle, TransferVertex};
-use crate::graphic::shape::triangle::RGBA;
+use crate::graphic::shape::rectangle::{Rectangle, TransferVertex};
+use crate::graphic::shape::point2d::RGBA;
 
 const INDICES: &[u16] = &[1, 2, 0, 3];
 

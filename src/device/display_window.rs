@@ -66,12 +66,10 @@ impl DisplayWindow {
         }
     }
 
-    pub fn start<E: Painter>
-    (mut self, event_loop: EventLoop<()>) {
-        log::info!("Initializing the example...");
-        // from window's variable to create the painter for render the shapes;
-        let mut painter = E::new(&self.sc_desc, &self.device, &self.queue);
-
+    pub fn start<E>
+    (mut self, mut container: E, event_loop: EventLoop<()>)
+        where E: Painter + 'static
+    {
         log::info!("Entering render loop...");
         event_loop.run(move |event, _, control_flow| {
             match event {
@@ -79,7 +77,7 @@ impl DisplayWindow {
                     ref event,
                     window_id,
                 } if window_id == self.window.id() => {
-                    if !painter.input(event) {
+                    if !container.input(event) {
                         match event {
                             WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                             WindowEvent::KeyboardInput { input, .. } => match input {
@@ -119,7 +117,7 @@ impl DisplayWindow {
                         .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                             label: Some("Render Encoder"),
                         });
-                    match painter.render(&mut encoder, &frame.view) {
+                    match container.render(&self, &mut encoder, &frame.view) {
                         Ok(_) => {}
                         // Recreate the swap_chain if lost
                         Err(wgpu::SwapChainError::Lost) => {}

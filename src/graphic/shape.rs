@@ -1,4 +1,4 @@
-pub mod point;
-pub mod round_rect;
-pub mod text;
-pub mod triangle;
+pub mod rectangle;
+pub mod round_rectangle;
+pub mod texture_point;
+pub mod point2d;

@@ -3,7 +3,7 @@ use wgpu::util::DeviceExt;
 
 use crate::graphic::render_type::pipeline_state::PipelineState;
 use crate::graphic::render_type::texture_state::TextureState;
-use crate::graphic::shape::point::{Rectangle, TransferVertex};
+use crate::graphic::shape::rectangle::{Rectangle, TransferVertex};
 
 /// 2D纹理顶点数据
 #[repr(C)]
@@ -61,15 +61,5 @@ impl<'a> TextState {
             index_buffer,
         }
     }
-
-    // pub fn render(&'a self, render_pipeline: &'a PipelineState,
-    //               texture_state: &'a TextureState,render_pass: &mut wgpu::RenderPass<'a> ) {
-    //
-    //     render_pass.set_pipeline(&render_pipeline.texture_pipeline);
-    //     render_pass.set_bind_group(0, &texture_state.diffuse_bind_group, &[]); // NEW!
-    //     render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-    //     render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-    //     render_pass.draw_indexed(0..4, 0, 0..1);
-    // }
 }
 

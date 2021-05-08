@@ -1,6 +1,6 @@
-use crate::graphic::shape::round_rect::RectVertex;
-use crate::graphic::shape::text::TexturePoint;
-use crate::graphic::shape::triangle::{BufferPoint, Point, RGBA};
+use crate::graphic::shape::round_rectangle::RectVertex;
+use crate::graphic::shape::texture_point::TexturePoint;
+use crate::graphic::shape::point2d::{BufferPoint, Point, RGBA};
 use crate::graphic::style;
 use crate::graphic::style::Bordering;
 

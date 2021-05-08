@@ -1,11 +1,15 @@
 use log::{debug, error, info, Level, log_enabled};
 use simple_logger::SimpleLogger;
 
-use global_setting::GlobalState;
+use container::GlobalState;
 use LemoGUI::device::display_window::DisplayWindow;
+use LemoGUI::device::listener::Listener;
 use LemoGUI::device::painter::Painter;
+use LemoGUI::graphic::shape::point2d::Point;
+use LemoGUI::graphic::shape::rectangle::Rectangle;
+use LemoGUI::model::button::Button;
 
-pub mod global_setting;
+pub mod container;
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
@@ -13,7 +17,9 @@ fn main() {
     run::<GlobalState>("hello");
 }
 
-fn run<E: Painter>(title: &str) {
+fn run<E>(title: &str)
+    where E: Painter + 'static
+{
     let event_loop = winit::event_loop::EventLoop::new();
     let mut builder = winit::window::WindowBuilder::new();
     builder = builder.with_title(title)
@@ -21,5 +27,14 @@ fn run<E: Painter>(title: &str) {
 
     use futures::executor::block_on;
     let display_device = block_on(DisplayWindow::init::<E>(builder, &event_loop));
-    DisplayWindow::start::<E>(display_device, event_loop);
+    // from window's variable to create the painter for render the shapes;
+    log::info!("Initializing the example...");
+    // 自定义设置
+    let rect = Rectangle::new(100.0, 100.0, 400, 40);
+    let mut button = Button::new(rect, "button1");
+    let mut container = E::new(&display_device);
+    container.add_comp(&display_device, button);
+    container.add_comp(&display_device,
+                       Button::default(Point { x: 10.0, y: 20.0 }, "hello"));
+    DisplayWindow::start::<E>(display_device, container, event_loop);
 }

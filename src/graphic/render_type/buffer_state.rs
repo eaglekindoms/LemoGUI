@@ -2,8 +2,8 @@ use wgpu::Device;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
 use crate::graphic::shape::*;
-use crate::graphic::shape::point::{Rectangle, TransferVertex};
-use crate::graphic::shape::triangle::RGBA;
+use crate::graphic::shape::rectangle::{Rectangle, TransferVertex};
+use crate::graphic::shape::point2d::RGBA;
 
 pub struct VertexBuffer {
     pub vertex_buffer: wgpu::Buffer,

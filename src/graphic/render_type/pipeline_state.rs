@@ -2,9 +2,9 @@ use wgpu::{BindGroupLayout, BindGroupLayoutDescriptor, BlendFactor, BlendOperati
 
 use crate::graphic::render_type::texture_state::TextureState;
 use crate::graphic::shader::Shader;
-use crate::graphic::shape::round_rect::RectVertex;
-use crate::graphic::shape::text::TexturePoint;
-use crate::graphic::shape::triangle::BufferPoint;
+use crate::graphic::shape::round_rectangle::RectVertex;
+use crate::graphic::shape::texture_point::TexturePoint;
+use crate::graphic::shape::point2d::BufferPoint;
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
 /// 主要用在创建渲染管道方法中定义渲染管道[`create_pipeline_state`]
