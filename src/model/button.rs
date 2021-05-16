@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use wgpu::{Device, RenderPipeline};
 use winit::event::WindowEvent;
 
@@ -10,8 +12,10 @@ use crate::model::component::Component;
 use crate::model::component::ComponentModel;
 
 /// 按钮属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
+#[derive(Debug)]
 pub struct Button<'a, L: Listener + ?Sized> {
-    pub context: Component<'a, L>
+    pub context: Component<'a, L>,
+    pub index: Option<usize>,
 }
 
 impl<'a> Button<'a, Listener> {
@@ -21,10 +25,11 @@ impl<'a> Button<'a, Listener> {
         let border_color = RGBA([0.0, 0.0, 0.0, 1.0]);
         let hover_color = RGBA([0.5, 0.0, 0.5, 0.5]);
         log::info!("create the Button obj");
-        let context = Component::new(rect, font_color, background_color, border_color, hover_color, text);
+        let context = Component::default(rect, font_color, background_color, border_color, hover_color, text);
 
         Self {
             context,
+            index: None,
         }
     }
 
@@ -35,15 +40,24 @@ impl<'a> Button<'a, Listener> {
         let hover_color = RGBA([0.5, 0.0, 0.5, 0.5]);
         let rect = Rectangle::new(pos.x, pos.y, (text.len() * 10) as u32, 40);
         log::info!("create the Button obj");
-        let context = Component::new(rect, font_color, background_color, border_color, hover_color, text);
+        let context = Component::default(rect, font_color, background_color, border_color, hover_color, text);
 
         Self {
             context,
+            index: None,
         }
     }
 }
 
 impl<'a> ComponentModel for Button<'a, Listener> {
+    fn set_index(&mut self, index: usize) {
+        self.index = Option::from(index);
+    }
+
+    fn get_index(&self) -> Option<usize> {
+        self.index
+    }
+
     fn to_graph(&self, display_window: &DisplayWindow) -> RenderGraph {
         self.context.to_graph(display_window)
     }

@@ -1,4 +1,4 @@
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Color {
     /// Red, Green, Blue, Alpha - All values' scales represented between 0.0 and 1.0.
     Rgba(f32, f32, f32, f32),
@@ -9,7 +9,7 @@ pub enum Color {
 }
 
 ///  边框
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Bordering {
     /// 边框宽度和颜色
     Border(f64, Color),
@@ -17,7 +17,7 @@ pub enum Bordering {
     NoBorder,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Label {
     /// 面板颜色
     Label(Color),
@@ -25,6 +25,7 @@ pub enum Label {
     NoLabel,
 }
 
+#[derive(Debug)]
 pub struct Style {
     border: Bordering,
     label: Label,

@@ -20,7 +20,7 @@ const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
 
 pub struct GlobalState {
     pub glob_pipeline: PipelineState,
-    pub graph_context: Vec<Box<dyn ComponentModel>>,
+    pub graph_context: Vec<RenderGraph>,
 }
 
 impl Painter for GlobalState {
@@ -33,8 +33,24 @@ impl Painter for GlobalState {
         }
     }
 
-    fn add_comp<C: ComponentModel>(&mut self, display_device: &DisplayWindow, comp: C) {
-        // self.graph_context.push(comp.to_graph(display_device));
+    fn add_comp<C>(&mut self, display_device: &DisplayWindow, comp: &mut C)
+        where C: ComponentModel + Listener {
+        if self.graph_context.len() == 0 {
+            self.graph_context.push(comp.to_graph(&display_device));
+            comp.set_index(self.graph_context.len() - 1);
+        } else if self.graph_context.len() != 0 {
+            if let Some(index) = comp.get_index() {
+                if self.graph_context.get(index).is_none() {
+                    log::info!("{}", comp.get_index().unwrap());
+                    self.graph_context
+                        .push(comp.to_graph(&display_device));
+                    comp.set_index(self.graph_context.len() - 1);
+                } else {
+                    self.graph_context
+                        .insert(index, comp.to_graph(&display_device));
+                }
+            }
+        }
     }
 
     /*  fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -67,9 +83,9 @@ impl Painter for GlobalState {
             depth_stencil_attachment: None,
         });
 
-        // for view in &self.graph_context {
-        //     view.render(&mut render_pass, &self.glob_pipeline, false);
-        // }
+        for view in &self.graph_context {
+            view.render(&mut render_pass, &self.glob_pipeline, false);
+        }
 
         Ok(())
     }

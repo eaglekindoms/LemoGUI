@@ -11,6 +11,7 @@ use crate::graphic::shape::round_rectangle::RectState;
 use crate::graphic::shape::texture_point::TextState;
 
 /// 组件属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
+#[derive(Debug)]
 pub struct Component<'a, L: Listener + ?Sized> {
     size: Rectangle,
     font_color: RGBA,
@@ -22,7 +23,21 @@ pub struct Component<'a, L: Listener + ?Sized> {
 }
 
 impl<'a> Component<'a, dyn Listener> {
-    pub fn new(rect: Rectangle, font_color: RGBA, background_color: RGBA, border_color: RGBA, hover_color: RGBA, text: &'a str) -> Self {
+    pub fn new(rect: Rectangle, font_color: RGBA, background_color: RGBA,
+               border_color: RGBA, hover_color: RGBA,
+               text: &'a str, listener: Box<Listener>) -> Self {
+        Self {
+            size: rect,
+            font_color,
+            background_color,
+            border_color,
+            hover_color,
+            text,
+            listener: Option::from(listener),
+        }
+    }
+
+    pub fn default(rect: Rectangle, font_color: RGBA, background_color: RGBA, border_color: RGBA, hover_color: RGBA, text: &'a str) -> Self {
         Self {
             size: rect,
             font_color,
@@ -52,5 +67,7 @@ impl<'a> Component<'a, dyn Listener> {
 }
 
 pub trait ComponentModel {
+    fn set_index(&mut self, index: usize);
+    fn get_index(&self) -> Option<usize>;
     fn to_graph(&self, display_window: &DisplayWindow) -> RenderGraph;
 }

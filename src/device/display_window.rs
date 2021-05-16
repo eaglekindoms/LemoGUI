@@ -1,11 +1,18 @@
+use std::any::Any;
+use std::future::Future;
+
+use futures::{StreamExt, task};
+use futures::channel::mpsc;
 use winit::event::*;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
 use crate::device::painter::Painter;
+use crate::graphic::shape::rectangle::Rectangle;
 
 pub struct DisplayWindow {
     pub window: winit::window::Window,
+    pub event_loop: EventLoop<()>,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub surface: wgpu::Surface,
     pub device: wgpu::Device,
@@ -14,10 +21,15 @@ pub struct DisplayWindow {
     pub swap_chain: wgpu::SwapChain,
 }
 
+struct Application {
+    base:Rectangle
+}
+
 impl DisplayWindow {
     /// 初始化窗口
-    pub async fn init<E: Painter>(mut builder: WindowBuilder, event_loop: &EventLoop<()>) -> DisplayWindow {
+    pub async fn init<E: Painter>(mut builder: WindowBuilder) -> DisplayWindow {
         log::info!("Initializing the window...");
+        let event_loop = winit::event_loop::EventLoop::new();
         let window = builder.build(&event_loop).unwrap();
 
         log::info!("Initializing the surface...");
@@ -57,6 +69,7 @@ impl DisplayWindow {
 
         DisplayWindow {
             window,
+            event_loop,
             size,
             surface,
             device,
@@ -66,75 +79,94 @@ impl DisplayWindow {
         }
     }
 
-    pub fn start<E>
-    (mut self, mut container: E, event_loop: EventLoop<()>)
+    pub fn start<E>(mut self, mut container: E)
         where E: Painter + 'static
     {
         log::info!("Entering render loop...");
-        event_loop.run(move |event, _, control_flow| {
-            match event {
+        let (mut sender, receiver) = mpsc::unbounded();
+        let mut instance = Box::pin(event_listener( container, receiver));
+        let mut context = task::Context::from_waker(task::noop_waker_ref());
+        self.event_loop.run(move |event, _, control_flow| {
+            if let ControlFlow::Exit = control_flow {
+                return;
+            }
+            let event = match event {
                 Event::WindowEvent {
-                    ref event,
+                    event:
+                    WindowEvent::ScaleFactorChanged {
+                        new_inner_size,
+                        ..
+                    },
                     window_id,
-                } if window_id == self.window.id() => {
-                    if !container.input(event) {
-                        match event {
-                            WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                            WindowEvent::KeyboardInput { input, .. } => match input {
-                                KeyboardInput {
-                                    state: ElementState::Pressed,
-                                    virtual_keycode: Some(VirtualKeyCode::Escape),
-                                    ..
-                                } => *control_flow = ControlFlow::Exit,
-                                _ => {}
-                            },
-                            WindowEvent::Resized(physical_size) => {
-                                // state.resize(*physical_size);
-                                self.size = *physical_size;
-                                self.sc_desc.width = physical_size.width;
-                                self.sc_desc.height = physical_size.height;
-                                self.swap_chain = self.device.create_swap_chain(&self.surface, &self.sc_desc);
-                            }
-                            WindowEvent::ScaleFactorChanged
-                            {
-                                new_inner_size, ..
-                            } => {
-                                // new_inner_size is &mut so w have to dereference it twice
-                                // state.resize(**new_inner_size);
-                                self.size = **new_inner_size;
-                                self.sc_desc.width = new_inner_size.width;
-                                self.sc_desc.height = new_inner_size.height;
-                                self.swap_chain = self.device.create_swap_chain(&self.surface, &self.sc_desc);
-                            }
-                            _ => {}
-                        }
+                } => Some(Event::WindowEvent {
+                    event: WindowEvent::Resized(*new_inner_size),
+                    window_id,
+                }),
+                _ => event.to_static(),
+            };
+            if let Some(event) = event  {
+                sender.start_send(event).expect("Send event");
+                let poll = instance.as_mut().poll(&mut context);
+                *control_flow = match poll {
+                    task::Poll::Pending => {
+                        // log::info!("pending");
+                        ControlFlow::Wait
                     }
-                }
-                Event::RedrawRequested(_) => {
-                    // state.update();
-                    let frame = self.swap_chain.get_current_frame().unwrap().output;
-                    let mut encoder = self.device
-                        .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                            label: Some("Render Encoder"),
-                        });
-                    match container.render(&self, &mut encoder, &frame.view) {
-                        Ok(_) => {}
-                        // Recreate the swap_chain if lost
-                        Err(wgpu::SwapChainError::Lost) => {}
-                        // The system is out of memory, we should probably quit
-                        Err(wgpu::SwapChainError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                        // All other errors (Outdated, Timeout) should be resolved by the next frame
-                        Err(e) => eprintln!("{:?}", e),
-                    };
-                    self.queue.submit(std::iter::once(encoder.finish()));
-                }
-                Event::MainEventsCleared => {
-                    // RedrawRequested will only trigger once, unless we manually
-                    // request it.
-                    self.window.request_redraw();
-                }
-                _ => {}
+                    task::Poll::Ready(_) => {
+                        // log::info!("--------ready--------");
+                        ControlFlow::Exit
+                    }
+                };
             }
         });
     }
+}
+
+pub async fn event_listener<T,E>(  mut container: E, mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, T>>)
+    where T: std::fmt::Debug,E: Painter + 'static
+{
+    while let Some(event) = receiver.next().await {
+        // log::info!("{:#?}", event);
+        // match event {
+        //     // Event::WindowEvent {
+        //     //     ref event,
+        //     //     window_id,
+        //     // } if window_id == display_device.window.id() => {
+        //     //     if !container.input(event) {
+        //     //         match event {
+        //     //             WindowEvent::Resized(physical_size) => {
+        //     //                 // state.resize(*physical_size);
+        //     //                 display_device.size = *physical_size;
+        //     //                 display_device.sc_desc.width = physical_size.width;
+        //     //                 display_device.sc_desc.height = physical_size.height;
+        //     //                 display_device.swap_chain = display_device.device.create_swap_chain(&display_device.surface, &display_device.sc_desc);
+        //     //             }
+        //     //             _ => {}
+        //     //         }
+        //     //     }
+        //     // }
+        //     Event::RedrawRequested(_) => {
+        //         // state.update();
+        //         let frame = display_device.swap_chain.get_current_frame().unwrap().output;
+        //         let mut encoder = display_device.device
+        //             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        //                 label: Some("Render Encoder"),
+        //             });
+        //         match container.render(&display_device, &mut encoder, &frame.view) {
+        //             Ok(_) => {}
+        //             // Recreate the swap_chain if lost
+        //             Err(wgpu::SwapChainError::Lost) => {}
+        //             // All other errors (Outdated, Timeout) should be resolved by the next frame
+        //             Err(e) => eprintln!("{:?}", e),
+        //         };
+        //         display_device.queue.submit(std::iter::once(encoder.finish()));
+        //     }
+        //     Event::MainEventsCleared => {
+        //         // RedrawRequested will only trigger once, unless we manually
+        //         // request it.
+        //         display_device.window.request_redraw();
+        //     }
+        //     _ => {}
+        // }
+    };
 }

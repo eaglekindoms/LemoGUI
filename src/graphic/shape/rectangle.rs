@@ -5,6 +5,7 @@ use crate::graphic::style;
 use crate::graphic::style::Bordering;
 
 /// 矩形结构体
+#[derive(Debug)]
 pub struct Rectangle {
     position: Point,
     width: u32,

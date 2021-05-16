@@ -20,21 +20,23 @@ fn main() {
 fn run<E>(title: &str)
     where E: Painter + 'static
 {
-    let event_loop = winit::event_loop::EventLoop::new();
     let mut builder = winit::window::WindowBuilder::new();
     builder = builder.with_title(title)
         .with_inner_size(winit::dpi::LogicalSize::new(428.0, 128.0));
 
     use futures::executor::block_on;
-    let display_device = block_on(DisplayWindow::init::<E>(builder, &event_loop));
+    let display_device = block_on(DisplayWindow::init::<E>(builder));
     // from window's variable to create the painter for render the shapes;
     log::info!("Initializing the example...");
     // 自定义设置
     let rect = Rectangle::new(100.0, 100.0, 400, 40);
     let mut button = Button::new(rect, "button1");
+    log::info!("{:#?}",&button.index);
     let mut container = E::new(&display_device);
-    container.add_comp(&display_device, button);
+    container.add_comp(&display_device, &mut button);
     container.add_comp(&display_device,
-                       Button::default(Point { x: 10.0, y: 20.0 }, "hello"));
-    DisplayWindow::start::<E>(display_device, container, event_loop);
+                       &mut Button::default(Point { x: 10.0, y: 20.0 }, "hello"));
+    log::info!("{:#?}",&button.index);
+    DisplayWindow::start::<E>(display_device,container);
+    log::info!("{:#?}",&button.index);
 }

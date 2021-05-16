@@ -7,7 +7,9 @@ use crate::model::component::ComponentModel;
 
 pub trait Painter: Sized {
     fn new(display_window: &DisplayWindow) -> Self;
-    fn add_comp<C: ComponentModel>(&mut self, display_device: &DisplayWindow, comp: C);
+    fn add_comp<C>(&mut self, display_device: &DisplayWindow, comp: &mut C)
+        where C: ComponentModel + Listener
+    ;
     // fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>);
     fn input(&mut self, event: &WindowEvent) -> bool;
     fn update(&mut self);
