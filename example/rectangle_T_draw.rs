@@ -5,9 +5,9 @@ use container::GlobalState;
 use LemoGUI::device::display_window::DisplayWindow;
 use LemoGUI::device::listener::Listener;
 use LemoGUI::device::painter::Painter;
-use LemoGUI::graphic::shape::point2d::Point;
-use LemoGUI::graphic::shape::rectangle::Rectangle;
-use LemoGUI::model::button::Button;
+use LemoGUI::graphic::base::point2d::Point;
+use LemoGUI::graphic::base::rectangle::Rectangle;
+use LemoGUI::widget::button::Button;
 
 pub mod container;
 

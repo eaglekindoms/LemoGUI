@@ -5,11 +5,12 @@ use winit::event::WindowEvent;
 
 use crate::device::display_window::{DisplayWindow, WGContext};
 use crate::device::listener::Listener;
-use crate::graphic::render_type::render_function::RenderGraph;
-use crate::graphic::shape::point2d::{Point, RGBA};
-use crate::graphic::shape::rectangle::Rectangle;
-use crate::model::component::Component;
-use crate::model::component::ComponentModel;
+use crate::graphic::base::color::RGBA;
+use crate::graphic::base::point2d::Point;
+use crate::graphic::base::rectangle::Rectangle;
+use crate::graphic::render_middle::render_function::RenderGraph;
+use crate::widget::component::Component;
+use crate::widget::component::ComponentModel;
 
 /// 按钮属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
 #[derive(Debug)]

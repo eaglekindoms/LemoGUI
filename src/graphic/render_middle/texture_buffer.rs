@@ -1,6 +1,6 @@
 use wgpu::*;
 
-use crate::graphic::font::draw_text;
+use crate::graphic::base::font::draw_text;
 
 pub struct TextureBuffer {
     // pub texture_bind_group_layout: BindGroupLayout,
@@ -11,6 +11,14 @@ pub struct TextureContext<'a> {
     pub x: u32,
     pub y: u32,
     pub buf: &'a [u8],
+}
+
+/// 2D纹理顶点数据
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct TextureVertex {
+    pub position: [f32; 2],
+    pub tex_coords: [f32; 2],
 }
 
 impl<'a> TextureBuffer {

@@ -8,7 +8,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
 use crate::device::painter::Painter;
-use crate::graphic::shape::rectangle::Rectangle;
+use crate::graphic::base::rectangle::Rectangle;
 
 pub struct DisplayWindow {
     pub window: winit::window::Window,

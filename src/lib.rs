@@ -1,4 +1,4 @@
 pub mod graphic;
-pub mod model;
+pub mod widget;
 pub mod device;
 pub mod design;

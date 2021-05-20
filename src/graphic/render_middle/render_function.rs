@@ -1,8 +1,8 @@
 use wgpu::RenderPipeline;
 
-use crate::graphic::render_type::pipeline_state::PipelineState;
-use crate::graphic::render_type::texture_buffer::TextureBuffer;
-use crate::graphic::render_type::vertex_buffer::VertexBuffer;
+use crate::graphic::render_middle::pipeline_state::PipelineState;
+use crate::graphic::render_middle::texture_buffer::TextureBuffer;
+use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 
 /// 组件渲染中间结构体
 pub struct RenderGraph {

@@ -2,11 +2,11 @@ use wgpu::Device;
 
 use crate::device::display_window::{DisplayWindow, WGContext};
 use crate::device::listener::Listener;
-use crate::graphic::render_type::render_function::RenderGraph;
-use crate::graphic::render_type::texture_buffer::TextureBuffer;
-use crate::graphic::render_type::vertex_buffer::VertexBuffer;
-use crate::graphic::shape::point2d::RGBA;
-use crate::graphic::shape::rectangle::Rectangle;
+use crate::graphic::base::color::RGBA;
+use crate::graphic::base::rectangle::Rectangle;
+use crate::graphic::render_middle::render_function::RenderGraph;
+use crate::graphic::render_middle::texture_buffer::TextureBuffer;
+use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 
 /// 组件属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
 #[derive(Debug)]

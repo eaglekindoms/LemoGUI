@@ -1,6 +1,7 @@
-use crate::graphic::shape::point2d::{PointVertex, RGBA};
-use crate::graphic::shape::rectangle::RectVertex;
-use crate::graphic::shape::texture2d::TextureVertex;
+use crate::graphic::base::color::RGBA;
+use crate::graphic::base::point2d::PointVertex;
+use crate::graphic::base::rectangle::RectVertex;
+use crate::graphic::render_middle::texture_buffer::TextureVertex;
 
 pub trait TransferVertex {
     fn to_tex(&self, w_width: u32, w_height: u32) -> Vec<TextureVertex>;

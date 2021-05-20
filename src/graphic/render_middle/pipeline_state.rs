@@ -1,10 +1,10 @@
 use wgpu::{BindGroupLayout, BindGroupLayoutDescriptor, BlendFactor, BlendOperation, Device, RenderPipeline, VertexState};
 
-use crate::graphic::render_type::texture_buffer::TextureBuffer;
-use crate::graphic::shader::Shader;
-use crate::graphic::shape::point2d::PointVertex;
-use crate::graphic::shape::rectangle::RectVertex;
-use crate::graphic::shape::texture2d::TextureVertex;
+use crate::graphic::base::point2d::PointVertex;
+use crate::graphic::base::rectangle::RectVertex;
+use crate::graphic::render_middle::shader::Shader;
+use crate::graphic::render_middle::texture_buffer::TextureBuffer;
+use crate::graphic::render_middle::texture_buffer::TextureVertex;
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
 /// 主要用在创建渲染管道方法中定义渲染管道[`create_pipeline_state`]

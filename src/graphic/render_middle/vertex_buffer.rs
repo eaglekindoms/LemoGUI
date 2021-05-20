@@ -1,10 +1,11 @@
 use wgpu::Device;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
-use crate::graphic::render_type::transfer_vertex::TransferVertex;
-use crate::graphic::shape::*;
-use crate::graphic::shape::point2d::{PointVertex, RGBA};
-use crate::graphic::shape::rectangle::{Rectangle, RectVertex};
+use crate::graphic::base::*;
+use crate::graphic::base::color::RGBA;
+use crate::graphic::base::point2d::PointVertex;
+use crate::graphic::base::rectangle::{Rectangle, RectVertex};
+use crate::graphic::render_middle::transfer_vertex::TransferVertex;
 
 pub struct VertexBuffer {
     pub vertex_buffer: wgpu::Buffer,

@@ -1,6 +1,7 @@
-use crate::graphic::render_type::transfer_vertex::TransferVertex;
-use crate::graphic::shape::point2d::{Point, PointVertex, RGBA};
-use crate::graphic::shape::texture2d::TextureVertex;
+use crate::graphic::base::color::RGBA;
+use crate::graphic::base::point2d::{Point, PointVertex};
+use crate::graphic::render_middle::texture_buffer::TextureVertex;
+use crate::graphic::render_middle::transfer_vertex::TransferVertex;
 use crate::graphic::style;
 use crate::graphic::style::Bordering;
 

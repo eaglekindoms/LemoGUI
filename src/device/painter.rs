@@ -2,8 +2,8 @@ use winit::event::WindowEvent;
 
 use crate::device::display_window::{DisplayWindow, WGContext};
 use crate::device::listener::Listener;
-use crate::graphic::render_type::render_function::RenderGraph;
-use crate::model::component::ComponentModel;
+use crate::graphic::render_middle::render_function::RenderGraph;
+use crate::widget::component::ComponentModel;
 
 pub trait Painter: Sized {
     fn new(wgcontext: WGContext) -> Self;

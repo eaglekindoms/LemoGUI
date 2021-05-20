@@ -1,6 +1,6 @@
-use crate::graphic::shape::point2d::PointVertex;
-use crate::graphic::shape::rectangle::RectVertex;
-use crate::graphic::shape::texture2d::TextureVertex;
+use crate::graphic::base::point2d::PointVertex;
+use crate::graphic::base::rectangle::RectVertex;
+use crate::graphic::render_middle::texture_buffer::TextureVertex;
 
 impl PointVertex {
     pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {

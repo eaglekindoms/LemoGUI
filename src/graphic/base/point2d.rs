@@ -1,17 +1,4 @@
-/// 颜色结构体
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct RGBA(pub [f32; 4]);
-
-impl RGBA {
-    pub fn to_u8(&self) -> (u8, u8, u8, u8) {
-        let r = (*self.0.iter().next().unwrap() * 255.0) as u8;
-        let g = (*self.0.iter().next().unwrap() * 255.0) as u8;
-        let b = (*self.0.iter().next().unwrap() * 255.0) as u8;
-        let a = (*self.0.iter().next().unwrap() * 255.0) as u8;
-        (r, g, b, a)
-    }
-}
+use crate::graphic::base::color::RGBA;
 
 /// 二维顶点结构体
 #[repr(C)]
