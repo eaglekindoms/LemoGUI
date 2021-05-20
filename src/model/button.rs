@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use wgpu::{Device, RenderPipeline};
 use winit::event::WindowEvent;
 
-use crate::device::display_window::DisplayWindow;
+use crate::device::display_window::{DisplayWindow, WGContext};
 use crate::device::listener::Listener;
 use crate::graphic::render_type::render_function::RenderGraph;
 use crate::graphic::shape::point2d::{Point, RGBA};
@@ -24,7 +24,7 @@ impl<'a> Button<'a, Listener> {
         let background_color = RGBA([0.8, 0.8, 0.8, 1.0]);
         let border_color = RGBA([0.0, 0.0, 0.0, 1.0]);
         let hover_color = RGBA([0.5, 0.0, 0.5, 0.5]);
-        log::info!("create the Button obj");
+        log::info!("create the Button obj use new");
         let context = Component::default(rect, font_color, background_color, border_color, hover_color, text);
 
         Self {
@@ -39,7 +39,7 @@ impl<'a> Button<'a, Listener> {
         let border_color = RGBA([0.0, 0.0, 0.0, 1.0]);
         let hover_color = RGBA([0.5, 0.0, 0.5, 0.5]);
         let rect = Rectangle::new(pos.x, pos.y, (text.len() * 10) as u32, 40);
-        log::info!("create the Button obj");
+        log::info!("create the Button obj use default");
         let context = Component::default(rect, font_color, background_color, border_color, hover_color, text);
 
         Self {
@@ -58,8 +58,8 @@ impl<'a> ComponentModel for Button<'a, Listener> {
         self.index
     }
 
-    fn to_graph(&self, display_window: &DisplayWindow) -> RenderGraph {
-        self.context.to_graph(display_window)
+    fn to_graph(&self, wgcontext: &WGContext) -> RenderGraph {
+        self.context.to_graph(wgcontext)
     }
 }
 

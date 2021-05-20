@@ -1,14 +1,12 @@
 use wgpu::Device;
 
-use crate::device::display_window::DisplayWindow;
+use crate::device::display_window::{DisplayWindow, WGContext};
 use crate::device::listener::Listener;
-use crate::graphic::render_type::buffer_state::VertexBuffer;
 use crate::graphic::render_type::render_function::RenderGraph;
-use crate::graphic::render_type::texture_state::TextureState;
+use crate::graphic::render_type::texture_buffer::TextureBuffer;
+use crate::graphic::render_type::vertex_buffer::VertexBuffer;
 use crate::graphic::shape::point2d::RGBA;
 use crate::graphic::shape::rectangle::Rectangle;
-use crate::graphic::shape::round_rectangle::RectState;
-use crate::graphic::shape::texture_point::TextState;
 
 /// 组件属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
 #[derive(Debug)]
@@ -49,13 +47,14 @@ impl<'a> Component<'a, dyn Listener> {
         }
     }
 
-    pub fn to_graph(&self, display_window: &DisplayWindow) -> RenderGraph {
+    pub fn to_graph(&self, display_window: &WGContext) -> RenderGraph {
         let vertex_buffer = VertexBuffer::create_tex_vertex_buf(&display_window.device, &display_window.sc_desc, &self.size);
         let shape_vertex_buffer = VertexBuffer::create_background_buf(&display_window.device, &display_window.sc_desc, &self.size, self.background_color);
         let hover_vertex_buffer = VertexBuffer::create_background_buf(&display_window.device, &display_window.sc_desc, &self.size, self.hover_color);
         let boder_vertex_buffer = VertexBuffer::create_border_buf(&display_window.device, &display_window.sc_desc, &self.size, self.border_color);
-        let texture_state = TextureState::create_text_texture(&display_window.device, &display_window.queue, self.text);
+        let texture_state = TextureBuffer::create_text_texture(&display_window.device, &display_window.queue, self.text);
 
+        // let round_vertex_buffer = RectVertex
         RenderGraph {
             vertex_buffer,
             back_buffer: shape_vertex_buffer,
@@ -69,5 +68,5 @@ impl<'a> Component<'a, dyn Listener> {
 pub trait ComponentModel {
     fn set_index(&mut self, index: usize);
     fn get_index(&self) -> Option<usize>;
-    fn to_graph(&self, display_window: &DisplayWindow) -> RenderGraph;
+    fn to_graph(&self, wgcontext: &WGContext) -> RenderGraph;
 }

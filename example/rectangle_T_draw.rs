@@ -22,7 +22,7 @@ fn run<E>(title: &str)
 {
     let mut builder = winit::window::WindowBuilder::new();
     builder = builder.with_title(title)
-        .with_inner_size(winit::dpi::LogicalSize::new(428.0, 128.0));
+        .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0));
 
     use futures::executor::block_on;
     let display_device = block_on(DisplayWindow::init::<E>(builder));
@@ -31,12 +31,11 @@ fn run<E>(title: &str)
     // 自定义设置
     let rect = Rectangle::new(100.0, 100.0, 400, 40);
     let mut button = Button::new(rect, "button1");
-    log::info!("{:#?}",&button.index);
-    let mut container = E::new(&display_device);
-    container.add_comp(&display_device, &mut button);
-    container.add_comp(&display_device,
-                       &mut Button::default(Point { x: 10.0, y: 20.0 }, "hello"));
-    log::info!("{:#?}",&button.index);
-    DisplayWindow::start::<E>(display_device,container);
-    log::info!("{:#?}",&button.index);
+    log::info!("{:#?}", &button.index);
+    let mut container = E::new(display_device.wgcontext);
+    container.add_comp(&mut button);
+    container.add_comp(&mut Button::default(Point { x: 100.0, y: 300.0 }, "hello"));
+    log::info!("{:#?}", &button.index);
+    DisplayWindow::start::<E>(display_device.event_loop, container);
+    log::info!("{:#?}", &button.index);
 }

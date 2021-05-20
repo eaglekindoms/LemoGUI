@@ -1,17 +1,24 @@
 use ab_glyph::{Font, FontRef, FontVec, Glyph, point, Point, PxScale, ScaleFont};
 
+use crate::graphic::shape::point2d::RGBA;
+
 #[deprecated]
-pub fn draw_image(f_scale: f32, text: &str) -> (u32, u32, Vec<u8>) {
+pub fn draw_text(f_scale: f32, text: &str) -> (u32, u32, Vec<u8>) {
     let font = FontRef::try_from_slice(include_bytes!("../../shader_c/SourceHanSansCN-Regular.otf")).unwrap();
+    default_draw_text(font, f_scale, RGBA([0.8, 0.1, 0.3, 1.0]), text)
+}
+
+
+pub fn default_draw_text(font: FontRef, font_scale: f32, font_color: RGBA, text: &str) -> (u32, u32, Vec<u8>) {
 
     // The font size to use
-    let scale = PxScale::from(f_scale);
+    let scale = PxScale::from(font_scale);
     let scaled_font = font.as_scaled(scale);
     let mut glyphs = Vec::new();
     layout_paragraph(scaled_font, point(20.0, 20.0), 9999.0, text, &mut glyphs);
 
     // Use a dark red colour
-    let colour = (150, 0, 0);
+    let colour = font_color.to_u8();
     // work out the layout size
     let glyphs_height = scaled_font.height().ceil() as u32;
     let glyphs_width = {
@@ -43,7 +50,6 @@ pub fn draw_image(f_scale: f32, text: &str) -> (u32, u32, Vec<u8>) {
         }
     }
 
-    // println!("bufst{:?}",bufst.as_slice());
     (glyphs_width + 20, glyphs_height, bufs1)
 }
 

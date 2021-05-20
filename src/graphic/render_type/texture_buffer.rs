@@ -1,20 +1,20 @@
 use wgpu::*;
 
-use crate::graphic::font::draw_image;
+use crate::graphic::font::draw_text;
 
-pub struct TextureState {
+pub struct TextureBuffer {
     // pub texture_bind_group_layout: BindGroupLayout,
     pub diffuse_bind_group: BindGroup,
 }
 
-pub struct TextureBuffer<'a> {
+pub struct TextureContext<'a> {
     pub x: u32,
     pub y: u32,
     pub buf: &'a [u8],
 }
 
-impl<'a> TextureState {
-    pub fn default(device: &Device, queue: &wgpu::Queue, texture_buf: &'a TextureBuffer) -> Self {
+impl<'a> TextureBuffer {
+    pub fn default(device: &Device, queue: &wgpu::Queue, texture_buf: &'a TextureContext) -> Self {
         let texture_size = Self::create_texture_size(texture_buf.x, texture_buf.y);
         let diffuse_texture = device.create_texture(
             &Self::create_texture_descriptor(&texture_size)
@@ -63,8 +63,8 @@ impl<'a> TextureState {
     #[deprecated]
     pub fn create_text_texture(device: &Device, queue: &wgpu::Queue, text: &'a str) -> Self {
         // let text = "hello button";
-        let (x, y, buf) = draw_image(45.0, text);
-        let texture_buf = TextureBuffer { x, y, buf: buf.as_slice() };
+        let (x, y, buf) = draw_text(45.0, text);
+        let texture_buf = TextureContext { x, y, buf: buf.as_slice() };
         Self::default(device, queue, &texture_buf)
     }
     #[deprecated]

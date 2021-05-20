@@ -1,10 +1,10 @@
 use wgpu::{BindGroupLayout, BindGroupLayoutDescriptor, BlendFactor, BlendOperation, Device, RenderPipeline, VertexState};
 
-use crate::graphic::render_type::texture_state::TextureState;
+use crate::graphic::render_type::texture_buffer::TextureBuffer;
 use crate::graphic::shader::Shader;
-use crate::graphic::shape::round_rectangle::RectVertex;
-use crate::graphic::shape::texture_point::TexturePoint;
-use crate::graphic::shape::point2d::BufferPoint;
+use crate::graphic::shape::point2d::PointVertex;
+use crate::graphic::shape::rectangle::RectVertex;
+use crate::graphic::shape::texture2d::TextureVertex;
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
 /// 主要用在创建渲染管道方法中定义渲染管道[`create_pipeline_state`]
@@ -65,7 +65,7 @@ impl<'a> PipelineState {
                     bind_group_layouts: &[&texture_bind_group_layout],
                     push_constant_ranges: &[],
                 });
-                vertex_desc = [TexturePoint::desc()];
+                vertex_desc = [TextureVertex::desc()];
                 fill_pology = wgpu::PrimitiveTopology::TriangleStrip;
             }
             RenderType::Shape => {
@@ -74,7 +74,7 @@ impl<'a> PipelineState {
                     bind_group_layouts: &[],
                     push_constant_ranges: &[],
                 });
-                vertex_desc = [BufferPoint::desc()];
+                vertex_desc = [PointVertex::desc()];
                 fill_pology = wgpu::PrimitiveTopology::TriangleStrip;
             }
             RenderType::Border => {
@@ -83,7 +83,7 @@ impl<'a> PipelineState {
                     bind_group_layouts: &[],
                     push_constant_ranges: &[],
                 });
-                vertex_desc = [BufferPoint::desc()];
+                vertex_desc = [PointVertex::desc()];
                 fill_pology = wgpu::PrimitiveTopology::LineStrip;
             }
             RenderType::RoundShape => {

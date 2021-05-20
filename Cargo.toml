@@ -14,7 +14,7 @@ path = "example/example.rs"
 
 [dependencies]
 wgpu = "0.7.1"
-async-trait="*"
+async-trait = "*"
 winit = "0.24.0"
 futures = "0.3.10"
 cgmath = "0.17"

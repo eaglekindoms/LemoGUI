@@ -1,4 +1,3 @@
 pub mod rectangle;
-pub mod round_rectangle;
-pub mod texture_point;
+pub mod texture2d;
 pub mod point2d;
