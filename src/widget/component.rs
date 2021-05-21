@@ -3,9 +3,10 @@ use wgpu::Device;
 use crate::device::display_window::{DisplayWindow, WGContext};
 use crate::device::listener::Listener;
 use crate::graphic::base::color::RGBA;
+use crate::graphic::base::point2d::PointVertex;
 use crate::graphic::base::rectangle::Rectangle;
 use crate::graphic::render_middle::render_function::RenderGraph;
-use crate::graphic::render_middle::texture_buffer::TextureBuffer;
+use crate::graphic::render_middle::texture_buffer::{TextureBuffer, TextureVertex};
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 
 /// 组件属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
@@ -48,10 +49,10 @@ impl<'a> Component<'a, dyn Listener> {
     }
 
     pub fn to_graph(&self, display_window: &WGContext) -> RenderGraph {
-        let vertex_buffer = VertexBuffer::create_tex_vertex_buf(&display_window.device, &display_window.sc_desc, &self.size);
-        let shape_vertex_buffer = VertexBuffer::create_background_buf(&display_window.device, &display_window.sc_desc, &self.size, self.background_color);
-        let hover_vertex_buffer = VertexBuffer::create_background_buf(&display_window.device, &display_window.sc_desc, &self.size, self.hover_color);
-        let boder_vertex_buffer = VertexBuffer::create_border_buf(&display_window.device, &display_window.sc_desc, &self.size, self.border_color);
+        let vertex_buffer = VertexBuffer::create_vertex_buf::<TextureVertex>(&display_window.device, &display_window.sc_desc, &self.size, &[0, 2, 1, 3], self.border_color);
+        let shape_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size, &[0, 2, 1, 3], self.background_color);
+        let hover_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size, &[0, 2, 1, 3], self.hover_color);
+        let boder_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size, &[0, 1, 3, 2, 0], self.border_color);
         let texture_state = TextureBuffer::create_text_texture(&display_window.device, &display_window.queue, self.text);
 
         // let round_vertex_buffer = RectVertex

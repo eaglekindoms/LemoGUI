@@ -1,3 +1,4 @@
+use bytemuck::Pod;
 use wgpu::Device;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
@@ -5,7 +6,7 @@ use crate::graphic::base::*;
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::point2d::PointVertex;
 use crate::graphic::base::rectangle::{Rectangle, RectVertex};
-use crate::graphic::render_middle::transfer_vertex::TransferVertex;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexBufferLayout;
 
 pub struct VertexBuffer {
     pub vertex_buffer: wgpu::Buffer,
@@ -14,84 +15,16 @@ pub struct VertexBuffer {
 }
 
 impl<'a> VertexBuffer {
-    #[deprecated]
-    pub fn create_rect_vertex_buf(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &'a Rectangle) -> Self {
-        let test_color = RGBA([0.5, 0.0, 0.5, 0.5]);
-        let indices: &[u16] = &[0, 2, 1, 3];
-        Self::default_rect_buffer(device, sc_desc, rect, indices, test_color)
-    }
+    pub fn create_vertex_buf<V>(device: &Device,
+                                sc_desc: &wgpu::SwapChainDescriptor,
+                                rect: &'a Rectangle
+                                , indices: &'a [u16]
+                                , test_color: RGBA,
+    ) -> Self
+        where V: VertexBufferLayout + Pod
+    {
+        let vect = V::from_shape_to_vector(rect, sc_desc, test_color);
 
-    pub fn create_round_rect_vertex_buf(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &'a Rectangle) -> Self {
-        let test_color = RGBA([0.5, 0.0, 0.5, 0.5]);
-        let indices: &[u16] = &[0, 2, 1, 3];
-        Self::default_rect_buffer(device, sc_desc, rect, indices, test_color)
-    }
-
-    pub fn create_background_buf(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &'a Rectangle, color: RGBA) -> Self {
-        let indices: &[u16] = &[0, 2, 1, 3];
-        Self::default_rect_buffer(device, sc_desc, rect, indices, color)
-    }
-    #[deprecated]
-    pub fn create_border_vertex_buf(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &'a Rectangle) -> Self {
-        let test_color = RGBA([0.5, 0.0, 0.5, 1.0]);
-        let indices: &[u16] = &[0, 1, 3, 2, 0];
-        Self::default_rect_buffer(device, sc_desc, rect, indices, test_color)
-    }
-
-    pub fn create_border_buf(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &'a Rectangle, color: RGBA) -> Self {
-        let test_color = RGBA([0.5, 0.0, 0.5, 1.0]);
-        let indices: &[u16] = &[0, 1, 3, 2, 0];
-        Self::default_rect_buffer(device, sc_desc, rect, indices, color)
-    }
-
-    pub fn default_rect_buffer(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &'a Rectangle, indices: &'a [u16], test_color: RGBA) -> Self {
-        let vect = rect.to_rect_buff(sc_desc.width, sc_desc.height, test_color);
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(vect.as_slice()),
-            usage: wgpu::BufferUsage::VERTEX,
-        });
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(indices),
-            usage: wgpu::BufferUsage::INDEX,
-        });
-        let num_indices = indices.len() as u32;
-
-        log::info!("create the VertexBuffer obj");
-        Self {
-            vertex_buffer,
-            num_indices,//11
-            index_buffer,
-        }
-    }
-
-    pub fn default_round_rect_buffer(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &'a Rectangle, indices: &'a [u16], test_color: RGBA) -> Self {
-        let vect = rect.to_round_rect_buff(sc_desc.width, sc_desc.height, test_color);
-
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(&[vect]),
-            usage: wgpu::BufferUsage::VERTEX,
-        });
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(indices),
-            usage: wgpu::BufferUsage::INDEX,
-        });
-        let num_indices = indices.len() as u32;
-        Self {
-            vertex_buffer,
-            index_buffer,
-            num_indices,
-        }
-    }
-
-
-    pub fn create_tex_vertex_buf(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &'a Rectangle) -> Self {
-        let vect = rect.to_tex(sc_desc.width, sc_desc.height);
-
-        let indices: &[u16] = &[0, 2, 1, 3];
         let vertex_buffer = device
             .create_buffer_init(&BufferInitDescriptor {
                 label: Some("Buffer"),

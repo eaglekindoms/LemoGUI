@@ -1,18 +1,21 @@
-use wgpu::{BindGroupLayout, BindGroupLayoutDescriptor, BlendFactor, BlendOperation, Device, RenderPipeline, VertexState};
+use wgpu::{BindGroupLayout, BindGroupLayoutDescriptor, BlendFactor, BlendOperation, Device, PipelineLayout, PrimitiveTopology, RenderPipeline, VertexBufferLayout, VertexState};
 
+use crate::graphic::base::color::RGBA;
 use crate::graphic::base::point2d::PointVertex;
-use crate::graphic::base::rectangle::RectVertex;
+use crate::graphic::base::rectangle::{Rectangle, RectVertex};
 use crate::graphic::render_middle::shader::Shader;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::texture_buffer::TextureVertex;
+use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexBufferLayout;
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
 /// 主要用在创建渲染管道方法中定义渲染管道[`create_pipeline_state`]
 pub enum RenderType {
     Texture,
-    Shape,
-    Border,
-    RoundShape,
+    Rect,
+    Line,
+    RoundRect,
 }
 
 /// 渲染管道状态元结构体
@@ -23,23 +26,20 @@ pub struct PipelineState {
     pub round_shape_pipeline: RenderPipeline,
 }
 
+
 impl<'a> PipelineState {
     pub fn create_glob_pipeline(device: &Device) -> Self {
-        // 纹理渲染配置：纹理着色器，文字着色器，矩形着色器。
-        let font_shader = Shader::create_font_shader(device);
-        let shape_shader = Shader::create_shape_shader(device);
-        let round_shader = Shader::create_round_shape_shader(device);
 
         // 固定渲染管道配置：纹理管道，矩形管道，边框管道。
         // 全局设置
         let texture_pipeline =
-            PipelineState::create_pipeline_state(device, &font_shader, RenderType::Texture);
+            PipelineState::create_pipeline_state::<TextureVertex>(device);
         let shape_pipeline =
-            PipelineState::create_pipeline_state(device, &shape_shader, RenderType::Shape);
+            PipelineState::create_pipeline_state::<RectVertex>(device);
         let border_pipeline =
-            PipelineState::create_pipeline_state(device, &shape_shader, RenderType::Border);
+            PipelineState::create_pipeline_state::<PointVertex>(device);
         let round_shape_pipeline =
-            PipelineState::create_pipeline_state(device, &round_shader, RenderType::RoundShape);
+            PipelineState::create_pipeline_state::<RectVertex>(device);
 
         log::info!("create the PipelineState obj");
         Self {
@@ -51,120 +51,50 @@ impl<'a> PipelineState {
     }
     /// 创建渲染管道
     /// 参数：全局状态，着色器，渲染类型
-    pub fn create_pipeline_state(device: &Device, shader: &'a Shader, render_type: RenderType) -> RenderPipeline {
-        let render_pipeline_layout;
-        let vertex_desc;
-        let fill_pology;
-        let texture_bind_group_layout = device.create_bind_group_layout(
-            &Self::create_bind_group_layout_descriptor()
-        );
-        match render_type {
-            RenderType::Texture => {
-                render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[&texture_bind_group_layout],
-                    push_constant_ranges: &[],
-                });
-                vertex_desc = [TextureVertex::desc()];
-                fill_pology = wgpu::PrimitiveTopology::TriangleStrip;
-            }
-            RenderType::Shape => {
-                render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[],
-                    push_constant_ranges: &[],
-                });
-                vertex_desc = [PointVertex::desc()];
-                fill_pology = wgpu::PrimitiveTopology::TriangleStrip;
-            }
-            RenderType::Border => {
-                render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[],
-                    push_constant_ranges: &[],
-                });
-                vertex_desc = [PointVertex::desc()];
-                fill_pology = wgpu::PrimitiveTopology::LineStrip;
-            }
-            RenderType::RoundShape => {
-                render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[],
-                    push_constant_ranges: &[],
-                });
-                vertex_desc = [RectVertex::desc()];
-                fill_pology = wgpu::PrimitiveTopology::TriangleStrip;
-            }
-            _ => panic!(),
-        };
-
+    pub fn create_pipeline_state<V>(device: &Device) -> RenderPipeline
+        where V: VertexBufferLayout {
+        let shader = V::set_shader(device);
+        let render_pipeline_layout = V::set_pipeline_layout(device);
+        let vertex_desc = [V::set_vertex_desc()];
+        let fill_topology = V::set_fill_topology();
         // 作用：绑定着色器，图形填充
-        let render_pipeline = device
-            .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("Render Pipeline"),
-                layout: Some(&render_pipeline_layout),
-                vertex: VertexState {
-                    module: &shader.vs_module,
-                    entry_point: "main",
-                    buffers: &vertex_desc,
-                },
-                primitive: wgpu::PrimitiveState {
-                    topology: fill_pology,
-                    front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: wgpu::CullMode::None,
-                    ..Default::default()
-                },
-                depth_stencil: None,
-                multisample: wgpu::MultisampleState {
-                    count: 1,
-                    mask: !0,
-                    alpha_to_coverage_enabled: false,
-                },
-                fragment: Some(wgpu::FragmentState {
-                    module: &shader.fs_module,
-                    entry_point: "main",
-                    targets: &[wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Bgra8UnormSrgb,
-                        color_blend: wgpu::BlendState {
-                            src_factor: BlendFactor::SrcAlpha,
-                            dst_factor: BlendFactor::OneMinusSrcAlpha,
-                            operation: BlendOperation::Add,
-                        },
-                        alpha_blend: wgpu::BlendState {
-                            src_factor: BlendFactor::SrcAlpha,
-                            dst_factor: BlendFactor::OneMinusSrcAlpha,
-                            operation: BlendOperation::Add,
-                        },
-                        write_mask: wgpu::ColorWrite::ALL,
-                    }],
-                }),
-            });
+        let render_pipeline = create_render_pipeline(device
+                                                     , shader, render_pipeline_layout, vertex_desc, fill_topology);
         return render_pipeline;
     }
-    fn create_bind_group_layout_descriptor() -> BindGroupLayoutDescriptor<'a> {
-        BindGroupLayoutDescriptor {
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStage::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStage::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler {
-                        filtering: false,
-                        comparison: false,
-                    },
-                    count: None,
-                },
-            ],
-            label: Some("texture_bind_group_layout"),
-        }
-    }
+}
+
+pub fn create_render_pipeline(device: &Device, shader: Shader,
+                              render_pipeline_layout: PipelineLayout,
+                              vertex_desc: [VertexBufferLayout; 1],
+                              fill_topology: PrimitiveTopology,
+) -> RenderPipeline {
+    let render_pipeline = device
+        .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Render Pipeline"),
+            layout: Some(&render_pipeline_layout),
+            vertex: VertexState {
+                module: &shader.vs_module,
+                entry_point: "main",
+                buffers: &vertex_desc,
+            },
+            primitive: wgpu::PrimitiveState {
+                topology: fill_topology,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Back),
+                ..Default::default()
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            fragment: Some(wgpu::FragmentState {
+                module: &shader.fs_module,
+                entry_point: "main",
+                targets: &[wgpu::ColorTargetState {
+                    format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                    write_mask: wgpu::ColorWrite::ALL,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                }],
+            }),
+        });
+    return render_pipeline;
 }

@@ -1,20 +1,25 @@
+use wgpu::{Device, PipelineLayout, PrimitiveTopology, RenderPipeline, VertexBufferLayout, VertexState};
+
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::point2d::{Point, PointVertex};
+use crate::graphic::render_middle::pipeline_state::create_render_pipeline;
+use crate::graphic::render_middle::shader::Shader;
 use crate::graphic::render_middle::texture_buffer::TextureVertex;
-use crate::graphic::render_middle::transfer_vertex::TransferVertex;
+use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexBufferLayout;
 use crate::graphic::style;
 use crate::graphic::style::Bordering;
 
 /// 矩形结构体
 #[derive(Debug)]
 pub struct Rectangle {
-    position: Point,
-    width: u32,
-    height: u32,
+    pub position: Point,
+    pub width: u32,
+    pub height: u32,
     style: style::Style,
 }
 
-#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 #[repr(C)]
 pub struct RectVertex {
     pub size: [f32; 2],
@@ -39,56 +44,89 @@ impl Rectangle {
     pub fn set_border(&mut self, border: Bordering) {
         self.style = style::Style::set_border(&mut self.style, border);
     }
+
+    pub fn get_coord(&self, w_width: u32, w_height: u32) -> (f32, f32, f32, f32) {
+        (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
+         1.0 - 2.0 * self.position.y as f32 / w_height as f32,
+         2.0 * self.width as f32 / w_width as f32,
+         2.0 * self.height as f32 / w_height as f32)
+    }
 }
 
-
-impl TransferVertex for Rectangle {
-    fn to_tex(&self, w_width: u32, w_height: u32) -> Vec<TextureVertex> {
-        let (t_x, t_y, t_w, t_h) =
-            (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
-             1.0 - 2.0 * self.position.y as f32 / w_height as f32,
-             2.0 * self.width as f32 / w_width as f32,
-             2.0 * self.height as f32 / w_height as f32);
-
-        let vect: Vec<TextureVertex> = vec![
-            TextureVertex { position: [t_x, t_y], tex_coords: [0.0, 0.0] }, // B  1
-            TextureVertex { position: [t_x + t_w, t_y], tex_coords: [1.0, 0.0] }, // B  1
-            TextureVertex { position: [t_x, t_y - t_h], tex_coords: [0.0, 1.0] }, // B  1
-            TextureVertex { position: [t_x + t_w, t_y - t_h], tex_coords: [1.0, 1.0] }, // B  1
-        ];
-        return vect;
+impl VertexBufferLayout for RectVertex {
+    fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<RectVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::InputStepMode::Instance,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: 4 * 2,
+                    shader_location: 2,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: 4 * (2 + 2),
+                    shader_location: 3,
+                    format: wgpu::VertexFormat::Float32x4,
+                }, wgpu::VertexAttribute {
+                    offset: 4 * (2 + 2 + 4),
+                    shader_location: 4,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: 4 * (2 + 2 + 4 + 4),
+                    shader_location: 5,
+                    format: wgpu::VertexFormat::Float32,
+                },
+                wgpu::VertexAttribute {
+                    offset: 4 * (2 + 2 + 4 + 4 + 1),
+                    shader_location: 6,
+                    format: wgpu::VertexFormat::Float32,
+                },
+            ],
+        }
     }
 
-    fn to_rect_buff(&self, w_width: u32, w_height: u32, test_color: RGBA) -> Vec<PointVertex> {
-        let (t_x, t_y, t_w, t_h) =
-            (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
-             1.0 - 2.0 * self.position.y as f32 / w_height as f32,
-             2.0 * self.width as f32 / w_width as f32,
-             2.0 * self.height as f32 / w_height as f32);
+    fn set_shader(device: &Device) -> Shader {
+        let vs_module = device
+            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/round_rect.vert.spv"));
+        let fs_module = device
+            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/round_rect.frag.spv"));
 
-        let vect: Vec<PointVertex> = vec![
-            PointVertex::new(t_x, t_y, test_color), // 左上
-            PointVertex::new(t_x + t_w, t_y, test_color), // 右上
-            PointVertex::new(t_x, t_y - t_h, test_color), // 左下
-            PointVertex::new(t_x + t_w, t_y - t_h, test_color), // 右下
-        ];
-        return vect;
+        Shader {
+            vs_module,
+            fs_module,
+        }
     }
 
-    fn to_round_rect_buff(&self, w_width: u32, w_height: u32, test_color: RGBA) -> RectVertex {
-        let (t_x, t_y, t_w, t_h) =
-            (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
-             1.0 - 2.0 * self.position.y as f32 / w_height as f32,
-             2.0 * self.width as f32 / w_width as f32,
-             2.0 * self.height as f32 / w_height as f32);
+    fn set_pipeline_layout(device: &Device) -> PipelineLayout {
+        let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Render Pipeline Layout"),
+            bind_group_layouts: &[],
+            push_constant_ranges: &[],
+        });
+        return render_pipeline_layout;
+    }
+    fn set_fill_topology() -> PrimitiveTopology {
+        wgpu::PrimitiveTopology::TriangleStrip
+    }
 
-        RectVertex {
+    fn from_shape_to_vector(rect: &Rectangle, sc_desc: &wgpu::SwapChainDescriptor, test_color: RGBA) -> Vec<Self> {
+        let (t_x, t_y, t_w, t_h) =
+            rect.get_coord(sc_desc.width, sc_desc.height);
+
+        vec![RectVertex {
             size: [t_w, t_h],
             position: [t_w / 2.0 + t_x, t_h / 2.0 + t_y],
             border_color: [0.0, 0.0, 0.0, 1.0],
             frame_color: test_color.0,
             border_radius: 0.05,
             border_width: 0.005,
-        }
+        }]
     }
 }
