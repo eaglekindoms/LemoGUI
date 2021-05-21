@@ -1,21 +1,19 @@
-use wgpu::{BindGroupLayout, BindGroupLayoutDescriptor, BlendFactor, BlendOperation, Device, PipelineLayout, PrimitiveTopology, RenderPipeline, VertexBufferLayout, VertexState};
+use wgpu::{BindGroupLayout, BindGroupLayoutDescriptor, BlendFactor, BlendOperation, Device, RenderPipeline, VertexState, PipelineLayout, VertexBufferLayout, PrimitiveTopology};
 
-use crate::graphic::base::color::RGBA;
 use crate::graphic::base::point2d::PointVertex;
-use crate::graphic::base::rectangle::{Rectangle, RectVertex};
+use crate::graphic::base::rectangle::RectVertex;
 use crate::graphic::render_middle::shader::Shader;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::texture_buffer::TextureVertex;
-use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
 /// 定义三种渲染类型：纹理，全填充图形，线框图形
 /// 主要用在创建渲染管道方法中定义渲染管道[`create_pipeline_state`]
 pub enum RenderType {
     Texture,
-    Rect,
-    Line,
-    RoundRect,
+    Shape,
+    Border,
+    RoundShape,
 }
 
 /// 渲染管道状态元结构体
