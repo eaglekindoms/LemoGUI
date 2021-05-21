@@ -13,7 +13,7 @@ name = "example"
 path = "example/example.rs"
 
 [dependencies]
-wgpu = "0.7.1"
+wgpu = "0.8.1"
 async-trait = "*"
 winit = "0.24.0"
 futures = "0.3.10"

@@ -1,6 +1,15 @@
+use std::num::NonZeroU32;
+use std::option::Option::None;
+
 use wgpu::*;
 
+use crate::graphic::base::color::RGBA;
 use crate::graphic::base::font::draw_text;
+use crate::graphic::base::rectangle::Rectangle;
+use crate::graphic::render_middle::pipeline_state::create_render_pipeline;
+use crate::graphic::render_middle::shader::Shader;
+use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
 pub struct TextureBuffer {
     // pub texture_bind_group_layout: BindGroupLayout,
@@ -15,7 +24,7 @@ pub struct TextureContext<'a> {
 
 /// 2D纹理顶点数据
 #[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct TextureVertex {
     pub position: [f32; 2],
     pub tex_coords: [f32; 2],
@@ -99,7 +108,7 @@ impl<'a> TextureBuffer {
     /// 用途：设定片段着色器程序传入参数在数据中的位置
     /// 此配置为：指定纹理二维坐标，及默认采样器配置
     /// 默认配置无需修改
-    fn create_bind_group_layout_descriptor() -> BindGroupLayoutDescriptor<'a> {
+    pub fn create_bind_group_layout_descriptor() -> BindGroupLayoutDescriptor<'a> {
         BindGroupLayoutDescriptor {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
@@ -116,7 +125,7 @@ impl<'a> TextureBuffer {
                     binding: 1,
                     visibility: wgpu::ShaderStage::FRAGMENT,
                     ty: wgpu::BindingType::Sampler {
-                        filtering: false,
+                        filtering: true,
                         comparison: false,
                     },
                     count: None,
@@ -131,7 +140,7 @@ impl<'a> TextureBuffer {
         Extent3d {
             width: w,
             height: h,
-            depth: 1,
+            depth_or_array_layers: 1,
         }
     }
 
@@ -158,8 +167,8 @@ impl<'a> TextureBuffer {
     /// 参数：纹理结构体
     /// 用途：指定纹理数据复制的来源为此纹理结构体
     /// 默认配置，无需修改
-    fn create_texture_copy_view(diffuse_texture: &'a Texture) -> TextureCopyView<'a> {
-        TextureCopyView {
+    fn create_texture_copy_view(diffuse_texture: &'a Texture) -> ImageCopyTexture<'a> {
+        ImageCopyTexture {
             texture: diffuse_texture,
             mip_level: 0,
             origin: wgpu::Origin3d::ZERO,
@@ -171,12 +180,71 @@ impl<'a> TextureBuffer {
     /// 具体含义：偏移量，行数宽度，列数宽度
     /// 注：图像纹理导入后会被转化为包含每个像素点rgba颜色值的一维数组
     /// 因此行数宽度为图像宽度*4，列数宽度不变
-    fn create_texture_data_layout(w: u32, h: u32) -> TextureDataLayout {
-        TextureDataLayout {
+    fn create_texture_data_layout(w: u32, h: u32) -> ImageDataLayout {
+        ImageDataLayout {
             offset: 0,
-            bytes_per_row: 4 * w,
-            rows_per_image: h,
+            bytes_per_row: NonZeroU32::new(4 * w),
+            rows_per_image: NonZeroU32::new(h),
         }
     }
 }
 
+impl VertexInterface for TextureVertex {
+    fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<TextureVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::InputStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 0,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+            ],
+        }
+    }
+
+    fn set_shader(device: &Device) -> Shader {
+        let vs_module = device
+            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/font.vert.spv"));
+        let fs_module = device
+            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/font.frag.spv"));
+
+        Shader {
+            vs_module,
+            fs_module,
+        }
+    }
+
+    fn set_pipeline_layout(device: &Device) -> PipelineLayout {
+        let texture_bind_group_layout = device.create_bind_group_layout(
+            &TextureBuffer::create_bind_group_layout_descriptor()
+        );
+        let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Render Pipeline Layout"),
+            bind_group_layouts: &[&texture_bind_group_layout],
+            push_constant_ranges: &[],
+        });
+        return render_pipeline_layout;
+    }
+    fn set_fill_topology() -> PrimitiveTopology {
+        wgpu::PrimitiveTopology::TriangleStrip
+    }
+
+    fn from_shape_to_vector(rect: &Rectangle, sc_desc: &SwapChainDescriptor, test_color: RGBA) -> Vec<Self> {
+        let (t_x, t_y, t_w, t_h) =
+            rect.get_coord(sc_desc.width, sc_desc.height);
+        let vect: Vec<TextureVertex> = vec![
+            TextureVertex { position: [t_x, t_y], tex_coords: [0.0, 0.0] }, // B  1
+            TextureVertex { position: [t_x + t_w, t_y], tex_coords: [1.0, 0.0] }, // B  1
+            TextureVertex { position: [t_x, t_y - t_h], tex_coords: [0.0, 1.0] }, // B  1
+            TextureVertex { position: [t_x + t_w, t_y - t_h], tex_coords: [1.0, 1.0] }, // B  1
+        ];
+        return vect;
+    }
+}

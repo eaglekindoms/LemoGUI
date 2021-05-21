@@ -10,7 +10,7 @@ pub enum Color {
 
 /// 颜色结构体
 #[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct RGBA(pub [f32; 4]);
 
 impl RGBA {
