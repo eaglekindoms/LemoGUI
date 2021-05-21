@@ -1,11 +1,8 @@
-use wgpu::{Device, PipelineLayout, PrimitiveTopology, RenderPipeline, VertexBufferLayout, VertexState};
+use wgpu::*;
 
 use crate::graphic::base::color::RGBA;
-use crate::graphic::base::point2d::{Point, PointVertex};
-use crate::graphic::render_middle::pipeline_state::create_render_pipeline;
-use crate::graphic::render_middle::shader::Shader;
-use crate::graphic::render_middle::texture_buffer::TextureVertex;
-use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
+use crate::graphic::base::point2d::Point;
+use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 use crate::graphic::style;
 use crate::graphic::style::Bordering;
@@ -102,18 +99,6 @@ impl VertexInterface for RectVertex {
             vs_module,
             fs_module,
         }
-    }
-
-    fn set_pipeline_layout(device: &Device) -> PipelineLayout {
-        let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[],
-            push_constant_ranges: &[],
-        });
-        return render_pipeline_layout;
-    }
-    fn set_fill_topology() -> PrimitiveTopology {
-        wgpu::PrimitiveTopology::TriangleStrip
     }
 
     fn from_shape_to_vector(rect: &Rectangle, sc_desc: &wgpu::SwapChainDescriptor, test_color: RGBA) -> Vec<Self> {

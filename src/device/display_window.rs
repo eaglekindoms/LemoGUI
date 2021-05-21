@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::future::Future;
 
 use futures::{StreamExt, task};
@@ -31,7 +30,7 @@ struct Application {
 
 impl DisplayWindow {
     /// 初始化窗口
-    pub async fn init<E: Painter>(mut builder: WindowBuilder) -> DisplayWindow {
+    pub async fn init<E: Painter>(builder: WindowBuilder) -> DisplayWindow {
         log::info!("Initializing the window...");
         let event_loop = winit::event_loop::EventLoop::new();
         let window = builder.build(&event_loop).unwrap();
@@ -85,7 +84,7 @@ impl DisplayWindow {
         }
     }
 
-    pub fn start<E>(event_loop: EventLoop<()>, mut container: E)
+    pub fn start<E>(event_loop: EventLoop<()>, container: E)
         where E: Painter + 'static
     {
         log::info!("Entering render loop...");

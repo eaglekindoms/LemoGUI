@@ -1,9 +1,7 @@
-use log::{debug, error, info, Level, log_enabled};
 use simple_logger::SimpleLogger;
 
 use container::GlobalState;
 use LemoGUI::device::display_window::DisplayWindow;
-use LemoGUI::device::listener::Listener;
 use LemoGUI::device::painter::Painter;
 use LemoGUI::graphic::base::point2d::Point;
 use LemoGUI::graphic::base::rectangle::Rectangle;
@@ -13,7 +11,7 @@ pub mod container;
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
-    info!("hh");
+    log::info!("hh");
     run::<GlobalState>("hello");
 }
 

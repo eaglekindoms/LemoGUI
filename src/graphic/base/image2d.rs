@@ -6,9 +6,7 @@ use wgpu::*;
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::font::draw_text;
 use crate::graphic::base::rectangle::Rectangle;
-use crate::graphic::render_middle::pipeline_state::create_render_pipeline;
-use crate::graphic::render_middle::shader::Shader;
-use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
+use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
 pub struct TextureBuffer {
@@ -232,11 +230,8 @@ impl VertexInterface for TextureVertex {
         });
         return render_pipeline_layout;
     }
-    fn set_fill_topology() -> PrimitiveTopology {
-        wgpu::PrimitiveTopology::TriangleStrip
-    }
 
-    fn from_shape_to_vector(rect: &Rectangle, sc_desc: &SwapChainDescriptor, test_color: RGBA) -> Vec<Self> {
+    fn from_shape_to_vector(rect: &Rectangle, sc_desc: &SwapChainDescriptor, _: RGBA) -> Vec<Self> {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.width, sc_desc.height);
         let vect: Vec<TextureVertex> = vec![

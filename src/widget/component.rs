@@ -1,12 +1,10 @@
-use wgpu::Device;
-
-use crate::device::display_window::{DisplayWindow, WGContext};
+use crate::device::display_window::WGContext;
 use crate::device::listener::Listener;
 use crate::graphic::base::color::RGBA;
+use crate::graphic::base::image2d::{TextureBuffer, TextureVertex};
 use crate::graphic::base::point2d::PointVertex;
 use crate::graphic::base::rectangle::Rectangle;
 use crate::graphic::render_middle::render_function::RenderGraph;
-use crate::graphic::render_middle::texture_buffer::{TextureBuffer, TextureVertex};
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 
 /// 组件属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
@@ -24,7 +22,7 @@ pub struct Component<'a, L: Listener + ?Sized> {
 impl<'a> Component<'a, dyn Listener> {
     pub fn new(rect: Rectangle, font_color: RGBA, background_color: RGBA,
                border_color: RGBA, hover_color: RGBA,
-               text: &'a str, listener: Box<Listener>) -> Self {
+               text: &'a str, listener: Box<dyn Listener>) -> Self {
         Self {
             size: rect,
             font_color,

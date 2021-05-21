@@ -2,10 +2,8 @@ use bytemuck::Pod;
 use wgpu::Device;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
-use crate::graphic::base::*;
 use crate::graphic::base::color::RGBA;
-use crate::graphic::base::point2d::PointVertex;
-use crate::graphic::base::rectangle::{Rectangle, RectVertex};
+use crate::graphic::base::rectangle::Rectangle;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
 pub struct VertexBuffer {
@@ -40,7 +38,7 @@ impl<'a> VertexBuffer {
         let num_indices = indices.len() as u32;
         Self {
             vertex_buffer,
-            num_indices,//11
+            num_indices,
             index_buffer,
         }
     }

@@ -1,7 +1,7 @@
 use wgpu::RenderPipeline;
 
+use crate::graphic::base::image2d::TextureBuffer;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
-use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 
 /// 组件渲染中间结构体
@@ -29,11 +29,6 @@ fn render_texture<'a>(render_pass: &mut wgpu::RenderPass<'a>, texture_state: &'a
     render_pass.set_index_buffer(vertex_buffer.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
     render_pass.draw_indexed(0..vertex_buffer.num_indices, 0, 0..1);
 }
-
-// pub trait Render {
-//     fn render<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>,
-//                   glob_pipeline: &'a PipelineState, focused: bool) {}
-// }
 
 impl RenderGraph {
     pub fn draw_rect<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>,

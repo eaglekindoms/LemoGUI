@@ -1,16 +1,12 @@
-use std::iter;
-
 use winit::event::*;
 
-use LemoGUI::device::display_window::{DisplayWindow, WGContext};
+use LemoGUI::device::display_window::WGContext;
 use LemoGUI::device::listener::Listener;
 use LemoGUI::device::painter::Painter;
-use LemoGUI::graphic::base::rectangle::Rectangle;
 use LemoGUI::graphic::render_middle::pipeline_state::PipelineState;
 use LemoGUI::graphic::render_middle::render_function::RenderGraph;
-use LemoGUI::widget::component::{Component, ComponentModel};
+use LemoGUI::widget::component::ComponentModel;
 
-const INDICES: &[u16] = &[0, 2, 1, 3];
 const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
     r: 0.9,
     g: 0.9,

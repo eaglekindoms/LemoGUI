@@ -1,9 +1,8 @@
 use std::fmt::Debug;
 
-use wgpu::{Device, RenderPipeline};
 use winit::event::WindowEvent;
 
-use crate::device::display_window::{DisplayWindow, WGContext};
+use crate::device::display_window::WGContext;
 use crate::device::listener::Listener;
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::point2d::Point;
@@ -19,7 +18,7 @@ pub struct Button<'a, L: Listener + ?Sized> {
     pub index: Option<usize>,
 }
 
-impl<'a> Button<'a, Listener> {
+impl<'a> Button<'a, dyn Listener> {
     pub fn new(rect: Rectangle, text: &'a str) -> Self {
         let font_color = RGBA([0.0, 0.0, 0.0, 1.0]);
         let background_color = RGBA([0.8, 0.8, 0.8, 1.0]);
@@ -50,7 +49,7 @@ impl<'a> Button<'a, Listener> {
     }
 }
 
-impl<'a> ComponentModel for Button<'a, Listener> {
+impl<'a> ComponentModel for Button<'a, dyn Listener> {
     fn set_index(&mut self, index: usize) {
         self.index = Option::from(index);
     }
@@ -64,7 +63,7 @@ impl<'a> ComponentModel for Button<'a, Listener> {
     }
 }
 
-impl<'a> Listener for Button<'a, Listener> {
+impl<'a> Listener for Button<'a, dyn Listener> {
     fn key_listener(&mut self, event: &WindowEvent) {
         log::info!("{:?}", event);
     }
