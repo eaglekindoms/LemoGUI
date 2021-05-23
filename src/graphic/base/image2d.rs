@@ -76,9 +76,9 @@ impl<'a> TextureBuffer {
         }
     }
     #[deprecated]
-    pub fn create_text_texture(device: &Device, queue: &wgpu::Queue, text: &'a str) -> Self {
+    pub fn create_font_image(device: &Device, queue: &wgpu::Queue, font_color: RGBA, text: &'a str) -> Self {
         // let text = "hello button";
-        let (x, y, buf) = draw_text(45.0, text);
+        let (x, y, buf) = draw_text(45.0, font_color, text);
         let texture_buf = TextureContext { x, y, buf: buf.as_slice() };
         Self::default(device, queue, &texture_buf)
     }

@@ -8,12 +8,12 @@ use crate::graphic::style;
 use crate::graphic::style::Bordering;
 
 /// 矩形结构体
-#[derive(Debug)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct Rectangle {
     pub position: Point,
     pub width: u32,
     pub height: u32,
-    style: style::Style,
+    // style: style::Style,
 }
 
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -35,12 +35,12 @@ impl Rectangle {
             position: Point { x: x, y: y },
             width: w,
             height: h,
-            style: style::Style::default(),
+            // style: style::Style::default(),
         }
     }
-    pub fn set_border(&mut self, border: Bordering) {
-        self.style = style::Style::set_border(&mut self.style, border);
-    }
+    // pub fn set_border(&mut self, border: Bordering) {
+    //     self.style = style::Style::set_border(&mut self.style, border);
+    // }
 
     pub fn get_coord(&self, w_width: u32, w_height: u32) -> (f32, f32, f32, f32) {
         (2.0 * self.position.x as f32 / w_width as f32 - 1.0,

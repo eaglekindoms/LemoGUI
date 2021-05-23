@@ -1,15 +1,17 @@
 use std::fmt::Debug;
 
+use wgpu::{RenderPass, RenderPipeline};
 use winit::event::WindowEvent;
 
 use crate::device::display_window::WGContext;
-use crate::device::listener::Listener;
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::point2d::Point;
 use crate::graphic::base::rectangle::Rectangle;
-use crate::graphic::render_middle::render_function::RenderGraph;
+use crate::graphic::render_middle::pipeline_state::PipelineState;
+use crate::graphic::render_middle::render_function::{render_shape, render_texture, RenderGraph};
 use crate::widget::component::Component;
 use crate::widget::component::ComponentModel;
+use crate::widget::listener::Listener;
 
 /// 按钮属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
 #[derive(Debug)]
@@ -21,7 +23,7 @@ pub struct Button<'a, L: Listener + ?Sized> {
 impl<'a> Button<'a, dyn Listener> {
     pub fn new(rect: Rectangle, text: &'a str) -> Self {
         let font_color = RGBA([0.0, 0.0, 0.0, 1.0]);
-        let background_color = RGBA([0.8, 0.8, 0.8, 1.0]);
+        let background_color = RGBA([0.4, 0.8, 0.8, 1.0]);
         let border_color = RGBA([0.0, 0.0, 0.0, 1.0]);
         let hover_color = RGBA([0.5, 0.0, 0.5, 0.5]);
         log::info!("create the Button obj use new");

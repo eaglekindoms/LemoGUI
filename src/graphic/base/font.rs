@@ -3,9 +3,9 @@ use ab_glyph::*;
 use crate::graphic::base::color::RGBA;
 
 #[deprecated]
-pub fn draw_text(f_scale: f32, text: &str) -> (u32, u32, Vec<u8>) {
+pub fn draw_text(f_scale: f32, font_color: RGBA, text: &str) -> (u32, u32, Vec<u8>) {
     let font = FontRef::try_from_slice(include_bytes!("../../../shader_c/SourceHanSansCN-Regular.otf")).unwrap();
-    default_draw_text(font, f_scale, RGBA([0.8, 0.1, 0.3, 1.0]), text)
+    default_draw_text(font, f_scale, font_color, text)
 }
 
 

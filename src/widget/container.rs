@@ -1,11 +1,11 @@
 use winit::event::*;
 
-use LemoGUI::device::display_window::WGContext;
-use LemoGUI::device::listener::Listener;
-use LemoGUI::device::painter::Painter;
-use LemoGUI::graphic::render_middle::pipeline_state::PipelineState;
-use LemoGUI::graphic::render_middle::render_function::RenderGraph;
-use LemoGUI::widget::component::ComponentModel;
+use crate::device::display_window::WGContext;
+use crate::device::painter::Painter;
+use crate::graphic::render_middle::pipeline_state::PipelineState;
+use crate::graphic::render_middle::render_function::RenderGraph;
+use crate::widget::component::{Component, ComponentModel};
+use crate::widget::listener::Listener;
 
 const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
     r: 0.9,
@@ -14,48 +14,57 @@ const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
     a: 1.0,
 };
 
-pub struct GlobalState {
+pub struct Container {
     pub glob_pipeline: PipelineState,
-    pub comp_grap_stack: Vec<RenderGraph>,
+    pub comp_graph_arr: Vec<RenderGraph>,
+    // pub comp_data_arr: Vec<Box<Component>>,
     pub wgcontext: WGContext,
 }
 
-impl GlobalState {
+impl Container {
     fn new(wgcontext: WGContext) -> Self {
         let glob_pipeline = PipelineState::create_glob_pipeline(&wgcontext.device);
-        let comp_grap_stack = Vec::with_capacity(20);
-
+        let comp_graph_arr = Vec::with_capacity(20);
+        // let comp_data_arr = Vec::with_capacity(20);
         Self {
             glob_pipeline,
-            comp_grap_stack,
+            comp_graph_arr,
+            // comp_data_arr,
             wgcontext,
+        }
+    }
+    fn update_comp_arr<C>(&mut self, comp: &mut C)
+        where C: ComponentModel {
+        if self.comp_graph_arr.len() == 0 {
+            log::info!("push the first component");
+            self.comp_graph_arr.push(comp.to_graph(&self.wgcontext));
+            comp.set_index(self.comp_graph_arr.len() - 1);
+            // self.comp_data_arr.insert(comp.get_index().unwrap(), Box::new(comp));
+        } else if self.comp_graph_arr.len() != 0 {
+            log::info!("-----update component array-----");
+            log::info!("get current componet index: {:#?}", comp.get_index());
+            if comp.get_index() != None {
+                self.comp_graph_arr
+                    .insert(comp.get_index().unwrap(), comp.to_graph(&self.wgcontext));
+                // self.comp_data_arr.insert(comp.get_index().unwrap(), Box::new(comp));
+            } else {
+                self.comp_graph_arr
+                    .push(comp.to_graph(&self.wgcontext));
+                comp.set_index(self.comp_graph_arr.len() - 1);
+                // self.comp_data_arr.insert(comp.get_index().unwrap(), Box::new(comp));
+            }
         }
     }
 }
 
-impl Painter for GlobalState {
+impl Painter for Container {
     fn new(wgcontext: WGContext) -> Self {
-        GlobalState::new(wgcontext)
+        Container::new(wgcontext)
     }
 
     fn add_comp<C>(&mut self, comp: &mut C)
         where C: ComponentModel + Listener {
-        if self.comp_grap_stack.len() == 0 {
-            log::info!("push the first component");
-            self.comp_grap_stack.push(comp.to_graph(&self.wgcontext));
-            comp.set_index(self.comp_grap_stack.len() - 1);
-        } else if self.comp_grap_stack.len() != 0 {
-            log::info!("-----update component array-----");
-            log::info!("get current componet index: {:#?}", comp.get_index());
-            if comp.get_index() != None {
-                self.comp_grap_stack
-                    .insert(comp.get_index().unwrap(), comp.to_graph(&self.wgcontext));
-            } else {
-                self.comp_grap_stack
-                    .push(comp.to_graph(&self.wgcontext));
-                comp.set_index(self.comp_grap_stack.len() - 1);
-            }
-        }
+        self.update_comp_arr(comp)
     }
 
     /*  fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -92,8 +101,8 @@ impl Painter for GlobalState {
                 depth_stencil_attachment: None,
             });
 
-            log::info!("graph_context size:{}", self.comp_grap_stack.len());
-            for view in &self.comp_grap_stack {
+            log::info!("graph_context size:{}", self.comp_graph_arr.len());
+            for view in &self.comp_graph_arr {
                 view.draw_rect(&mut render_pass, &self.glob_pipeline, false);
             }
         }

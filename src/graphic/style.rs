@@ -32,7 +32,7 @@ impl Style {
     }
     pub fn set_border(&mut self, border: Bordering) -> Self {
         Style {
-            border: Bordering::Border(1.0, Color::Rgbau(0, 0, 0, 255)),
+            border,
             label: Label::Label(Color::Rgbau(255, 255, 255, 255)),
         }
     }

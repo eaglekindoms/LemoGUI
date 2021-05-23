@@ -26,7 +26,7 @@ impl<'a> PipelineState {
         let texture_pipeline =
             PipelineState::create_pipeline_state::<TextureVertex>(device, TriangleStrip);
         let shape_pipeline =
-            PipelineState::create_pipeline_state::<RectVertex>(device, TriangleStrip);
+            PipelineState::create_pipeline_state::<PointVertex>(device, TriangleStrip);
         let border_pipeline =
             PipelineState::create_pipeline_state::<PointVertex>(device, LineStrip);
         let round_shape_pipeline =
@@ -44,47 +44,9 @@ impl<'a> PipelineState {
     /// 参数：全局状态，着色器，渲染类型
     pub fn create_pipeline_state<V>(device: &Device, fill_topology: PrimitiveTopology) -> RenderPipeline
         where V: VertexInterface {
-        let shader = V::set_shader(device);
-        let render_pipeline_layout = V::set_pipeline_layout(device);
-        let vertex_desc = [V::set_vertex_desc()];
         // 作用：绑定着色器，图形填充
-        let render_pipeline = create_render_pipeline(device
-                                                     , shader, render_pipeline_layout, vertex_desc, fill_topology);
+        let render_pipeline = V::create_render_pipeline(device, fill_topology);
         return render_pipeline;
     }
 }
 
-pub fn create_render_pipeline(device: &Device, shader: Shader,
-                              render_pipeline_layout: PipelineLayout,
-                              vertex_desc: [VertexBufferLayout; 1],
-                              fill_topology: PrimitiveTopology,
-) -> RenderPipeline {
-    let render_pipeline = device
-        .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex: VertexState {
-                module: &shader.vs_module,
-                entry_point: "main",
-                buffers: &vertex_desc,
-            },
-            primitive: wgpu::PrimitiveState {
-                topology: fill_topology,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
-                ..Default::default()
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            fragment: Some(wgpu::FragmentState {
-                module: &shader.fs_module,
-                entry_point: "main",
-                targets: &[wgpu::ColorTargetState {
-                    format: wgpu::TextureFormat::Bgra8UnormSrgb,
-                    write_mask: wgpu::ColorWrite::ALL,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
-                }],
-            }),
-        });
-    return render_pipeline;
-}

@@ -1,18 +1,16 @@
 use simple_logger::SimpleLogger;
 
-use container::GlobalState;
 use LemoGUI::device::display_window::DisplayWindow;
 use LemoGUI::device::painter::Painter;
 use LemoGUI::graphic::base::point2d::Point;
 use LemoGUI::graphic::base::rectangle::Rectangle;
 use LemoGUI::widget::button::Button;
-
-pub mod container;
+use LemoGUI::widget::container::Container;
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
     log::info!("hh");
-    run::<GlobalState>("hello");
+    run::<Container>("hello");
 }
 
 fn run<E>(title: &str)
@@ -32,7 +30,7 @@ fn run<E>(title: &str)
     log::info!("{:#?}", &button.index);
     let mut container = E::new(display_device.wgcontext);
     container.add_comp(&mut button);
-    container.add_comp(&mut Button::default(Point { x: 100.0, y: 300.0 }, "hello"));
+    container.add_comp(&mut Button::default(Point { x: 100.0, y: 300.0 }, "按钮2"));
     log::info!("{:#?}", &button.index);
     DisplayWindow::start::<E>(display_device.event_loop, container);
     log::info!("{:#?}", &button.index);
