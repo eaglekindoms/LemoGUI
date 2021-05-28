@@ -6,8 +6,8 @@ use crate::widget::listener::Listener;
 
 pub trait Painter: Sized {
     fn new(wgcontext: WGContext) -> Self;
-    fn add_comp<C>(&mut self, comp: &mut C)
-        where C: ComponentModel + Listener + 'static
+    fn add_comp<C>(&mut self, comp: C)
+        where C: ComponentModel + Listener+'static
     ;
     // fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>);
     fn input(&mut self, event: &WindowEvent) -> bool;

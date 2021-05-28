@@ -21,16 +21,16 @@ pub fn default_draw_text(font: FontRef, font_scale: f32, font_color: RGBA, text:
     let colour = font_color.to_u8();
     // work out the layout size
     let glyphs_height = scaled_font.height().ceil() as u32;
-    let glyphs_width = {
-        let min_x = glyphs.first().unwrap().position.x;
-        let last_glyph = glyphs.last().unwrap();
-        let max_x = last_glyph.position.x + scaled_font.h_advance(last_glyph.id);
-        (max_x - min_x).ceil() as u32
-    };
+    let glyphs_width = glyphs
+        .iter()
+        .last()
+        .map(|g| g.position.x + scaled_font.h_advance(g.id))
+        .unwrap_or(0.0)
+        .ceil() as u32;
 
     // Create a new rgba image with some padding
     // let mut image = DynamicImage::new_rgba8(glyphs_width + 20, glyphs_height-15).to_rgba8();
-    let size = (glyphs_width + 20) * (glyphs_height);
+    let size = (glyphs_width) * (glyphs_height);
     let mut bufs1 = vec![0; (size * 4) as usize];
 
     // Loop through the glyphs in the text, positing each one on a line
@@ -41,16 +41,17 @@ pub fn default_draw_text(font: FontRef, font_scale: f32, font_color: RGBA, text:
             outlined.draw(|x, y, v| {
                 // Offset the position by the glyph bounding box
                 // println!("x: {} y: {}", x, y);
-                let index = x + bounds.min.x as u32 - 20 + (glyphs_width + 20) * (y + bounds.min.y as u32 - 29);
+                let index = x + bounds.min.x as u32 -10  + (glyphs_width   ) * (y + bounds.min.y as u32 - 22);
                 bufs1[(index * 4) as usize] = colour.0;
                 bufs1[(index * 4) as usize + 1] = colour.1;
                 bufs1[(index * 4) as usize + 2] = colour.2;
                 bufs1[(index * 4) as usize + 3] = (v * 255.0) as u8;
+                // log::info!("+++++{} ++++++++",(v * 255.0) as u8);
             });
         }
     }
 
-    (glyphs_width + 20, glyphs_height, bufs1)
+    (glyphs_width  , glyphs_height, bufs1)
 }
 
 fn layout_paragraph<F, SF>(

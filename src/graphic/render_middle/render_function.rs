@@ -8,7 +8,6 @@ use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 pub struct RenderGraph {
     pub vertex_buffer: VertexBuffer,
     pub back_buffer: VertexBuffer,
-    pub hover_buffer: Option<VertexBuffer>,
     pub border_buffer: VertexBuffer,
     pub context_buffer: TextureBuffer,
 }
@@ -36,9 +35,7 @@ impl RenderGraph {
         render_shape(render_pass, &glob_pipeline.shape_pipeline, &self.back_buffer);
         render_shape(render_pass, &glob_pipeline.border_pipeline, &self.border_buffer);
         render_texture(render_pass, &self.context_buffer, &glob_pipeline.texture_pipeline, &self.vertex_buffer);
-        if focused && !self.hover_buffer.is_none() {
-            render_shape(render_pass, &glob_pipeline.shape_pipeline, self.hover_buffer.as_ref().unwrap());
-        }
+
     }
 
     pub fn draw_round_rect<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>,
@@ -46,8 +43,6 @@ impl RenderGraph {
         render_shape(render_pass, &glob_pipeline.round_shape_pipeline, &self.back_buffer);
         // render_shape(render_pass, &glob_pipeline.round_shape_pipeline, &self.border_buffer);
         render_texture(render_pass, &self.context_buffer, &glob_pipeline.texture_pipeline, &self.vertex_buffer);
-        if focused && !self.hover_buffer.is_none() {
-            render_shape(render_pass, &glob_pipeline.shape_pipeline, self.hover_buffer.as_ref().unwrap());
-        }
+
     }
 }

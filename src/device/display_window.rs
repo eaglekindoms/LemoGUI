@@ -21,7 +21,6 @@ pub struct WGContext {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub sc_desc: wgpu::SwapChainDescriptor,
-    pub swap_chain: wgpu::SwapChain,
 }
 
 struct Application {
@@ -68,7 +67,6 @@ impl DisplayWindow {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
-        let swap_chain = device.create_swap_chain(&surface, &sc_desc);
 
         DisplayWindow {
             window,
@@ -79,7 +77,6 @@ impl DisplayWindow {
                 device,
                 queue,
                 sc_desc,
-                swap_chain,
             },
         }
     }

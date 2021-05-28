@@ -9,8 +9,8 @@ name = "rectangle_T_draw"
 path = "example/rectangle_T_draw.rs"
 
 [[example]]
-name = "example"
-path = "example/example.rs"
+name = "test_font"
+path = "example/test_font.rs"
 
 [dependencies]
 wgpu = "0.8.1"
@@ -25,6 +25,10 @@ rand = "0.8.2"
 bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
 ab_glyph = "0.2.9"
+
+font-kit="0.10.0"
+pathfinder_geometry = "0.5"
+
 
 #[dependencies.wgpu]
 #path = "./wgpu-rs_v0.7"

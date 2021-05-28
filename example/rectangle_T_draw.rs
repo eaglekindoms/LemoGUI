@@ -26,12 +26,12 @@ fn run<E>(title: &str)
     log::info!("Initializing the example...");
     // 自定义设置
     let rect = Rectangle::new(100.0, 100.0, 400, 40);
-    let mut button = Button::new(rect, "button1");
+    let button = Button::new(rect, "button1");
     log::info!("{:#?}", &button.index);
     let mut container = E::new(display_device.wgcontext);
-    container.add_comp(&mut button);
-    container.add_comp(&mut Button::default(Point { x: 100.0, y: 300.0 }, "按钮2"));
-    log::info!("{:#?}", &button.index);
+    container.add_comp(button);
+    container.add_comp(Button::default(Point { x: 100.0, y: 300.0 }, "按钮2"));
+    // log::info!("{:#?}", &button.index);
     DisplayWindow::start::<E>(display_device.event_loop, container);
-    log::info!("{:#?}", &button.index);
+    // log::info!("{:#?}", &button.index);
 }

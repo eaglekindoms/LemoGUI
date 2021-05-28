@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use wgpu::{RenderPass, RenderPipeline};
+use wgpu::{CommandEncoder, RenderPass, RenderPipeline, TextureView};
 use winit::event::WindowEvent;
 
 use crate::device::display_window::WGContext;
@@ -62,6 +62,38 @@ impl<'a> ComponentModel for Button<'a, dyn Listener> {
 
     fn to_graph(&self, wgcontext: &WGContext) -> RenderGraph {
         self.context.to_graph(wgcontext)
+    }
+
+    fn draw(&self, wgcontext: &WGContext, encoder: &mut CommandEncoder, target: &TextureView, glob_pipeline: &PipelineState) {
+        let render_buffer = self.to_graph(wgcontext);
+
+        // let instance_bytes = bytemuck::cast_slice(&instances[i..end]);
+        //
+        // let mut instance_buffer = staging_belt.write_buffer(
+        //     encoder,
+        //     &self.instances,
+        //     0,
+        //     wgpu::BufferSize::new(instance_bytes.len() as u64).unwrap(),
+        //     device,
+        // );
+        //
+        // instance_buffer.copy_from_slice(instance_bytes);
+
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: None,
+            color_attachments: &[wgpu::RenderPassColorAttachment {
+                view: &target,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: true,
+                },
+            }],
+            depth_stencil_attachment: None,
+        });
+        render_shape(&mut render_pass, &glob_pipeline.shape_pipeline, &render_buffer.back_buffer);
+        render_shape(&mut render_pass, &glob_pipeline.border_pipeline, &render_buffer.border_buffer);
+        render_texture(&mut render_pass, &render_buffer.context_buffer, &glob_pipeline.texture_pipeline, &render_buffer.vertex_buffer);
     }
 }
 

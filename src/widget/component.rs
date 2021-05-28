@@ -1,6 +1,6 @@
 use std::option::Option::Some;
 
-use wgpu::RenderPipeline;
+use wgpu::*;
 
 use crate::device::display_window::WGContext;
 use crate::graphic::base::color::RGBA;
@@ -9,7 +9,7 @@ use crate::graphic::base::point2d::PointVertex;
 use crate::graphic::base::rectangle::Rectangle;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderGraph;
-use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
+use crate::graphic::render_middle::vertex_buffer::{VertexBuffer, RECT_LINE_INDEX, RECT_INDEX};
 use crate::widget::listener::Listener;
 
 /// 组件属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
@@ -28,6 +28,8 @@ pub trait ComponentModel {
     fn set_index(&mut self, index: usize);
     fn get_index(&self) -> Option<usize>;
     fn to_graph(&self, wgcontext: &WGContext) -> RenderGraph;
+    fn draw(&self, wgcontext: &WGContext, encoder: &mut CommandEncoder, target: &TextureView,
+            glob_pipeline: &PipelineState);
 }
 
 type CompNode<'a> = Option<Box<&'a CompTreeNode<'a, dyn Listener>>>;
@@ -73,17 +75,15 @@ impl<'a> Component<'a, dyn Listener> {
     }
 
     pub fn to_graph(&self, display_window: &WGContext) -> RenderGraph {
-        let vertex_buffer = VertexBuffer::create_vertex_buf::<TextureVertex>(&display_window.device, &display_window.sc_desc, &self.size, &[0, 2, 1, 3], RGBA::default());
-        let shape_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size, &[0, 2, 1, 3], self.background_color);
-        let hover_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size, &[0, 2, 1, 3], self.hover_color);
-        let boder_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size, &[0, 1, 3, 2, 0], self.border_color);
+        let vertex_buffer = VertexBuffer::create_vertex_buf::<TextureVertex>(&display_window.device, &display_window.sc_desc, &self.size, RECT_INDEX, RGBA::default());
+        let shape_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size,RECT_INDEX, self.background_color);
+        let boder_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size, RECT_LINE_INDEX, self.border_color);
         let font_buffer = TextureBuffer::create_font_image(&display_window.device, &display_window.queue, self.font_color, self.text);
 
         // let round_vertex_buffer = RectVertex
         RenderGraph {
             vertex_buffer,
             back_buffer: shape_vertex_buffer,
-            hover_buffer: Some(hover_vertex_buffer),
             border_buffer: boder_vertex_buffer,
             context_buffer: font_buffer,
         }
