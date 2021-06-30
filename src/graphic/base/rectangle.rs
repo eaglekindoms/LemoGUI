@@ -1,11 +1,10 @@
 use wgpu::*;
 
-use crate::graphic::base::color::RGBA;
 use crate::graphic::base::point2d::Point;
 use crate::graphic::render_middle::pipeline_state::Shader;
+use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
-use crate::graphic::style;
-use crate::graphic::style::Bordering;
+use crate::graphic::style::{Bordering, Rounding, Style};
 
 /// 矩形结构体
 #[derive(Debug, Default, Copy, Clone)]
@@ -13,7 +12,6 @@ pub struct Rectangle {
     pub position: Point,
     pub width: u32,
     pub height: u32,
-    // style: style::Style,
 }
 
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -23,8 +21,7 @@ pub struct RectVertex {
     pub position: [f32; 2],
     pub border_color: [f32; 4],
     pub frame_color: [f32; 4],
-    pub border_radius: f32,
-    pub border_width: f32,
+    pub is_round_or_border: [u32; 2],
 }
 
 
@@ -32,15 +29,11 @@ impl Rectangle {
     pub fn new(x: f32, y: f32, w: u32, h: u32) -> Rectangle {
         log::info!("create the Rectangle obj");
         Rectangle {
-            position: Point { x: x, y: y },
+            position: Point { x, y },
             width: w,
             height: h,
-            // style: style::Style::default(),
         }
     }
-    // pub fn set_border(&mut self, border: Bordering) {
-    //     self.style = style::Style::set_border(&mut self.style, border);
-    // }
 
     pub fn get_coord(&self, w_width: u32, w_height: u32) -> (f32, f32, f32, f32) {
         (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
@@ -58,32 +51,27 @@ impl VertexInterface for RectVertex {
             attributes: &[
                 wgpu::VertexAttribute {
                     offset: 0,
-                    shader_location: 1,
+                    shader_location: 0,
                     format: wgpu::VertexFormat::Float32x2,
                 },
                 wgpu::VertexAttribute {
                     offset: 4 * 2,
-                    shader_location: 2,
+                    shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
                 },
                 wgpu::VertexAttribute {
                     offset: 4 * (2 + 2),
-                    shader_location: 3,
+                    shader_location: 2,
                     format: wgpu::VertexFormat::Float32x4,
                 }, wgpu::VertexAttribute {
                     offset: 4 * (2 + 2 + 4),
-                    shader_location: 4,
+                    shader_location: 3,
                     format: wgpu::VertexFormat::Float32x4,
                 },
                 wgpu::VertexAttribute {
                     offset: 4 * (2 + 2 + 4 + 4),
-                    shader_location: 5,
-                    format: wgpu::VertexFormat::Float32,
-                },
-                wgpu::VertexAttribute {
-                    offset: 4 * (2 + 2 + 4 + 4 + 1),
-                    shader_location: 6,
-                    format: wgpu::VertexFormat::Float32,
+                    shader_location: 4,
+                    format: wgpu::VertexFormat::Uint32x2,
                 },
             ],
         }
@@ -100,18 +88,45 @@ impl VertexInterface for RectVertex {
             fs_module,
         }
     }
+}
 
-    fn from_shape_to_vector(rect: &Rectangle, sc_desc: &wgpu::SwapChainDescriptor, test_color: RGBA) -> Vec<Self> {
+impl RectVertex {
+    pub fn from_shape_to_vector(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &Rectangle, style: &Style) -> VertexBuffer {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.width, sc_desc.height);
+        let border_color;
+        let frame_color;
+        let is_round;
+        let is_border;
 
-        vec![RectVertex {
-            size: [t_w, t_h],
-            position: [t_w / 2.0 + t_x, t_h / 2.0 + t_y],
-            border_color: [0.0, 0.0, 0.0, 1.0],
-            frame_color: test_color.0,
-            border_radius: 0.05,
-            border_width: 0.005,
-        }]
+        match style.get_border() {
+            Bordering::Border(color) => {
+                border_color = color.to_f32();
+                is_border = 1;
+            }
+            Bordering::NoBorder => {
+                border_color = [0.0, 0.0, 0.0, 0.0];
+                is_border = 0;
+            }
+        }
+        match style.get_round() {
+            Rounding::Round => is_round = 1,
+            Rounding::NoRound => is_round = 0,
+        }
+        frame_color = style.get_background_color().to_f32();
+
+        let vect = vec![
+            RectVertex {
+                size: [t_w, t_h],
+                position: [t_w / 2.0 + t_x, t_y - t_h / 2.0],
+                border_color,
+                frame_color,
+                is_round_or_border: [is_round, is_border],
+            }
+        ];
+        let back_buffer =
+            VertexBuffer::create_vertex_buf::<RectVertex>
+                (device, vect, RECT_INDEX);
+        back_buffer
     }
 }

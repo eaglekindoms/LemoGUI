@@ -1,134 +1,88 @@
-use std::option::Option::Some;
-
 use wgpu::*;
 
 use crate::device::display_window::WGContext;
-use crate::graphic::base::color::RGBA;
-use crate::graphic::base::image2d::{TextureBuffer, TextureVertex};
-use crate::graphic::base::point2d::PointVertex;
-use crate::graphic::base::rectangle::Rectangle;
+use crate::graphic::base::image2d::TextureVertex;
+use crate::graphic::base::rectangle::*;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderGraph;
-use crate::graphic::render_middle::vertex_buffer::{VertexBuffer, RECT_LINE_INDEX, RECT_INDEX};
+use crate::graphic::render_middle::texture_buffer::TextureBuffer;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
+use crate::graphic::style::*;
 use crate::widget::listener::Listener;
 
 /// 组件属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
-#[derive(Debug, Default, Clone)]
-pub struct Component<'a, L: Listener + ?Sized> {
+#[derive(Debug, Default)]
+pub struct Component<L: Listener + ?Sized> {
     size: Rectangle,
-    font_color: RGBA,
-    background_color: RGBA,
-    border_color: RGBA,
-    hover_color: RGBA,
-    text: &'a str,
+    text: String,
+    render_buffer: Option<RenderGraph>,
     listener: Option<Box<L>>,
+    style: Style,
 }
 
 pub trait ComponentModel {
     fn set_index(&mut self, index: usize);
     fn get_index(&self) -> Option<usize>;
-    fn to_graph(&self, wgcontext: &WGContext) -> RenderGraph;
-    fn draw(&self, wgcontext: &WGContext, encoder: &mut CommandEncoder, target: &TextureView,
-            glob_pipeline: &PipelineState);
+    fn to_graph(&mut self, wgcontext: &WGContext) -> &RenderGraph;
+    fn get_style(&self) -> &Style;
+    fn draw(&mut self, wgcontext: &WGContext, encoder: &mut CommandEncoder, target: &TextureView, glob_pipeline: &PipelineState) {
+        let render_buffer = self.to_graph(wgcontext);
+
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: None,
+            color_attachments: &[wgpu::RenderPassColorAttachment {
+                view: &target,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: true,
+                },
+            }],
+            depth_stencil_attachment: None,
+        });
+        render_buffer.draw(&mut render_pass, &glob_pipeline);
+    }
 }
 
-type CompNode<'a> = Option<Box<&'a CompTreeNode<'a, dyn Listener>>>;
-
-#[derive(Clone)]
-pub struct CompTreeNode<'a, L: Listener + ?Sized> {
-    context: Component<'a, L>,
-    parent: CompNode<'a>,
-    next: CompNode<'a>,
-    child: CompNode<'a>,
-}
-
-pub struct CompTree<'a, L: Listener + ?Sized> {
-    root: Option<CompTreeNode<'a, L>>,
-    size: i32,
-}
-
-impl<'a> Component<'a, dyn Listener> {
-    pub fn new(rect: Rectangle, font_color: RGBA, background_color: RGBA,
-               border_color: RGBA, hover_color: RGBA,
-               text: &'a str, listener: Box<dyn Listener>) -> Self {
+impl<'a> Component<dyn Listener> {
+    pub fn new<S: Into<String>>(rect: Rectangle, style: Style,
+                                text: S, listener: Option<Box<dyn Listener>>) -> Self {
         Self {
             size: rect,
-            font_color,
-            background_color,
-            border_color,
-            hover_color,
-            text,
-            listener: Option::from(listener),
+            text: text.into(),
+            render_buffer: None,
+            listener,
+            style,
         }
     }
 
-    pub fn default(rect: Rectangle, font_color: RGBA, background_color: RGBA, border_color: RGBA, hover_color: RGBA, text: &'a str) -> Self {
-        Self {
-            size: rect,
-            font_color,
-            background_color,
-            border_color,
-            hover_color,
-            text,
-            listener: None,
-        }
-    }
+    pub fn to_graph(&mut self, display_window: &WGContext) -> &RenderGraph {
+        match self.render_buffer.as_mut() {
+            Some(_) => {}
+            None => {
+                let vertex_buffer =
+                    TextureVertex::from_shape_to_vector
+                        (&display_window.device, &display_window.sc_desc, &self.size);
+                let back_buffer =
+                    RectVertex::from_shape_to_vector
+                        (&display_window.device, &display_window.sc_desc, &self.size, &self.style);
 
-    pub fn to_graph(&self, display_window: &WGContext) -> RenderGraph {
-        let vertex_buffer = VertexBuffer::create_vertex_buf::<TextureVertex>(&display_window.device, &display_window.sc_desc, &self.size, RECT_INDEX, RGBA::default());
-        let shape_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size,RECT_INDEX, self.background_color);
-        let boder_vertex_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(&display_window.device, &display_window.sc_desc, &self.size, RECT_LINE_INDEX, self.border_color);
-        let font_buffer = TextureBuffer::create_font_image(&display_window.device, &display_window.queue, self.font_color, self.text);
+                let font_buffer =
+                    TextureBuffer::create_font_image
+                        (&display_window.device,
+                         &display_window.queue, self.style.get_font_color(), self.text.as_str());
 
-        // let round_vertex_buffer = RectVertex
-        RenderGraph {
-            vertex_buffer,
-            back_buffer: shape_vertex_buffer,
-            border_buffer: boder_vertex_buffer,
-            context_buffer: font_buffer,
-        }
-    }
-}
-
-impl<'a> CompTreeNode<'a, dyn Listener> {
-    pub fn new(component: Component<'a, dyn Listener>) -> Self {
-        CompTreeNode {
-            context: component,
-            parent: None,
-            next: None,
-            child: None,
-        }
-    }
-    pub fn insert_child(&'a mut self, mut treeNode: CompTreeNode<'a, dyn Listener>) {
-        treeNode.parent = Some(Box::new(self));
-        let mut child = self.child.as_ref();
-        if child.is_none() {
-            child = Some(&Box::new(&treeNode));
-        } else {
-            while child.is_some() {
-                let mut current_node = child.unwrap().next.as_ref();
-                if current_node.is_some() {
-                    let mut future_node = current_node.unwrap().next.as_ref();
-                    if future_node.is_none() {
-                        future_node = Some(&Box::new(&treeNode));
-                        break;
-                    } else {
-                        child = future_node;
-                    }
-                } else {
-                    current_node = Some(&Box::new(&treeNode));
-                    break;
-                }
+                self.render_buffer = Some(RenderGraph {
+                    vertex_buffer,
+                    back_buffer,
+                    context_buffer: font_buffer,
+                });
             }
         }
+        self.render_buffer.as_ref().unwrap()
     }
-}
 
-impl<'a> CompTree<'a, dyn Listener> {
-    pub fn new() -> Self {
-        CompTree {
-            root: None,
-            size: 0,
-        }
+    pub fn get_style(&self) -> &Style {
+        &self.style
     }
 }

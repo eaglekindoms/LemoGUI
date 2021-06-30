@@ -1,7 +1,5 @@
 use wgpu::*;
 
-use crate::graphic::base::color::RGBA;
-use crate::graphic::base::rectangle::Rectangle;
 use crate::graphic::render_middle::pipeline_state::Shader;
 
 pub trait VertexInterface: Sized {
@@ -15,7 +13,6 @@ pub trait VertexInterface: Sized {
         });
         return render_pipeline_layout;
     }
-    fn from_shape_to_vector(rect: &Rectangle, sc_desc: &wgpu::SwapChainDescriptor, test_color: RGBA) -> Vec<Self>;
 
     fn create_render_pipeline(device: &Device,
                               fill_topology: PrimitiveTopology,

@@ -37,15 +37,16 @@ void main(){
     float frameAlpha;
     float borderAlpha;
     vec2 pos= v_pos;
-    vec2 size= v_size;
+    vec2 size= v_size*0.5  - v_radius;
     frameAlpha = renderRectFrame(pos, size, v_radius);
     fragColor = mix(fragColor, v_frameColor, frameAlpha);
-    // 边框
-    float border_width = v_borderWidth;
-    if (border_width!=0){
-        borderAlpha = renderRectBorder(pos, size, v_radius, border_width);
-        fragColor = mix(fragColor, v_borderColor, borderAlpha);
-    }
+
+    //    // 边框
+    //    float border_width = v_borderWidth;
+    //    if (border_width!=0){
+    //        borderAlpha = renderRectBorder(pos, size, v_radius, border_width);
+    //        fragColor = mix(fragColor, v_borderColor, borderAlpha);
+    //    }
     //        fragColor=vec4(1);
 }
 

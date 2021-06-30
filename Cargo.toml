@@ -13,7 +13,7 @@ name = "test_font"
 path = "example/test_font.rs"
 
 [dependencies]
-wgpu = "0.8.1"
+wgpu = "0.9.0"
 async-trait = "*"
 winit = "0.24.0"
 futures = "0.3.10"

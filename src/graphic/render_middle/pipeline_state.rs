@@ -1,4 +1,5 @@
 use wgpu::*;
+use wgpu::PrimitiveTopology::*;
 
 use crate::graphic::base::image2d::TextureVertex;
 use crate::graphic::base::point2d::PointVertex;
@@ -22,7 +23,6 @@ impl<'a> PipelineState {
     pub fn create_glob_pipeline(device: &Device) -> Self {
         // 固定渲染管道配置：纹理管道，矩形管道，边框管道。
         // 全局设置
-        use wgpu::PrimitiveTopology::{TriangleStrip, LineStrip};
         let texture_pipeline =
             PipelineState::create_pipeline_state::<TextureVertex>(device, TriangleStrip);
         let shape_pipeline =

@@ -3,6 +3,7 @@ use wgpu::*;
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::rectangle::Rectangle;
 use crate::graphic::render_middle::pipeline_state::Shader;
+use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
 /// 二维顶点结构体
@@ -62,17 +63,20 @@ impl VertexInterface for PointVertex {
             fs_module,
         }
     }
+}
 
-    fn from_shape_to_vector(rect: &Rectangle, sc_desc: &wgpu::SwapChainDescriptor, test_color: RGBA) -> Vec<Self> {
+impl PointVertex {
+    pub fn from_shape_to_vector(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &Rectangle, indices: &[u16], color: RGBA) -> VertexBuffer {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.width, sc_desc.height);
-
         let vect: Vec<PointVertex> = vec![
-            PointVertex::new(t_x, t_y, test_color), // 左上
-            PointVertex::new(t_x + t_w, t_y, test_color), // 右上
-            PointVertex::new(t_x, t_y - t_h, test_color), // 左下
-            PointVertex::new(t_x + t_w, t_y - t_h, test_color), // 右下
+            PointVertex::new(t_x, t_y, color), // 左上
+            PointVertex::new(t_x + t_w, t_y, color), // 右上
+            PointVertex::new(t_x, t_y - t_h, color), // 左下
+            PointVertex::new(t_x + t_w, t_y - t_h, color), // 右下
         ];
-        return vect;
+        let point_buffer = VertexBuffer::create_vertex_buf::<PointVertex>
+            (device, vect, indices);
+        point_buffer
     }
 }

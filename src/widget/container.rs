@@ -1,12 +1,9 @@
-use std::borrow::BorrowMut;
-
 use winit::event::*;
 
 use crate::device::display_window::WGContext;
 use crate::device::painter::Painter;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
-use crate::graphic::render_middle::render_function::RenderGraph;
-use crate::widget::component::{Component, ComponentModel};
+use crate::widget::component::ComponentModel;
 use crate::widget::listener::Listener;
 
 const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
@@ -98,7 +95,7 @@ impl Painter for Container {
                 label: Some("Render Encoder"),
             });
         {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            let mut _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[wgpu::RenderPassColorAttachment {
                     view: &target.view,
@@ -112,7 +109,7 @@ impl Painter for Container {
             });
         }
         log::info!("graph_context size:{}", self.comp_graph_arr.len());
-        for view in &self.comp_graph_arr {
+        for view in &mut self.comp_graph_arr {
             view.draw(&self.wgcontext, &mut encoder, &target.view, &self.glob_pipeline);
         }
         self.wgcontext.queue.submit(std::iter::once(encoder.finish()));
