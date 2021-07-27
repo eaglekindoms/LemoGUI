@@ -17,7 +17,6 @@ const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
 pub struct Container {
     pub glob_pipeline: PipelineState,
     pub comp_graph_arr: Vec<Box<dyn ComponentModel>>,
-    // pub comp_data_arr: Vec<Box<Component>>,
     pub wgcontext: WGContext,
 }
 
@@ -33,8 +32,8 @@ impl Container {
             wgcontext,
         }
     }
-    fn update_comp_arr(&mut self, mut comp: Box<dyn ComponentModel>)
-    {
+
+    fn update_comp_arr(&mut self, mut comp: Box<dyn ComponentModel>) {
         if self.comp_graph_arr.len() == 0 {
             log::info!("push the first component");
             // self.comp_graph_arr.push(comp.to_graph(&self.wgcontext));
@@ -79,7 +78,11 @@ impl Painter for Container {
 
     fn input(&mut self, event: &WindowEvent) -> bool {
         // for listener in &self.graph_context {}
-        false
+        let mut input = false;
+        for comp in &mut self.comp_graph_arr {
+            input = comp.key_listener(event);
+        }
+        input
     }
 
     fn update(&mut self) {}

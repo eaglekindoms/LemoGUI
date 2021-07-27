@@ -3,14 +3,13 @@ use std::future::Future;
 use futures::{StreamExt, task};
 use futures::channel::mpsc;
 use winit::event::*;
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::WindowBuilder;
+use winit::event_loop::*;
+use winit::window::*;
 
 use crate::device::painter::Painter;
-use crate::graphic::base::rectangle::Rectangle;
 
 pub struct DisplayWindow {
-    pub window: winit::window::Window,
+    pub window: Window,
     pub event_loop: EventLoop<()>,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub wgcontext: WGContext,
@@ -21,10 +20,6 @@ pub struct WGContext {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub sc_desc: wgpu::SwapChainDescriptor,
-}
-
-struct Application {
-    base: Rectangle,
 }
 
 impl DisplayWindow {
@@ -81,12 +76,12 @@ impl DisplayWindow {
         }
     }
 
-    pub fn start<E>(event_loop: EventLoop<()>, container: E)
+    pub fn start<E>(window: Window, event_loop: EventLoop<()>, container: E)
         where E: Painter + 'static
     {
         log::info!("Entering render loop...");
         let (mut sender, receiver) = mpsc::unbounded();
-        let mut instance = Box::pin(event_listener(container, receiver));
+        let mut instance = Box::pin(event_listener(window, container, receiver));
         let mut context = task::Context::from_waker(task::noop_waker_ref());
         event_loop.run(move |event, _, control_flow| {
             if let ControlFlow::Exit = control_flow {
@@ -124,29 +119,20 @@ impl DisplayWindow {
     }
 }
 
-pub async fn event_listener<T, E>(mut container: E, mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, T>>)
+pub async fn event_listener<T, E>(window: Window, mut container: E, mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, T>>)
     where T: std::fmt::Debug, E: Painter + 'static
 {
     while let Some(event) = receiver.next().await {
         // log::info!("{:#?}", event);
         match event {
-            // Event::WindowEvent {
-            //     ref event,
-            //     window_id,
-            // } if window_id == display_device.window.id() => {
-            //     if !container.input(event) {
-            //         match event {
-            //             WindowEvent::Resized(physical_size) => {
-            //                 // state.resize(*physical_size);
-            //                 display_device.size = *physical_size;
-            //                 display_device.sc_desc.width = physical_size.width;
-            //                 display_device.sc_desc.height = physical_size.height;
-            //                 display_device.swap_chain = display_device.device.create_swap_chain(&display_device.surface, &display_device.sc_desc);
-            //             }
-            //             _ => {}
-            //         }
-            //     }
-            // }
+            Event::WindowEvent {
+                ref event,
+                window_id,
+            } if window_id == window.id() => {
+                if container.input(event) {
+                    container.render();
+                }
+            }
             Event::RedrawRequested(_) => {
                 // state.update();
                 container.render();
