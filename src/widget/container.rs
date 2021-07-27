@@ -3,6 +3,7 @@ use winit::event::*;
 use crate::device::display_window::WGContext;
 use crate::device::painter::Painter;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
+use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::widget::component::ComponentModel;
 use crate::widget::listener::Listener;
 
@@ -22,13 +23,11 @@ pub struct Container {
 
 impl Container {
     fn new(wgcontext: WGContext) -> Self {
-        let glob_pipeline = PipelineState::create_glob_pipeline(&wgcontext.device);
+        let glob_pipeline = PipelineState::default(&wgcontext.device);
         let comp_graph_arr = Vec::with_capacity(20);
-        // let comp_data_arr = Vec::with_capacity(20);
         Self {
             glob_pipeline,
             comp_graph_arr,
-            // comp_data_arr,
             wgcontext,
         }
     }
@@ -36,24 +35,16 @@ impl Container {
     fn update_comp_arr(&mut self, mut comp: Box<dyn ComponentModel>) {
         if self.comp_graph_arr.len() == 0 {
             log::info!("push the first component");
-            // self.comp_graph_arr.push(comp.to_graph(&self.wgcontext));
             comp.set_index(0);
             self.comp_graph_arr.push(comp);
-            // self.comp_data_arr.insert(comp.get_index().unwrap(), Box::new(comp));
         } else if self.comp_graph_arr.len() != 0 {
             log::info!("-----update component array-----");
             log::info!("get current componet index: {:#?}", comp.get_index());
             if comp.get_index() != None {
-                // self.comp_graph_arr
-                // .insert(comp.get_index().unwrap(), comp.to_graph(&self.wgcontext));
                 self.comp_graph_arr.insert(comp.get_index().unwrap(), comp);
-                // self.comp_data_arr.insert(comp.get_index().unwrap(), Box::new(comp));
             } else {
-                // self.comp_graph_arr
-                //     .push(comp.to_graph(&self.wgcontext));
                 comp.set_index(self.comp_graph_arr.len() - 1);
                 self.comp_graph_arr.push(comp);
-                // self.comp_data_arr.insert(comp.get_index().unwrap(), Box::new(comp));
             }
         }
     }
@@ -111,11 +102,16 @@ impl Painter for Container {
                 depth_stencil_attachment: None,
             });
         }
+        let mut utils = RenderUtil {
+            encoder,
+            target,
+        };
         log::info!("graph_context size:{}", self.comp_graph_arr.len());
         for view in &mut self.comp_graph_arr {
-            view.draw(&self.wgcontext, &mut encoder, &target.view, &self.glob_pipeline);
+            view.set_glob_pipeline(&self.wgcontext, &mut self.glob_pipeline);
+            view.draw(&self.wgcontext, &mut utils, &self.glob_pipeline);
         }
-        self.wgcontext.queue.submit(std::iter::once(encoder.finish()));
+        self.wgcontext.queue.submit(std::iter::once(utils.encoder.finish()));
     }
 }
 

@@ -1,3 +1,7 @@
+use wgpu::{CommandEncoder, SwapChainTexture};
+
+use crate::device::display_window::WGContext;
+use crate::graphic::base::shape::ShapeType;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
@@ -10,10 +14,42 @@ pub struct RenderGraph {
     pub context_buffer: TextureBuffer,
 }
 
+pub struct RenderUtil {
+    pub encoder: CommandEncoder,
+    pub target: SwapChainTexture,
+}
+
 impl RenderGraph {
-    pub fn draw<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>,
-                    glob_pipeline: &'a PipelineState) {
-        self.back_buffer.render_shape(render_pass, &glob_pipeline.round_shape_pipeline);
-        self.vertex_buffer.render_texture(render_pass, &self.context_buffer, &glob_pipeline.texture_pipeline);
+    pub fn draw(&self, render_utils: &mut RenderUtil,
+                glob_pipeline: &PipelineState) {
+        self.back_buffer.render(render_utils,
+                                glob_pipeline, ShapeType::ROUND);
+        let mut render_pass = render_utils.create_render_pass();
+        self.vertex_buffer.render_texture(&mut render_pass,
+                                          &self.context_buffer,
+                                          &glob_pipeline.get_pipeline(ShapeType::TEXTURE).unwrap());
+    }
+}
+
+pub trait Render {
+    fn draw<'a>(&'a self, wgcontext: &WGContext, render_pass: &mut wgpu::RenderPass<'a>,
+                glob_pipeline: &'a PipelineState);
+}
+
+impl RenderUtil {
+    pub fn create_render_pass<'a>(&'a mut self) -> wgpu::RenderPass<'a> {
+        let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: None,
+            color_attachments: &[wgpu::RenderPassColorAttachment {
+                view: &self.target.view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: true,
+                },
+            }],
+            depth_stencil_attachment: None,
+        });
+        render_pass
     }
 }

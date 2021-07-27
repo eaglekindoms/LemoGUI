@@ -1,18 +1,11 @@
 use wgpu::*;
 
-use crate::graphic::base::point2d::Point;
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 use crate::graphic::style::{Bordering, Rounding, Style};
+use crate::graphic::base::shape::Rectangle;
 
-/// 矩形结构体
-#[derive(Debug, Default, Copy, Clone)]
-pub struct Rectangle {
-    pub position: Point,
-    pub width: u32,
-    pub height: u32,
-}
 
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 #[repr(C)]
@@ -22,25 +15,6 @@ pub struct RectVertex {
     pub border_color: [f32; 4],
     pub frame_color: [f32; 4],
     pub is_round_or_border: [u32; 2],
-}
-
-
-impl Rectangle {
-    pub fn new(x: f32, y: f32, w: u32, h: u32) -> Rectangle {
-        log::info!("create the Rectangle obj");
-        Rectangle {
-            position: Point { x, y },
-            width: w,
-            height: h,
-        }
-    }
-
-    pub fn get_coord(&self, w_width: u32, w_height: u32) -> (f32, f32, f32, f32) {
-        (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
-         1.0 - 2.0 * self.position.y as f32 / w_height as f32,
-         2.0 * self.width as f32 / w_width as f32,
-         2.0 * self.height as f32 / w_height as f32)
-    }
 }
 
 impl VertexInterface for RectVertex {

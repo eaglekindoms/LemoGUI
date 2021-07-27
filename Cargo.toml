@@ -5,12 +5,20 @@ authors = ["eaglekindoms <huyongmao35@outlook.com>"]
 edition = "2018"
 
 [[example]]
-name = "rectangle_T_draw"
-path = "example/rectangle_T_draw.rs"
+name = "show_button"
+path = "example/show_button.rs"
 
 [[example]]
 name = "test_font"
 path = "example/test_font.rs"
+
+[[example]]
+name = "show_shap"
+path = "example/show_shape.rs"
+
+[[example]]
+name = "test_graph_algo"
+path = "example/test_graph_algo.rs"
 
 [dependencies]
 wgpu = "0.9.0"

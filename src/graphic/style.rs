@@ -18,7 +18,7 @@ pub enum Rounding {
     NoRound,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Style {
     border: Bordering,
     round: Rounding,

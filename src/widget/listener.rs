@@ -18,5 +18,7 @@ impl State {
 }
 
 pub trait Listener {
-    fn key_listener(&mut self, event: &WindowEvent) -> bool;
+    fn key_listener(&mut self, event: &WindowEvent) -> bool {
+        false
+    }
 }

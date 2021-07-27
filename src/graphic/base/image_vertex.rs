@@ -1,10 +1,10 @@
 use wgpu::*;
 
-use crate::graphic::base::rectangle::Rectangle;
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
+use crate::graphic::base::shape::Rectangle;
 
 /// 2D纹理顶点数据
 #[repr(C)]

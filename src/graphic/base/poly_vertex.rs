@@ -1,30 +1,23 @@
 use wgpu::*;
 
+use crate::device::display_window::WGContext;
 use crate::graphic::base::color::RGBA;
-use crate::graphic::base::rectangle::Rectangle;
+use crate::graphic::base::shape::*;
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
-/// 二维顶点结构体
+/// 多边形形缓存顶点结构体
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-}
-
-/// 2d图形缓存顶点结构体
-#[repr(C)]
-#[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct PointVertex {
+pub struct PolyVertex {
     pub position: Point,
     pub color: RGBA,
 }
 
-impl PointVertex {
+impl PolyVertex {
     pub fn new(x: f32, y: f32, color: RGBA) -> Self {
-        log::info!("create the BufferPoint obj");
+        log::info!("create the PolyVertex obj");
         Self {
             position: Point { x, y },
             color,
@@ -32,10 +25,10 @@ impl PointVertex {
     }
 }
 
-impl VertexInterface for PointVertex {
+impl VertexInterface for PolyVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<PointVertex>() as wgpu::BufferAddress,
+            array_stride: std::mem::size_of::<PolyVertex>() as wgpu::BufferAddress,
             step_mode: wgpu::InputStepMode::Vertex,
             attributes: &[
                 wgpu::VertexAttribute {
@@ -65,18 +58,23 @@ impl VertexInterface for PointVertex {
     }
 }
 
-impl PointVertex {
-    pub fn from_shape_to_vector(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &Rectangle, indices: &[u16], color: RGBA) -> VertexBuffer {
-        let (t_x, t_y, t_w, t_h) =
-            rect.get_coord(sc_desc.width, sc_desc.height);
-        let vect: Vec<PointVertex> = vec![
-            PointVertex::new(t_x, t_y, color), // 左上
-            PointVertex::new(t_x + t_w, t_y, color), // 右上
-            PointVertex::new(t_x, t_y - t_h, color), // 左下
-            PointVertex::new(t_x + t_w, t_y - t_h, color), // 右下
-        ];
-        let point_buffer = VertexBuffer::create_vertex_buf::<PointVertex>
-            (device, vect, indices);
+impl PolyVertex {
+    pub fn from_shape_to_vector(wgcontext: &WGContext, points: &Vec<Point>, color: RGBA) -> VertexBuffer {
+        let vertex_nums = (points.len() - 3) * 2 + points.len();
+        let mut vect = Vec::with_capacity(points.len());
+        let mut indices = Vec::with_capacity(vertex_nums);
+        for i in 0..points.len() {
+            vect.push(PolyVertex::new(points[i].x, points[i].y, color));
+        }
+        let mut i = 1u16;
+        while i < points.len() as u16 - 1 {
+            indices.push(0);
+            indices.push(i);
+            i = i + 1;
+            indices.push(i);
+        }
+        let point_buffer = VertexBuffer::create_vertex_buf::<PolyVertex>
+            (&wgcontext.device, vect, indices.as_slice());
         point_buffer
     }
 }

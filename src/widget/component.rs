@@ -1,10 +1,9 @@
-use wgpu::*;
-
 use crate::device::display_window::WGContext;
-use crate::graphic::base::image2d::TextureVertex;
-use crate::graphic::base::rectangle::*;
+use crate::graphic::base::image_vertex::TextureVertex;
+use crate::graphic::base::rect_vertex::*;
+use crate::graphic::base::shape::Rectangle;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
-use crate::graphic::render_middle::render_function::RenderGraph;
+use crate::graphic::render_middle::render_function::{RenderGraph, RenderUtil};
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::style::*;
 use crate::widget::listener::Listener;
@@ -19,25 +18,17 @@ pub struct Component {
 }
 
 pub trait ComponentModel: Listener {
-    fn set_index(&mut self, index: usize);
-    fn get_index(&self) -> Option<usize>;
-    fn to_graph(&mut self, wgcontext: &WGContext) -> &RenderGraph;
-    fn draw(&mut self, wgcontext: &WGContext, encoder: &mut CommandEncoder, target: &TextureView, glob_pipeline: &PipelineState) {
-        let render_buffer = self.to_graph(wgcontext);
-
-        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
-            color_attachments: &[wgpu::RenderPassColorAttachment {
-                view: &target,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
-                    store: true,
-                },
-            }],
-            depth_stencil_attachment: None,
-        });
-        render_buffer.draw(&mut render_pass, &glob_pipeline);
+    fn set_index(&mut self, _index: usize) {}
+    fn get_index(&self) -> Option<usize> { None }
+    fn to_graph(&mut self, _wgcontext: &WGContext) -> Option<&RenderGraph> { None }
+    fn set_glob_pipeline(&self, wgcontext: &WGContext, glob_pipeline: &mut PipelineState);
+    fn draw(&mut self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
+        match self.to_graph(wgcontext) {
+            Some(render_buffer) => {
+                render_buffer.draw(render_utils, &glob_pipeline);
+            }
+            None => {}
+        }
     }
 }
 

@@ -3,13 +3,13 @@ use std::fmt::Debug;
 use winit::event::*;
 
 use crate::device::display_window::WGContext;
-use crate::graphic::base::point2d::Point;
-use crate::graphic::base::rectangle::Rectangle;
 use crate::graphic::render_middle::render_function::RenderGraph;
 use crate::graphic::style::*;
 use crate::widget::component::Component;
 use crate::widget::component::ComponentModel;
 use crate::widget::listener::{Listener, State};
+use crate::graphic::base::shape::{Rectangle, Point, ShapeType};
+use crate::graphic::render_middle::pipeline_state::PipelineState;
 
 /// 按钮属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
 #[derive(Debug)]
@@ -67,9 +67,17 @@ impl<'a> ComponentModel for Button {
         self.index
     }
 
-    fn to_graph(&mut self, wgcontext: &WGContext) -> &RenderGraph {
+    fn to_graph(&mut self, wgcontext: &WGContext) -> Option<&RenderGraph> {
         let text = &self.text;
-        self.context.to_graph(text, wgcontext)
+        Some(self.context.to_graph(text, wgcontext))
+    }
+
+    fn set_glob_pipeline(&self, wgcontext: &WGContext, glob_pipeline: &mut PipelineState) {
+        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::ROUND);
+        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::CIRCLE);
+        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::POLYGON);
+        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::BORDER);
+        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::TEXTURE);
     }
 }
 
