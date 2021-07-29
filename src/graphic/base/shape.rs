@@ -6,7 +6,7 @@ use crate::graphic::base::rect_vertex::RectVertex;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::style::Style;
 
-/// 图形类型
+/// 图形类型枚举
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 pub enum ShapeType {
     TEXTURE = 0,
@@ -33,12 +33,15 @@ pub struct Rectangle {
     pub height: u32,
 }
 
+/// 圆形结构体
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Circle {
     pub position: Point,
     pub radius: f32,
 }
 
+/// 多边形结构体
+/// 顶点顺序为左下开始逆时针排序
 #[derive(Debug)]
 pub struct Polygon {
     pub points: Vec<Point>,
@@ -88,6 +91,7 @@ impl Polygon {
     }
 }
 
+/// 图形缓冲转换接口
 pub trait ShapeBuffer {
     fn to_buffer(&self, wgcontext: &WGContext, style: &Style) -> VertexBuffer;
     fn get_type(&self) -> ShapeType;

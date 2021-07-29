@@ -117,6 +117,16 @@ impl DisplayWindow {
             }
         });
     }
+
+    pub fn start_window<E>(builder: WindowBuilder, build_container: &Fn(WGContext) -> E)
+        where E: Painter + 'static
+    {
+        use futures::executor::block_on;
+        let display_device = block_on(DisplayWindow::init::<E>(builder));
+        log::info!("Initializing the example...");
+        DisplayWindow::start::<E>(display_device.window, display_device.event_loop,
+                                  build_container(display_device.wgcontext));
+    }
 }
 
 pub async fn event_listener<T, E>(window: Window, mut container: E, mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, T>>)

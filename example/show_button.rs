@@ -17,12 +17,7 @@ fn main() {
     builder = builder.with_title("hello")
         .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0));
 
-    use futures::executor::block_on;
-    let display_device = block_on(DisplayWindow::init::<Container>(builder));
-    // from window's variable to create the painter for render the shapes;
-    log::info!("Initializing the example...");
-    DisplayWindow::start::<Container>(display_device.window, display_device.event_loop,
-                                      build_container(display_device.wgcontext));
+    DisplayWindow::start_window::<Container>(builder, &build_container)
 }
 
 fn build_container(wgcontext: WGContext) -> Container
