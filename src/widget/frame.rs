@@ -1,12 +1,13 @@
 use winit::event::*;
 
+use crate::device::container::Container;
 use crate::device::display_window::WGContext;
-use crate::device::painter::Painter;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::widget::component::ComponentModel;
 use crate::widget::listener::Listener;
 
+/// 默认窗口帧背景色
 const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
     r: 0.9,
     g: 0.9,
@@ -14,16 +15,18 @@ const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
     a: 1.0,
 };
 
-
-pub struct Container {
+/// 窗口帧结构体
+/// 作用：用作gui控件的容器
+pub struct Frame {
     pub glob_pipeline: PipelineState,
     pub comp_graph_arr: Vec<Box<dyn ComponentModel>>,
     pub wgcontext: WGContext,
 }
 
-impl Container {
+impl Frame {
     fn new(wgcontext: WGContext) -> Self {
         let glob_pipeline = PipelineState::default(&wgcontext.device);
+
         let comp_graph_arr = Vec::with_capacity(20);
         Self {
             glob_pipeline,
@@ -32,32 +35,19 @@ impl Container {
         }
     }
 
-    fn update_comp_arr(&mut self, mut comp: Box<dyn ComponentModel>) {
-        if self.comp_graph_arr.len() == 0 {
-            log::info!("push the first component");
-            comp.set_index(0);
-            self.comp_graph_arr.push(comp);
-        } else if self.comp_graph_arr.len() != 0 {
-            log::info!("-----update component array-----");
-            log::info!("get current componet index: {:#?}", comp.get_index());
-            if comp.get_index() != None {
-                self.comp_graph_arr.insert(comp.get_index().unwrap(), comp);
-            } else {
-                comp.set_index(self.comp_graph_arr.len() - 1);
-                self.comp_graph_arr.push(comp);
-            }
-        }
+    fn add_comp_arr(&mut self, mut comp: Box<dyn ComponentModel>) {
+        self.comp_graph_arr.push(comp);
     }
 }
 
-impl Painter for Container {
+impl Container for Frame {
     fn new(wgcontext: WGContext) -> Self {
-        Container::new(wgcontext)
+        Frame::new(wgcontext)
     }
 
     fn add_comp<C>(&mut self, comp: C)
         where C: ComponentModel + Listener + 'static {
-        self.update_comp_arr(Box::new(comp))
+        self.add_comp_arr(Box::new(comp))
     }
 
     /*  fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -75,8 +65,6 @@ impl Painter for Container {
         }
         input
     }
-
-    fn update(&mut self) {}
 
     fn render(&mut self) {
         let screen_displayed = self.wgcontext
@@ -108,7 +96,6 @@ impl Painter for Container {
         };
         log::info!("graph_context size:{}", self.comp_graph_arr.len());
         for view in &mut self.comp_graph_arr {
-            view.set_glob_pipeline(&self.wgcontext, &mut self.glob_pipeline);
             view.draw(&self.wgcontext, &mut utils, &self.glob_pipeline);
         }
         self.wgcontext.queue.submit(std::iter::once(utils.encoder.finish()));

@@ -1,6 +1,6 @@
 use crate::graphic::base::color::{BLACK, LIGHT_BLUE, LIGHT_WHITE, RGBA};
 
-///  边框
+/// 边框枚举
 #[derive(Copy, Clone, Debug)]
 pub enum Bordering {
     /// 边框颜色
@@ -9,7 +9,7 @@ pub enum Bordering {
     NoBorder,
 }
 
-///  圆角
+/// 圆角枚举
 #[derive(Copy, Clone, Debug)]
 pub enum Rounding {
     /// 圆角宽度和颜色
@@ -18,12 +18,19 @@ pub enum Rounding {
     NoRound,
 }
 
+/// 样式结构体
+/// 作用：设置图形样式
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Style {
+    /// 是否有边界
     border: Bordering,
+    /// 是否圆角
     round: Rounding,
+    /// 文字颜色
     font_color: RGBA,
+    /// 背景色
     background_color: RGBA,
+    /// 悬浮色
     hover_color: RGBA,
 }
 

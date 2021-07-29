@@ -8,6 +8,7 @@ use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::render_function::RenderUtil;
 use std::borrow::BorrowMut;
 
+/// 渲染顶点缓冲结构体
 #[derive(Debug)]
 pub struct VertexBuffer {
     pub vertex_buffer: wgpu::Buffer,

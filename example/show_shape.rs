@@ -1,12 +1,11 @@
 use simple_logger::SimpleLogger;
 
 use LemoGUI::device::display_window::*;
-use LemoGUI::device::painter::Painter;
+use LemoGUI::device::container::Container;
 use LemoGUI::graphic::base::color::*;
 use LemoGUI::graphic::base::shape::*;
 use LemoGUI::graphic::style::*;
-use LemoGUI::widget::component::ComponentModel;
-use LemoGUI::widget::container::Container;
+use LemoGUI::widget::frame::Frame;
 use LemoGUI::widget::drawing_board::ShapeBoard;
 
 fn main() {
@@ -16,12 +15,12 @@ fn main() {
     builder = builder.with_title("hello")
         .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0));
 
-    DisplayWindow::start_window::<Container>(builder, &build_container)
+    DisplayWindow::start_window::<Frame>(builder, &build_container)
 }
 
-fn build_container(wgcontext: WGContext) -> Container
+fn build_container(wgcontext: WGContext) -> Frame
 {
-    let mut container = Container::new(wgcontext);
+    let mut container = Frame::new(wgcontext);
     container.add_comp(shapes());
     container
 }

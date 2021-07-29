@@ -8,20 +8,26 @@ use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::style::*;
 use crate::widget::listener::Listener;
 
-/// 组件属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
+/// 公共组件结构体
 #[derive(Debug, Default)]
 pub struct Component {
+    /// 组件尺寸
     size: Rectangle,
+    /// 图形缓存
     render_buffer: Option<RenderGraph>,
+    /// 组件样式
     style: Style,
+    /// 是否重绘
     is_redraw: bool,
 }
 
+/// 组件模型trait
+/// 作用：定义组件必须的公共方法接口
 pub trait ComponentModel: Listener {
-    fn set_index(&mut self, _index: usize) {}
-    fn get_index(&self) -> Option<usize> { None }
+    #[deprecated]
     fn to_graph(&mut self, _wgcontext: &WGContext) -> Option<&RenderGraph> { None }
-    fn set_glob_pipeline(&self, wgcontext: &WGContext, glob_pipeline: &mut PipelineState);
+
+    /// 组件绘制方法实现
     fn draw(&mut self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
         match self.to_graph(wgcontext) {
             Some(render_buffer) => {
@@ -48,7 +54,7 @@ impl<'a> Component {
     pub fn set_is_redraw(&mut self, is_redraw: bool) {
         self.is_redraw = is_redraw;
     }
-
+    #[deprecated]
     pub fn to_graph(&mut self, text: &String, display_window: &WGContext) -> &RenderGraph {
         if self.is_redraw {
             self.render_buffer = Some(self.convert_graph(text, display_window));
@@ -71,7 +77,7 @@ impl<'a> Component {
     pub fn set_style(&mut self, style: Style) {
         self.style = style;
     }
-
+    #[deprecated]
     fn convert_graph(&self, text: &String, display_window: &WGContext) -> RenderGraph {
         let vertex_buffer =
             TextureVertex::from_shape_to_vector

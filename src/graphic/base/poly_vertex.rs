@@ -7,7 +7,7 @@ use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
-/// 多边形形缓存顶点结构体
+/// 多边形顶点数据布局结构体
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct PolyVertex {

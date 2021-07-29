@@ -2,12 +2,12 @@ use simple_logger::SimpleLogger;
 use winit::event::VirtualKeyCode::Key1;
 
 use LemoGUI::device::display_window::{DisplayWindow, WGContext};
-use LemoGUI::device::painter::Painter;
+use LemoGUI::device::container::Container;
 use LemoGUI::graphic::base::color::*;
 use LemoGUI::graphic::base::shape::{Point, Rectangle};
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::button::Button;
-use LemoGUI::widget::container::Container;
+use LemoGUI::widget::frame::Frame;
 use LemoGUI::widget::listener::State;
 
 fn main() {
@@ -17,10 +17,10 @@ fn main() {
     builder = builder.with_title("hello")
         .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0));
 
-    DisplayWindow::start_window::<Container>(builder, &build_container)
+    DisplayWindow::start_window::<Frame>(builder, &build_container)
 }
 
-fn build_container(wgcontext: WGContext) -> Container
+fn build_container(wgcontext: WGContext) -> Frame
 {
     // 自定义设置
     let rect = Rectangle::new(100.0, 100.0, 170, 40);
@@ -32,14 +32,13 @@ fn build_container(wgcontext: WGContext) -> Container
         .font_color(RGBA(0.0, 0.0, 0.0, 1.0))
         .round();
     let button = Button::new_with_style(rect, style, "button1");
-    log::info!("{:#?}", &button.index);
-    let mut container = Container::new(wgcontext);
+    let mut container = Frame::new(wgcontext);
     container.add_comp(button);
     container
         .add_comp(
             Button::new(
                 Point { x: 100.0, y: 300.0 },
                 "按钮2")
-                .set_state(Some(State::new(Some(Key1)))));
+                .update_state(Some(State::new(Some(Key1)))));
     container
 }

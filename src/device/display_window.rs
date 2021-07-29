@@ -6,25 +6,37 @@ use winit::event::*;
 use winit::event_loop::*;
 use winit::window::*;
 
-use crate::device::painter::Painter;
+use crate::device::container::Container;
 
+/// 窗口结构体
+/// 作用：封装窗体，事件循环器，图形上下文
 pub struct DisplayWindow {
+    /// 窗体
     pub window: Window,
+    /// 事件监听器
     pub event_loop: EventLoop<()>,
+    /// 窗体尺寸
     pub size: winit::dpi::PhysicalSize<u32>,
+    /// 图形上下文
     pub wgcontext: WGContext,
 }
 
+/// 图形渲染上下文结构体
+/// 作用：封装wgpu渲染所需的结构体
 pub struct WGContext {
+    /// 渲染面板
     pub surface: wgpu::Surface,
+    /// 图形设备
     pub device: wgpu::Device,
+    /// 渲染命令队列
     pub queue: wgpu::Queue,
+    /// 交换缓冲区描述符
     pub sc_desc: wgpu::SwapChainDescriptor,
 }
 
 impl DisplayWindow {
     /// 初始化窗口
-    pub async fn init<E: Painter>(builder: WindowBuilder) -> DisplayWindow {
+    pub async fn init(builder: WindowBuilder) -> DisplayWindow {
         log::info!("Initializing the window...");
         let event_loop = winit::event_loop::EventLoop::new();
         let window = builder.build(&event_loop).unwrap();
@@ -76,8 +88,9 @@ impl DisplayWindow {
         }
     }
 
-    pub fn start<E>(window: Window, event_loop: EventLoop<()>, container: E)
-        where E: Painter + 'static
+    /// 启动窗口事件循环器
+    pub fn start<C>(window: Window, event_loop: EventLoop<()>, container: C)
+        where C: Container + 'static
     {
         log::info!("Entering render loop...");
         let (mut sender, receiver) = mpsc::unbounded();
@@ -118,19 +131,21 @@ impl DisplayWindow {
         });
     }
 
-    pub fn start_window<E>(builder: WindowBuilder, build_container: &Fn(WGContext) -> E)
-        where E: Painter + 'static
+    /// 装填组件容器，启动窗口
+    pub fn start_window<C>(builder: WindowBuilder, build_container: &Fn(WGContext) -> C)
+        where C: Container + 'static
     {
         use futures::executor::block_on;
-        let display_device = block_on(DisplayWindow::init::<E>(builder));
+        let display_device = block_on(DisplayWindow::init(builder));
         log::info!("Initializing the example...");
-        DisplayWindow::start::<E>(display_device.window, display_device.event_loop,
+        DisplayWindow::start::<C>(display_device.window, display_device.event_loop,
                                   build_container(display_device.wgcontext));
     }
 }
 
-pub async fn event_listener<T, E>(window: Window, mut container: E, mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, T>>)
-    where T: std::fmt::Debug, E: Painter + 'static
+/// 事件监听方法
+pub async fn event_listener<T, C>(window: Window, mut container: C, mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, T>>)
+    where T: std::fmt::Debug, C: Container + 'static
 {
     while let Some(event) = receiver.next().await {
         // log::info!("{:#?}", event);

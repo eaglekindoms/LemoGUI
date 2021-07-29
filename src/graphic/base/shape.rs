@@ -16,7 +16,7 @@ pub enum ShapeType {
     CIRCLE = 4,
 }
 
-/// 二维顶点结构体
+/// 点结构体
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Point {
@@ -93,7 +93,9 @@ impl Polygon {
 
 /// 图形缓冲转换接口
 pub trait ShapeBuffer {
+    /// 转换为顶点缓冲数据
     fn to_buffer(&self, wgcontext: &WGContext, style: &Style) -> VertexBuffer;
+    /// 获取图形类型
     fn get_type(&self) -> ShapeType;
 }
 

@@ -14,9 +14,10 @@ use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 #[derive(Debug)]
 pub struct PipelineState {
     context: HashMap<ShapeType, RenderPipeline>,
-    // device:&'a Device
 }
 
+/// 图元渲染器
+#[derive(Debug)]
 pub struct Shader {
     pub vs_module: wgpu::ShaderModule,
     pub fs_module: wgpu::ShaderModule,
@@ -28,10 +29,15 @@ impl PipelineState {
         // 全局设置
         log::info!("create the PipelineState obj");
         let context = HashMap::with_capacity(4);
-        Self {
+        let mut glob_pipeline = Self {
             context,
-            // device
-        }
+        };
+        glob_pipeline.set_pipeline(device, ShapeType::ROUND);
+        glob_pipeline.set_pipeline(device, ShapeType::CIRCLE);
+        glob_pipeline.set_pipeline(device, ShapeType::POLYGON);
+        glob_pipeline.set_pipeline(device, ShapeType::BORDER);
+        glob_pipeline.set_pipeline(device, ShapeType::TEXTURE);
+        glob_pipeline
     }
     /// 创建渲染管道
     /// 参数：全局状态，着色器，渲染类型
@@ -77,6 +83,7 @@ impl PipelineState {
             }
         }
     }
+    /// 获取渲染管线
     pub fn get_pipeline(&self, shape_type: ShapeType) -> Option<&RenderPipeline> {
         self.context.get(&shape_type)
     }

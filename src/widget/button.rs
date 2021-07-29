@@ -3,20 +3,21 @@ use std::fmt::Debug;
 use winit::event::*;
 
 use crate::device::display_window::WGContext;
+use crate::graphic::base::shape::{Point, Rectangle};
 use crate::graphic::render_middle::render_function::RenderGraph;
 use crate::graphic::style::*;
 use crate::widget::component::Component;
 use crate::widget::component::ComponentModel;
 use crate::widget::listener::{Listener, State};
-use crate::graphic::base::shape::{Rectangle, Point, ShapeType};
-use crate::graphic::render_middle::pipeline_state::PipelineState;
 
-/// 按钮属性：矩形，背景颜色，聚焦颜色，文字颜色，文本内容
+/// 按钮控件结构体
 #[derive(Debug)]
 pub struct Button {
+    /// 按钮组件样式
     pub context: Component,
+    /// 内容文本
     pub text: String,
-    pub index: Option<usize>,
+    /// 控件状态
     pub state: Option<State>,
 }
 
@@ -26,7 +27,6 @@ impl<'a> Button {
         Self {
             context: Component::new(rect, style),
             text: text.into(),
-            index: None,
             state: None,
         }
     }
@@ -38,17 +38,18 @@ impl<'a> Button {
         Self {
             context: Component::new(rect, Style::default()),
             text,
-            index: None,
             state: None,
         }
     }
 
-    pub fn set_state(mut self, state: Option<State>) -> Self {
+    /// 更新状态
+    pub fn update_state(mut self, state: Option<State>) -> Self {
         self.state = state;
         self
     }
 
-    pub fn update_text<S: Into<String>>(&mut self, text: S) {
+    /// 更新内容
+    pub fn update_content<S: Into<String>>(&mut self, text: S) {
         self.text = text.into();
         self.context.set_is_redraw(true);
     }
@@ -59,25 +60,9 @@ impl<'a> Button {
 }
 
 impl<'a> ComponentModel for Button {
-    fn set_index(&mut self, index: usize) {
-        self.index = Option::from(index);
-    }
-
-    fn get_index(&self) -> Option<usize> {
-        self.index
-    }
-
     fn to_graph(&mut self, wgcontext: &WGContext) -> Option<&RenderGraph> {
         let text = &self.text;
         Some(self.context.to_graph(text, wgcontext))
-    }
-
-    fn set_glob_pipeline(&self, wgcontext: &WGContext, glob_pipeline: &mut PipelineState) {
-        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::ROUND);
-        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::CIRCLE);
-        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::POLYGON);
-        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::BORDER);
-        glob_pipeline.set_pipeline(&wgcontext.device, ShapeType::TEXTURE);
     }
 }
 
@@ -100,7 +85,7 @@ impl<'a> Listener for Button {
                     }if virtual_keycode.as_ref() == key => {
                         if *state == ElementState::Pressed {
                             let text = self.text.as_str().to_owned() + "2";
-                            self.update_text(text);
+                            self.update_content(text);
                             input = true;
                         } else if *state == ElementState::Released {}
                     }

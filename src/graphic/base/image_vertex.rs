@@ -6,7 +6,7 @@ use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 use crate::graphic::base::shape::Rectangle;
 
-/// 2D纹理顶点数据
+/// 2D纹理顶点数据布局结构体
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct TextureVertex {

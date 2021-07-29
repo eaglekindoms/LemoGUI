@@ -2,9 +2,14 @@ use wgpu::*;
 
 use crate::graphic::render_middle::pipeline_state::Shader;
 
+/// wgpu图形顶点布局trait
+/// 作用：定义顶点布局接口
 pub trait VertexInterface: Sized {
+    /// 设置图形顶点缓存布局
     fn set_vertex_desc<'a>() -> wgpu::VertexBufferLayout<'a>;
+    /// 设置图元渲染器
     fn set_shader(device: &Device) -> Shader;
+    /// 设置渲染管线布局
     fn set_pipeline_layout(device: &Device) -> PipelineLayout {
         let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
@@ -13,7 +18,7 @@ pub trait VertexInterface: Sized {
         });
         return render_pipeline_layout;
     }
-
+    /// 创建渲染管线
     fn create_render_pipeline(device: &Device,
                               fill_topology: PrimitiveTopology,
     ) -> RenderPipeline {

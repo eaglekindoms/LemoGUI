@@ -6,7 +6,7 @@ use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 use crate::graphic::style::{Bordering, Rounding, Style};
 use crate::graphic::base::shape::Rectangle;
 
-
+/// 矩形顶点数据布局结构体
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 #[repr(C)]
 pub struct RectVertex {

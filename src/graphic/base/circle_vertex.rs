@@ -6,7 +6,7 @@ use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer::{VertexBuffer, RECT_INDEX};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
-/// 2d图形缓存顶点结构体
+/// 圆形顶点数据布局结构体
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct CircleVertex {

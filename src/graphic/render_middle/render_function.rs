@@ -1,6 +1,5 @@
 use wgpu::{CommandEncoder, SwapChainTexture};
 
-use crate::device::display_window::WGContext;
 use crate::graphic::base::shape::ShapeType;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
@@ -14,6 +13,9 @@ pub struct RenderGraph {
     pub context_buffer: TextureBuffer,
 }
 
+/// 渲染工具封装结构体
+/// 作用：省事
+#[derive(Debug)]
 pub struct RenderUtil {
     pub encoder: CommandEncoder,
     pub target: SwapChainTexture,
@@ -31,12 +33,8 @@ impl RenderGraph {
     }
 }
 
-pub trait Render {
-    fn draw<'a>(&'a self, wgcontext: &WGContext, render_pass: &mut wgpu::RenderPass<'a>,
-                glob_pipeline: &'a PipelineState);
-}
-
 impl RenderUtil {
+    /// 创建渲染中间变量
     pub fn create_render_pass<'a>(&'a mut self) -> wgpu::RenderPass<'a> {
         let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
