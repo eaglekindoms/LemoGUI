@@ -86,7 +86,7 @@ impl Style {
         &self.round
     }
 
-    pub fn get_background_color(&self) -> RGBA {
+    pub fn get_back_color(&self) -> RGBA {
         self.background_color
     }
 

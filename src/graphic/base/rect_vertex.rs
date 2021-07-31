@@ -87,7 +87,7 @@ impl RectVertex {
             Rounding::Round => is_round = 1,
             Rounding::NoRound => is_round = 0,
         }
-        frame_color = style.get_background_color().to_f32();
+        frame_color = style.get_back_color().to_f32();
 
         let vect = vec![
             RectVertex {

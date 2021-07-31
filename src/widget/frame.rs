@@ -50,15 +50,14 @@ impl Container for Frame {
         self.add_comp_arr(Box::new(comp))
     }
 
-    /*  fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-          // self.size = new_size;
-          // self.sc_desc.width = new_size.width;
-          // self.sc_desc.height = new_size.height;
-          // self.swap_chain = self.device.create_swap_chain(&self.surface, &self.sc_desc);
-      }*/
-
     fn input(&mut self, event: &WindowEvent) -> bool {
-        // for listener in &self.graph_context {}
+        match event {
+            WindowEvent::Resized(new_inner_size)=> {
+                self.wgcontext.sc_desc.width = new_inner_size.width;
+                self.wgcontext.sc_desc.height = new_inner_size.height;
+            }
+            _ => {}
+        }
         let mut input = false;
         for comp in &mut self.comp_graph_arr {
             input = comp.key_listener(event);
@@ -70,7 +69,6 @@ impl Container for Frame {
         let screen_displayed = self.wgcontext
             .device
             .create_swap_chain(&self.wgcontext.surface, &self.wgcontext.sc_desc);
-
         let target = screen_displayed.get_current_frame().unwrap().output;
         let mut encoder = self.wgcontext.device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {

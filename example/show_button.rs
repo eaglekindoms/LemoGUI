@@ -17,10 +17,10 @@ fn main() {
     builder = builder.with_title("hello")
         .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0));
 
-    DisplayWindow::start_window::<Frame>(builder, &build_container)
+    DisplayWindow::start_window::<Frame>(builder, &frame)
 }
 
-fn build_container(wgcontext: WGContext) -> Frame
+fn frame(wgcontext: WGContext) -> Frame
 {
     // 自定义设置
     let rect = Rectangle::new(100.0, 100.0, 170, 40);
@@ -32,13 +32,13 @@ fn build_container(wgcontext: WGContext) -> Frame
         .font_color(RGBA(0.0, 0.0, 0.0, 1.0))
         .round();
     let button = Button::new_with_style(rect, style, "button1");
-    let mut container = Frame::new(wgcontext);
-    container.add_comp(button);
-    container
+    let mut frame = Frame::new(wgcontext);
+    frame.add_comp(button);
+    frame
         .add_comp(
             Button::new(
                 Point { x: 100.0, y: 300.0 },
                 "按钮2")
                 .update_state(Some(State::new(Some(Key1)))));
-    container
+    frame
 }

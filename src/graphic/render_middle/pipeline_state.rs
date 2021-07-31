@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use wgpu::*;
 use wgpu::PrimitiveTopology::*;
 
-use crate::graphic::base::circle_vertex::CircleVertex;
+use crate::graphic::base::poly_vertex::PolygonVertex;
 use crate::graphic::base::image_vertex::TextureVertex;
-use crate::graphic::base::poly_vertex::PolyVertex;
+use crate::graphic::base::triangle_vertex::PointVertex;
 use crate::graphic::base::rect_vertex::RectVertex;
 use crate::graphic::base::shape::ShapeType;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
@@ -33,8 +33,8 @@ impl PipelineState {
             context,
         };
         glob_pipeline.set_pipeline(device, ShapeType::ROUND);
-        glob_pipeline.set_pipeline(device, ShapeType::CIRCLE);
         glob_pipeline.set_pipeline(device, ShapeType::POLYGON);
+        glob_pipeline.set_pipeline(device, ShapeType::POINT);
         glob_pipeline.set_pipeline(device, ShapeType::BORDER);
         glob_pipeline.set_pipeline(device, ShapeType::TEXTURE);
         glob_pipeline
@@ -64,21 +64,21 @@ impl PipelineState {
                 }
             }
             ShapeType::BORDER => {
-                let pipeline = PolyVertex::create_render_pipeline(device, LineStrip);
+                let pipeline = PointVertex::create_render_pipeline(device, LineStrip);
                 if self.context.get(&ShapeType::BORDER).is_none() {
                     self.context.insert(ShapeType::BORDER, pipeline);
                 }
             }
-            ShapeType::POLYGON => {
-                let pipeline = PolyVertex::create_render_pipeline(device, TriangleList);
-                if self.context.get(&ShapeType::POLYGON).is_none() {
-                    self.context.insert(ShapeType::POLYGON, pipeline);
+            ShapeType::POINT => {
+                let pipeline = PointVertex::create_render_pipeline(device, TriangleList);
+                if self.context.get(&ShapeType::POINT).is_none() {
+                    self.context.insert(ShapeType::POINT, pipeline);
                 }
             }
-            ShapeType::CIRCLE => {
-                let pipeline = CircleVertex::create_render_pipeline(device, TriangleStrip);
-                if self.context.get(&ShapeType::CIRCLE).is_none() {
-                    self.context.insert(ShapeType::CIRCLE, pipeline);
+            ShapeType::POLYGON => {
+                let pipeline = PolygonVertex::create_render_pipeline(device, TriangleStrip);
+                if self.context.get(&ShapeType::POLYGON).is_none() {
+                    self.context.insert(ShapeType::POLYGON, pipeline);
                 }
             }
         }

@@ -36,9 +36,9 @@ impl VertexInterface for TextureVertex {
 
     fn set_shader(device: &Device) -> Shader {
         let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/font.vert.spv"));
+            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/image.vert.spv"));
         let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/font.frag.spv"));
+            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/image.frag.spv"));
 
         Shader {
             vs_module,

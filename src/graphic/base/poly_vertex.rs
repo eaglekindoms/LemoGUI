@@ -1,35 +1,39 @@
 use wgpu::*;
 
-use crate::device::display_window::WGContext;
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::shape::*;
 use crate::graphic::render_middle::pipeline_state::Shader;
-use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
+use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
 
-/// 多边形顶点数据布局结构体
+/// 圆形顶点数据布局结构体
+/// 顶点顺序为左下开始逆时针排序
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct PolyVertex {
+pub struct PolygonVertex {
     pub position: Point,
     pub color: RGBA,
+    pub radius: f32,
+    pub edge: u32,
 }
 
-impl PolyVertex {
-    pub fn new(x: f32, y: f32, color: RGBA) -> Self {
-        log::info!("create the PolyVertex obj");
+impl PolygonVertex {
+    pub fn new(point: &Circle, edge: u32, color: RGBA) -> Self {
+        log::info!("create the PolygonVertex obj");
         Self {
-            position: Point { x, y },
+            position: point.position,
             color,
+            radius: point.radius,
+            edge,
         }
     }
 }
 
-impl VertexInterface for PolyVertex {
+impl VertexInterface for PolygonVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<PolyVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Vertex,
+            array_stride: std::mem::size_of::<PolygonVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::InputStepMode::Instance,
             attributes: &[
                 wgpu::VertexAttribute {
                     offset: 0,
@@ -41,15 +45,25 @@ impl VertexInterface for PolyVertex {
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x4,
                 },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 6]>() as wgpu::BufferAddress,
+                    shader_location: 2,
+                    format: wgpu::VertexFormat::Float32,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 7]>() as wgpu::BufferAddress,
+                    shader_location: 3,
+                    format: wgpu::VertexFormat::Uint32,
+                },
             ],
         }
     }
 
     fn set_shader(device: &Device) -> Shader {
         let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/rect.vert.spv"));
+            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/polygon.vert.spv"));
         let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/rect.frag.spv"));
+            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/polygon.frag.spv"));
 
         Shader {
             vs_module,
@@ -58,23 +72,11 @@ impl VertexInterface for PolyVertex {
     }
 }
 
-impl PolyVertex {
-    pub fn from_shape_to_vector(wgcontext: &WGContext, points: &Vec<Point>, color: RGBA) -> VertexBuffer {
-        let vertex_nums = (points.len() - 3) * 2 + points.len();
-        let mut vect = Vec::with_capacity(points.len());
-        let mut indices = Vec::with_capacity(vertex_nums);
-        for i in 0..points.len() {
-            vect.push(PolyVertex::new(points[i].x, points[i].y, color));
-        }
-        let mut i = 1u16;
-        while i < points.len() as u16 - 1 {
-            indices.push(0);
-            indices.push(i);
-            i = i + 1;
-            indices.push(i);
-        }
-        let point_buffer = VertexBuffer::create_vertex_buf::<PolyVertex>
-            (&wgcontext.device, vect, indices.as_slice());
-        point_buffer
+impl PolygonVertex {
+    pub fn from_shape_to_vector(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, circle: PolygonVertex) -> VertexBuffer {
+        let vect = vec![circle];
+        let cricle_buffer = VertexBuffer::create_vertex_buf::<PolygonVertex>
+            (device, vect, RECT_INDEX);
+        cricle_buffer
     }
 }
