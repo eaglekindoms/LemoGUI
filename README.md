@@ -1,13 +1,12 @@
 # LemoGUI
 
-### 目标
-1. 实现一个图形用户界面库，提供一些基本组件
-   * [x] Button 
-   * [x] Text Input
-   * [x] Image Display
-2. 组件实现与底层渲染解耦，可绑定不同的图形驱动库
-   * [x] wgpu 
-
+## Features
+### Implement a GUI library dependent on wgpu
+#### Plan
+   1. Provide basic 2D graphics drawing API.
+   2. Define basic widgets.
+   3. Provide renderer to widgets through the drawing API.
+   4. Provide event listeners to widgets.
 
 ### the third party library dependencies
 
