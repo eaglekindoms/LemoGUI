@@ -16,7 +16,7 @@ pub struct DisplayWindow {
     /// 事件监听器
     pub event_loop: EventLoop<()>,
     /// 窗体尺寸
-    pub size: winit::dpi::PhysicalSize<u32>,
+    // pub size: winit::dpi::PhysicalSize<u32>,
     /// 图形上下文
     pub wgcontext: WGContext,
 }
@@ -78,7 +78,7 @@ impl DisplayWindow {
         DisplayWindow {
             window,
             event_loop,
-            size,
+            // size,
             wgcontext: WGContext {
                 surface,
                 device,
@@ -89,7 +89,7 @@ impl DisplayWindow {
     }
 
     /// 启动窗口事件循环器
-    pub fn start<C>(window: Window, event_loop: EventLoop<()>, container: C)
+    pub fn run<C>(window: Window, event_loop: EventLoop<()>, container: C)
         where C: Container + 'static
     {
         log::info!("Entering render loop...");
@@ -100,6 +100,7 @@ impl DisplayWindow {
             if let ControlFlow::Exit = control_flow {
                 return;
             }
+            // 封装窗口尺寸变更事件
             let event = match event {
                 Event::WindowEvent {
                     event:
@@ -114,6 +115,7 @@ impl DisplayWindow {
                 }),
                 _ => event.to_static(),
             };
+            // 异步发送到事件监听器
             if let Some(event) = event {
                 sender.start_send(event).expect("Send event");
                 let poll = instance.as_mut().poll(&mut context);
@@ -132,14 +134,14 @@ impl DisplayWindow {
     }
 
     /// 装填组件容器，启动窗口
-    pub fn start_window<C>(builder: WindowBuilder, build_container: &Fn(WGContext) -> C)
+    pub fn start<C>(builder: WindowBuilder, build_container: &Fn(WGContext) -> C)
         where C: Container + 'static
     {
         use futures::executor::block_on;
         let display_device = block_on(DisplayWindow::init(builder));
         log::info!("Initializing the example...");
-        DisplayWindow::start::<C>(display_device.window, display_device.event_loop,
-                                  build_container(display_device.wgcontext));
+        DisplayWindow::run::<C>(display_device.window, display_device.event_loop,
+                                build_container(display_device.wgcontext));
     }
 }
 
@@ -157,9 +159,15 @@ pub async fn event_listener<T, C>(window: Window, mut container: C, mut receiver
                 if container.input(event) {
                     container.render();
                 }
+                // 捕获窗口关闭请求
+                match event {
+                    WindowEvent::CloseRequested =>
+                        break,
+                    _ => {}
+                }
             }
-            Event::RedrawRequested(_) => {
-                // state.update();
+            Event::RedrawRequested(window_id)
+            if window_id == window.id() => {
                 container.render();
             }
             // Event::MainEventsCleared => {
