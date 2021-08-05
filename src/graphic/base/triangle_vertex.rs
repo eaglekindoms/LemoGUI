@@ -5,27 +5,27 @@ use crate::graphic::base::color::RGBA;
 use crate::graphic::base::shape::*;
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
-use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
 /// 多边形顶点数据布局结构体
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct PointVertex {
-    pub position: Point,
-    pub color: RGBA,
+    pub position: [f32; 2],
+    pub color: [f32; 4],
 }
 
 impl PointVertex {
     pub fn new(x: f32, y: f32, color: RGBA) -> Self {
         log::info!("create the PointVertex obj");
         Self {
-            position: Point { x, y },
-            color,
+            position: [x, y],
+            color: color.to_vec(),
         }
     }
 }
 
-impl VertexInterface for PointVertex {
+impl VertexLayout for PointVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<PointVertex>() as wgpu::BufferAddress,
@@ -47,9 +47,9 @@ impl VertexInterface for PointVertex {
 
     fn set_shader(device: &Device) -> Shader {
         let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/triangle.vert.spv"));
+            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/triangle.vert.spv")));
         let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/triangle.frag.spv"));
+            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/triangle.frag.spv")));
 
         Shader {
             vs_module,
@@ -59,7 +59,7 @@ impl VertexInterface for PointVertex {
 }
 
 impl PointVertex {
-    pub fn from_shape_to_vector(wgcontext: &WGContext, points: &Vec<Point>, color: RGBA) -> VertexBuffer {
+    pub fn from_shape_to_vector(wgcontext: &WGContext, points: &Vec<Point<f32>>, color: RGBA) -> VertexBuffer {
         let vertex_nums = (points.len() - 3) * 2 + points.len();
         let mut vect = Vec::with_capacity(points.len());
         let mut indices = Vec::with_capacity(vertex_nums);

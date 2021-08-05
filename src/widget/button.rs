@@ -8,7 +8,7 @@ use crate::graphic::render_middle::render_function::RenderGraph;
 use crate::graphic::style::*;
 use crate::widget::component::Component;
 use crate::widget::component::ComponentModel;
-use crate::widget::listener::{Listener, State};
+use crate::widget::listener::{Listener, Message};
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -18,7 +18,7 @@ pub struct Button {
     /// 内容文本
     pub text: String,
     /// 控件状态
-    pub state: Option<State>,
+    pub state: Option<Message>,
 }
 
 impl<'a> Button {
@@ -31,7 +31,7 @@ impl<'a> Button {
         }
     }
 
-    pub fn new<S: Into<String>>(pos: Point, text: S) -> Self {
+    pub fn new<S: Into<String>>(pos: Point<f32>, text: S) -> Self {
         let text = text.into();
         let rect = Rectangle::new(pos.x, pos.y, (text.len() * 10) as u32, 40);
         log::info!("create the Button obj use default");
@@ -43,7 +43,7 @@ impl<'a> Button {
     }
 
     /// 更新状态
-    pub fn update_state(mut self, state: Option<State>) -> Self {
+    pub fn update_state(mut self, state: Option<Message>) -> Self {
         self.state = state;
         self
     }

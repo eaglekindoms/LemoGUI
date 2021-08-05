@@ -1,10 +1,10 @@
 use wgpu::*;
 
+use crate::graphic::base::shape::Rectangle;
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
-use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 use crate::graphic::style::{Bordering, Rounding, Style};
-use crate::graphic::base::shape::Rectangle;
 
 /// 矩形顶点数据布局结构体
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -17,7 +17,7 @@ pub struct RectVertex {
     pub is_round_or_border: [u32; 2],
 }
 
-impl VertexInterface for RectVertex {
+impl VertexLayout for RectVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<RectVertex>() as wgpu::BufferAddress,
@@ -29,21 +29,21 @@ impl VertexInterface for RectVertex {
                     format: wgpu::VertexFormat::Float32x2,
                 },
                 wgpu::VertexAttribute {
-                    offset: 4 * 2,
+                    offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
                 },
                 wgpu::VertexAttribute {
-                    offset: 4 * (2 + 2),
+                    offset: std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
                     shader_location: 2,
                     format: wgpu::VertexFormat::Float32x4,
                 }, wgpu::VertexAttribute {
-                    offset: 4 * (2 + 2 + 4),
+                    offset: std::mem::size_of::<[f32; 8]>() as wgpu::BufferAddress,
                     shader_location: 3,
                     format: wgpu::VertexFormat::Float32x4,
                 },
                 wgpu::VertexAttribute {
-                    offset: 4 * (2 + 2 + 4 + 4),
+                    offset: std::mem::size_of::<[f32; 12]>() as wgpu::BufferAddress,
                     shader_location: 4,
                     format: wgpu::VertexFormat::Uint32x2,
                 },
@@ -53,9 +53,9 @@ impl VertexInterface for RectVertex {
 
     fn set_shader(device: &Device) -> Shader {
         let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/round_rect.vert.spv"));
+            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.vert.spv")));
         let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/round_rect.frag.spv"));
+            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.frag.spv")));
 
         Shader {
             vs_module,
@@ -75,7 +75,7 @@ impl RectVertex {
 
         match style.get_border() {
             Bordering::Border(color) => {
-                border_color = color.to_f32();
+                border_color = color.to_vec();
                 is_border = 1;
             }
             Bordering::NoBorder => {
@@ -87,7 +87,7 @@ impl RectVertex {
             Rounding::Round => is_round = 1,
             Rounding::NoRound => is_round = 0,
         }
-        frame_color = style.get_back_color().to_f32();
+        frame_color = style.get_back_color().to_vec();
 
         let vect = vec![
             RectVertex {

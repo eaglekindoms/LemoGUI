@@ -1,4 +1,6 @@
+use image::GenericImageView;
 use simple_logger::SimpleLogger;
+use winit::window::Icon;
 
 use LemoGUI::device::container::Container;
 use LemoGUI::device::display_window::*;
@@ -7,15 +9,21 @@ use LemoGUI::graphic::base::shape::*;
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::drawing_board::ShapeBoard;
 use LemoGUI::widget::frame::Frame;
+use std::path::Path;
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
     log::info!("build window");
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/res/icon.png");
+
+    let icon = load_icon(Path::new(path));
+
     let mut builder = winit::window::WindowBuilder::new();
     builder = builder.with_title("hello")
-        .with_inner_size(winit::dpi::LogicalSize::new(428.0, 633.0));
+        .with_inner_size(winit::dpi::LogicalSize::new(428.0, 633.0))
+        .with_window_icon(Some(icon) );
 
-    DisplayWindow::start_window::<Frame>(builder, &frame)
+    DisplayWindow::start::<Frame>(builder, &frame)
 }
 
 fn frame(wgcontext: WGContext) -> Frame
@@ -26,7 +34,7 @@ fn frame(wgcontext: WGContext) -> Frame
 }
 
 fn shapes() -> ShapeBoard {
-    let mut shapes: Vec<Box<dyn ShapeBuffer>> = Vec::with_capacity(10);
+    let mut shapes: Vec<Box<dyn ShapeGraph>> = Vec::with_capacity(10);
     let rect = Rectangle::new(21.0, 31.0, 221, 111);
     let rect2 = Rectangle::new(21.0, 181.0, 221, 111);
     let circle = Circle::new(401., 160.2, 110.2);
@@ -53,4 +61,15 @@ fn shapes() -> ShapeBoard {
     }
 }
 
+fn load_icon(path: &Path) -> Icon {
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = image::open(path)
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+    Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
+}
 

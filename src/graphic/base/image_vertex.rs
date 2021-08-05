@@ -1,10 +1,10 @@
 use wgpu::*;
 
+use crate::graphic::base::shape::Rectangle;
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
-use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
-use crate::graphic::base::shape::Rectangle;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
 /// 2D纹理顶点数据布局结构体
 #[repr(C)]
@@ -14,7 +14,7 @@ pub struct TextureVertex {
     pub tex_coords: [f32; 2],
 }
 
-impl VertexInterface for TextureVertex {
+impl VertexLayout for TextureVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<TextureVertex>() as wgpu::BufferAddress,
@@ -36,9 +36,9 @@ impl VertexInterface for TextureVertex {
 
     fn set_shader(device: &Device) -> Shader {
         let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/image.vert.spv"));
+            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/image.vert.spv")));
         let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!("../../../shader_c/image.frag.spv"));
+            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/image.frag.spv")));
 
         Shader {
             vs_module,

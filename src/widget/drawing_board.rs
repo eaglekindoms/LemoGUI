@@ -1,6 +1,6 @@
 use crate::device::display_window::WGContext;
 use crate::graphic::base::color::LIGHT_BLUE;
-use crate::graphic::base::shape::ShapeBuffer;
+use crate::graphic::base::shape::ShapeGraph;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::graphic::style::Style;
@@ -9,7 +9,7 @@ use crate::widget::listener::Listener;
 
 /// 图形绘制面板控件结构体
 pub struct ShapeBoard {
-    pub shape_arr: Vec<Box<dyn ShapeBuffer>>,
+    pub shape_arr: Vec<Box<dyn ShapeGraph>>,
     pub style: Style,
 }
 

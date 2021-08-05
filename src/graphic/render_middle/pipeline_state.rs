@@ -8,7 +8,7 @@ use crate::graphic::base::image_vertex::TextureVertex;
 use crate::graphic::base::triangle_vertex::PointVertex;
 use crate::graphic::base::rect_vertex::RectVertex;
 use crate::graphic::base::shape::ShapeType;
-use crate::graphic::render_middle::vertex_buffer_layout::VertexInterface;
+use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
 /// 渲染管道状态元结构体
 #[derive(Debug)]
@@ -43,7 +43,7 @@ impl PipelineState {
     /// 参数：全局状态，着色器，渲染类型
     #[deprecated]
     pub fn create_pipeline_state<V>(device: &Device, fill_topology: PrimitiveTopology) -> RenderPipeline
-        where V: VertexInterface {
+        where V: VertexLayout {
         // 作用：绑定着色器，图形填充
         let render_pipeline = V::create_render_pipeline(device, fill_topology);
         return render_pipeline;

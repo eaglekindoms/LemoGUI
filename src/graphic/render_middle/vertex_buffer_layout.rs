@@ -4,7 +4,7 @@ use crate::graphic::render_middle::pipeline_state::Shader;
 
 /// wgpu图形顶点布局trait
 /// 作用：定义顶点布局接口
-pub trait VertexInterface: Sized {
+pub trait VertexLayout: Sized {
     /// 设置图形顶点缓存布局
     fn set_vertex_desc<'a>() -> wgpu::VertexBufferLayout<'a>;
     /// 设置图元渲染器

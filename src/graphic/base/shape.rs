@@ -1,8 +1,8 @@
 use crate::device::display_window::WGContext;
-use crate::graphic::base::color::RGBA;
-use crate::graphic::base::triangle_vertex::PointVertex;
+use crate::graphic::base::color::*;
 use crate::graphic::base::poly_vertex::PolygonVertex;
 use crate::graphic::base::rect_vertex::RectVertex;
+use crate::graphic::base::triangle_vertex::PointVertex;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::style::Style;
 
@@ -18,17 +18,17 @@ pub enum ShapeType {
 
 /// 点结构体
 #[repr(C)]
-#[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
+#[derive(Copy, Default, Clone, Debug)]
+pub struct Point<T> {
+    pub x: T,
+    pub y: T,
 }
 
 
 /// 矩形结构体
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Rectangle {
-    pub position: Point,
+    pub position: Point<f32>,
     pub width: u32,
     pub height: u32,
 }
@@ -36,7 +36,7 @@ pub struct Rectangle {
 /// 圆形结构体
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Circle {
-    pub position: Point,
+    pub position: Point<f32>,
     pub radius: f32,
 }
 
@@ -47,8 +47,8 @@ pub struct Polygon {
     pub edge: u32,
 }
 
-impl Point {
-    pub fn new(x: f32, y: f32) -> Point {
+impl<T> Point<T> {
+    pub fn new(x: T, y: T) -> Point<T> {
         Point {
             x,
             y,
@@ -94,14 +94,14 @@ impl Polygon {
 }
 
 /// 图形缓冲转换接口
-pub trait ShapeBuffer {
+pub trait ShapeGraph {
     /// 转换为顶点缓冲数据
     fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer;
     /// 获取图形类型
     fn get_type(&self) -> ShapeType;
 }
 
-impl ShapeBuffer for Rectangle {
+impl ShapeGraph for Rectangle {
     fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
         RectVertex::from_shape_to_vector
             (&wgcontext.device, &wgcontext.sc_desc, &self, &Style::default())
@@ -112,7 +112,7 @@ impl ShapeBuffer for Rectangle {
     }
 }
 
-impl ShapeBuffer for Circle {
+impl ShapeGraph for Circle {
     fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
         let circle_vertex
             = PolygonVertex::new(&self, 0, color);
@@ -126,7 +126,7 @@ impl ShapeBuffer for Circle {
     }
 }
 
-impl ShapeBuffer for Polygon {
+impl ShapeGraph for Polygon {
     fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
         let circle_vertex
             = PolygonVertex::new(&self.point, self.edge, color);

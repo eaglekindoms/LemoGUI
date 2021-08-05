@@ -1,14 +1,14 @@
 use simple_logger::SimpleLogger;
 use winit::event::VirtualKeyCode::Key1;
 
-use LemoGUI::device::display_window::{DisplayWindow, WGContext};
 use LemoGUI::device::container::Container;
+use LemoGUI::device::display_window::{DisplayWindow, WGContext};
 use LemoGUI::graphic::base::color::*;
 use LemoGUI::graphic::base::shape::{Point, Rectangle};
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::button::Button;
 use LemoGUI::widget::frame::Frame;
-use LemoGUI::widget::listener::State;
+use LemoGUI::widget::listener::Message;
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
@@ -17,7 +17,7 @@ fn main() {
     builder = builder.with_title("hello")
         .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0));
 
-    DisplayWindow::start_window::<Frame>(builder, &frame)
+    DisplayWindow::start::<Frame>(builder, &frame)
 }
 
 fn frame(wgcontext: WGContext) -> Frame
@@ -39,6 +39,6 @@ fn frame(wgcontext: WGContext) -> Frame
             Button::new(
                 Point { x: 100.0, y: 300.0 },
                 "按钮2")
-                .update_state(Some(State::new(Some(Key1)))));
+                .update_state(Some(Message::key(Key1))));
     frame
 }
