@@ -97,4 +97,12 @@ impl<'a> Component {
             context_buffer: font_buffer,
         }
     }
+
+    pub fn get_size(&self) -> &Rectangle {
+        &self.size
+    }
+
+    pub fn set_size(&mut self, rect: Rectangle) {
+        self.size = rect;
+    }
 }

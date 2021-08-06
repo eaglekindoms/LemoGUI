@@ -7,6 +7,7 @@ use winit::event_loop::*;
 use winit::window::*;
 
 use crate::device::container::Container;
+use crate::graphic::base::shape::Point;
 
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文
@@ -15,8 +16,8 @@ pub struct DisplayWindow {
     pub window: Window,
     /// 事件监听器
     pub event_loop: EventLoop<()>,
-    /// 窗体尺寸
-    // pub size: winit::dpi::PhysicalSize<u32>,
+    /// 鼠标位置
+    pub cursor_pos: Option<Point<f32>>,
     /// 图形上下文
     pub wgcontext: WGContext,
 }
@@ -78,7 +79,7 @@ impl DisplayWindow {
         DisplayWindow {
             window,
             event_loop,
-            // size,
+            cursor_pos: None,
             wgcontext: WGContext {
                 surface,
                 device,
@@ -89,12 +90,12 @@ impl DisplayWindow {
     }
 
     /// 启动窗口事件循环器
-    pub fn run<C>(window: Window, event_loop: EventLoop<()>, container: C)
+    pub fn run<C>(window: Window, cursor_pos: Option<Point<f32>>, event_loop: EventLoop<()>, container: C)
         where C: Container + 'static
     {
         log::info!("Entering render loop...");
         let (mut sender, receiver) = mpsc::unbounded();
-        let mut instance = Box::pin(event_listener(window, container, receiver));
+        let mut instance = Box::pin(event_listener(window, container, cursor_pos, receiver));
         let mut context = task::Context::from_waker(task::noop_waker_ref());
         event_loop.run(move |event, _, control_flow| {
             if let ControlFlow::Exit = control_flow {
@@ -140,13 +141,16 @@ impl DisplayWindow {
         use futures::executor::block_on;
         let display_device = block_on(DisplayWindow::init(builder));
         log::info!("Initializing the example...");
-        DisplayWindow::run::<C>(display_device.window, display_device.event_loop,
+        DisplayWindow::run::<C>(display_device.window, display_device.cursor_pos, display_device.event_loop,
                                 build_container(display_device.wgcontext));
     }
 }
 
 /// 事件监听方法
-pub async fn event_listener<T, C>(window: Window, mut container: C, mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, T>>)
+pub async fn event_listener<T, C>(window: Window,
+                                  mut container: C,
+                                  mut cursor_pos: Option<Point<f32>>,
+                                  mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, T>>)
     where T: std::fmt::Debug, C: Container + 'static
 {
     while let Some(event) = receiver.next().await {
@@ -156,13 +160,18 @@ pub async fn event_listener<T, C>(window: Window, mut container: C, mut receiver
                 ref event,
                 window_id,
             } if window_id == window.id() => {
-                if container.input(event) {
+                if container.input(cursor_pos, event) {
                     container.render();
                 }
-                // 捕获窗口关闭请求
                 match event {
+                    // 捕获窗口关闭请求
                     WindowEvent::CloseRequested =>
                         break,
+                    // 储存鼠标位置
+                    WindowEvent::CursorMoved { position, .. }
+                    => {
+                        cursor_pos = Some(Point::new(position.x as f32, position.y as f32));
+                    }
                     _ => {}
                 }
             }

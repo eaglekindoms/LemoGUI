@@ -2,6 +2,7 @@ use winit::event::*;
 
 use crate::device::container::Container;
 use crate::device::display_window::WGContext;
+use crate::graphic::base::shape::Point;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::widget::component::ComponentModel;
@@ -50,9 +51,9 @@ impl Container for Frame {
         self.add_comp_arr(Box::new(comp))
     }
 
-    fn input(&mut self, event: &WindowEvent) -> bool {
+    fn input(&mut self, cursor_pos: Option<Point<f32>>, event: &WindowEvent) -> bool {
         match event {
-            WindowEvent::Resized(new_inner_size)=> {
+            WindowEvent::Resized(new_inner_size) => {
                 self.wgcontext.sc_desc.width = new_inner_size.width;
                 self.wgcontext.sc_desc.height = new_inner_size.height;
             }
@@ -60,7 +61,7 @@ impl Container for Frame {
         }
         let mut input = false;
         for comp in &mut self.comp_graph_arr {
-            input = comp.key_listener(event);
+            input = comp.listener(cursor_pos, event);
         }
         input
     }

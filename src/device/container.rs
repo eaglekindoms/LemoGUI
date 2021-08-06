@@ -1,6 +1,7 @@
 use winit::event::WindowEvent;
 
 use crate::device::display_window::WGContext;
+use crate::graphic::base::shape::Point;
 use crate::widget::component::ComponentModel;
 use crate::widget::listener::Listener;
 
@@ -16,9 +17,9 @@ pub trait Container: Sized {
     ;
     // fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>);
     /// 事件响应
-    fn input(&mut self, event: &WindowEvent) -> bool;
+    fn input(&mut self, cursor_pos: Option<Point<f32>>, event: &WindowEvent) -> bool;
     /// 状态更新
-    fn update(&mut self){}
+    fn update(&mut self) {}
     /// 容器渲染
     fn render(&mut self);
 }

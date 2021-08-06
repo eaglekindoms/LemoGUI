@@ -73,6 +73,16 @@ impl Rectangle {
          2.0 * self.width as f32 / w_width as f32,
          2.0 * self.height as f32 / w_height as f32)
     }
+
+    /// 判断点是否在矩形内
+    pub fn contain_coord(&self, position: Point<f32>) -> bool {
+        let rel_x = (position.x - self.position.x);
+        let rel_y = (position.y - self.position.y);
+        (rel_x < self.width as f32) &&
+            (rel_y < self.height as f32) &&
+            (rel_x > 0.) &&
+            (rel_y > 0.)
+    }
 }
 
 impl Circle {

@@ -8,7 +8,8 @@ use crate::graphic::render_middle::render_function::RenderGraph;
 use crate::graphic::style::*;
 use crate::widget::component::Component;
 use crate::widget::component::ComponentModel;
-use crate::widget::listener::{Listener, Message};
+use crate::widget::listener::Listener;
+use crate::widget::message::Message;
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -18,7 +19,7 @@ pub struct Button {
     /// 内容文本
     pub text: String,
     /// 控件状态
-    pub state: Option<Message>,
+    pub message: Option<Message>,
 }
 
 impl<'a> Button {
@@ -27,7 +28,7 @@ impl<'a> Button {
         Self {
             context: Component::new(rect, style),
             text: text.into(),
-            state: None,
+            message: None,
         }
     }
 
@@ -38,13 +39,13 @@ impl<'a> Button {
         Self {
             context: Component::new(rect, Style::default()),
             text,
-            state: None,
+            message: None,
         }
     }
 
     /// 更新状态
-    pub fn update_state(mut self, state: Option<Message>) -> Self {
-        self.state = state;
+    pub fn message(mut self, state: Option<Message>) -> Self {
+        self.message = state;
         self
     }
 
@@ -67,33 +68,28 @@ impl<'a> ComponentModel for Button {
 }
 
 impl<'a> Listener for Button {
-    fn key_listener(&mut self, event: &WindowEvent) -> bool {
-        // log::info!("---button--- {:?}", event);
+    fn key_listener(&mut self, virtual_keycode: Option<VirtualKeyCode>) -> bool {
         let mut input = false;
-        match self.state.as_ref() {
-            Some(state) => {
-                let key = state.get_key();
-                match event {
-                    WindowEvent::KeyboardInput {
-                        input:
-                        KeyboardInput {
-                            state,
-                            virtual_keycode,
-                            ..
-                        },
-                        ..
-                    }if virtual_keycode.as_ref() == key => {
-                        if *state == ElementState::Pressed {
-                            let text = self.text.as_str().to_owned() + "2";
-                            self.update_content(text);
-                            input = true;
-                        } else if *state == ElementState::Released {}
-                    }
-
-                    _ => {}
+        if let Some(state) = self.message.as_ref() {
+            if virtual_keycode == state.get_key() {
+                if let Some(callback) = state.get_key_callback() {
+                    callback();
+                }
+                input = true;
+            }
+        }
+        input
+    }
+    fn action_listener(&mut self, position: Point<f32>) -> bool {
+        let input = self.context
+            .get_size()
+            .contain_coord(position);
+        if input {
+            if let Some(state) = self.message.as_ref() {
+                if let Some(callback) = state.get_action_callback() {
+                    callback();
                 }
             }
-            None => {}
         }
         input
     }

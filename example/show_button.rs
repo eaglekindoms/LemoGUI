@@ -8,7 +8,7 @@ use LemoGUI::graphic::base::shape::{Point, Rectangle};
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::button::Button;
 use LemoGUI::widget::frame::Frame;
-use LemoGUI::widget::listener::Message;
+use LemoGUI::widget::message::Message;
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
@@ -39,6 +39,11 @@ fn frame(wgcontext: WGContext) -> Frame
             Button::new(
                 Point { x: 100.0, y: 300.0 },
                 "按钮2")
-                .update_state(Some(Message::key(Key1))));
+                .message(Some(Message::key(Key1, Some(Box::new(call)))
+                    .set_action(Box::new(call)))));
     frame
+}
+
+fn call() {
+    log::info!("hello");
 }
