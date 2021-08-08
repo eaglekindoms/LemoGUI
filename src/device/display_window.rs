@@ -160,6 +160,7 @@ pub async fn event_listener<T, C>(window: Window,
                 ref event,
                 window_id,
             } if window_id == window.id() => {
+                // 监听到组件关注事件，决定是否重绘
                 if container.input(cursor_pos, event) {
                     container.render();
                 }

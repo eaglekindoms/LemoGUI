@@ -29,9 +29,11 @@ pub struct Style {
     /// 文字颜色
     font_color: RGBA,
     /// 背景色
-    background_color: RGBA,
+    back_color: RGBA,
     /// 悬浮色
     hover_color: RGBA,
+    // 默认背景显示颜色
+    display_color: RGBA,
 }
 
 impl Style {
@@ -40,42 +42,49 @@ impl Style {
             border: Bordering::Border(BLACK),
             round: Rounding::NoRound,
             font_color: BLACK,
-            background_color: LIGHT_WHITE,
+            back_color: LIGHT_WHITE,
             hover_color: LIGHT_BLUE,
+            display_color: LIGHT_WHITE,
         }
     }
-    pub fn border(mut self, color: RGBA) -> Self {
+    pub fn border(&mut self, color: RGBA) -> Self {
         self.border = Bordering::Border(color);
-        self
+        *self
     }
 
-    pub fn no_border(mut self) -> Self {
+    pub fn no_border(&mut self) -> Self {
         self.border = Bordering::NoBorder;
-        self
+        *self
     }
 
-    pub fn round(mut self) -> Self {
+    pub fn round(&mut self) -> Self {
         self.round = Rounding::Round;
-        self
+        *self
     }
-    pub fn no_round(mut self) -> Self {
+    pub fn no_round(&mut self) -> Self {
         self.round = Rounding::NoRound;
-        self
+        *self
     }
 
-    pub fn font_color(mut self, color: RGBA) -> Self {
+    pub fn font_color(&mut self, color: RGBA) -> Self {
         self.font_color = color;
-        self
+        *self
     }
 
-    pub fn back_color(mut self, color: RGBA) -> Self {
-        self.background_color = color;
-        self
+    pub fn back_color(&mut self, color: RGBA) -> Self {
+        self.back_color = color;
+        self.display_color = color;
+        *self
     }
 
-    pub fn hover_color(mut self, color: RGBA) -> Self {
+    pub fn hover_color(&mut self, color: RGBA) -> Self {
         self.hover_color = color;
-        self
+        *self
+    }
+
+    pub fn display_color(&mut self, color: RGBA) -> Self {
+        self.display_color = color;
+        *self
     }
 
     pub fn get_border(&self) -> &Bordering {
@@ -87,7 +96,7 @@ impl Style {
     }
 
     pub fn get_back_color(&self) -> RGBA {
-        self.background_color
+        self.back_color
     }
 
     pub fn get_font_color(&self) -> RGBA {
@@ -96,6 +105,10 @@ impl Style {
 
     pub fn get_hover_color(&self) -> RGBA {
         self.hover_color
+    }
+
+    pub fn get_display_color(&self) -> RGBA {
+        self.display_color
     }
 }
 

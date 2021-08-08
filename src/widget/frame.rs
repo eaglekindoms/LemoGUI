@@ -36,7 +36,7 @@ impl Frame {
         }
     }
 
-    fn add_comp_arr(&mut self, mut comp: Box<dyn ComponentModel>) {
+    fn add_comp_arr(&mut self, comp: Box<dyn ComponentModel>) {
         self.comp_graph_arr.push(comp);
     }
 }
@@ -61,7 +61,9 @@ impl Container for Frame {
         }
         let mut input = false;
         for comp in &mut self.comp_graph_arr {
-            input = comp.listener(cursor_pos, event);
+            if comp.listener(cursor_pos, event) {
+                input = true;
+            }
         }
         input
     }

@@ -2,9 +2,9 @@ use wgpu::*;
 
 use crate::graphic::base::shape::Rectangle;
 use crate::graphic::render_middle::pipeline_state::Shader;
-use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
-use crate::graphic::style::{Bordering, Rounding, Style};
+use crate::graphic::style::{Bordering, Rounding};
+use crate::graphic::base::color::RGBA;
 
 /// 矩形顶点数据布局结构体
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -65,42 +65,35 @@ impl VertexLayout for RectVertex {
 }
 
 impl RectVertex {
-    pub fn from_shape_to_vector(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, rect: &Rectangle, style: &Style) -> VertexBuffer {
+    pub fn new(rect: &Rectangle, sc_desc: &wgpu::SwapChainDescriptor, color: RGBA) -> RectVertex {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.width, sc_desc.height);
-        let border_color;
-        let frame_color;
-        let is_round;
-        let is_border;
-
-        match style.get_border() {
-            Bordering::Border(color) => {
-                border_color = color.to_vec();
-                is_border = 1;
+        let mut border_color = [0.0, 0.0, 0.0, 0.0];
+        let frame_color = color.to_vec();
+        let mut is_round = 0;
+        let mut is_border = 0;
+        if let Some(style) = rect.style {
+            match style.get_border() {
+                Bordering::Border(color) => {
+                    border_color = color.to_vec();
+                    is_border = 1;
+                }
+                Bordering::NoBorder => {
+                    border_color = [0.0, 0.0, 0.0, 0.0];
+                    is_border = 0;
+                }
             }
-            Bordering::NoBorder => {
-                border_color = [0.0, 0.0, 0.0, 0.0];
-                is_border = 0;
+            match style.get_round() {
+                Rounding::Round => is_round = 1,
+                Rounding::NoRound => is_round = 0,
             }
         }
-        match style.get_round() {
-            Rounding::Round => is_round = 1,
-            Rounding::NoRound => is_round = 0,
+        RectVertex {
+            size: [t_w, t_h],
+            position: [t_w / 2.0 + t_x, t_y - t_h / 2.0],
+            border_color,
+            frame_color,
+            is_round_or_border: [is_round, is_border],
         }
-        frame_color = style.get_back_color().to_vec();
-
-        let vect = vec![
-            RectVertex {
-                size: [t_w, t_h],
-                position: [t_w / 2.0 + t_x, t_y - t_h / 2.0],
-                border_color,
-                frame_color,
-                is_round_or_border: [is_round, is_border],
-            }
-        ];
-        let back_buffer =
-            VertexBuffer::create_vertex_buf::<RectVertex>
-                (device, vect, RECT_INDEX);
-        back_buffer
     }
 }

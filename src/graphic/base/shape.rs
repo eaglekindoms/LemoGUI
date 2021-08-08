@@ -2,7 +2,6 @@ use crate::device::display_window::WGContext;
 use crate::graphic::base::color::*;
 use crate::graphic::base::poly_vertex::PolygonVertex;
 use crate::graphic::base::rect_vertex::RectVertex;
-use crate::graphic::base::triangle_vertex::PointVertex;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::style::Style;
 
@@ -31,6 +30,7 @@ pub struct Rectangle {
     pub position: Point<f32>,
     pub width: u32,
     pub height: u32,
+    pub style: Option<Style>
 }
 
 /// 圆形结构体
@@ -58,12 +58,17 @@ impl<T> Point<T> {
 
 impl Rectangle {
     pub fn new(x: f32, y: f32, w: u32, h: u32) -> Rectangle {
-        log::info!("create the Rectangle obj");
         Rectangle {
             position: Point { x, y },
             width: w,
             height: h,
+            style: None,
         }
+    }
+
+    pub fn set_style(&mut self, style: Style) -> Self {
+        self.style = Some(style);
+        *self
     }
 
     #[deprecated]
@@ -113,8 +118,10 @@ pub trait ShapeGraph {
 
 impl ShapeGraph for Rectangle {
     fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
-        RectVertex::from_shape_to_vector
-            (&wgcontext.device, &wgcontext.sc_desc, &self, &Style::default())
+        let rect_vertex = RectVertex::new(&self, &wgcontext.sc_desc, color);
+        let rect_vertex = VertexBuffer::create_vertex_buf::<RectVertex>
+            (&wgcontext.device, vec![rect_vertex], RECT_INDEX);
+        rect_vertex
     }
 
     fn get_type(&self) -> ShapeType {

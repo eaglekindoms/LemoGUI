@@ -1,12 +1,13 @@
+use std::borrow::BorrowMut;
+
 use bytemuck::Pod;
 use wgpu::{Device, RenderPipeline};
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
 use crate::graphic::base::shape::ShapeType;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
-use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::render_function::RenderUtil;
-use std::borrow::BorrowMut;
+use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 
 /// 渲染顶点缓冲结构体
 #[derive(Debug)]
@@ -50,22 +51,30 @@ impl<'a> VertexBuffer {
     }
 
     pub fn render(&'a self, render_utils: &mut RenderUtil,
-                  glob_pipeline: &'a  PipelineState, shape_type: ShapeType) {
-        let mut render_pass=render_utils.create_render_pass();
+                  glob_pipeline: &'a PipelineState, shape_type: ShapeType) {
+        let mut render_pass = render_utils.create_render_pass();
         self.render_shape(render_pass.borrow_mut(), glob_pipeline.get_pipeline(shape_type).unwrap())
     }
 
+    pub fn render_t(&'a self, render_utils: &mut RenderUtil,
+                    texture_state: &'a TextureBuffer,
+                    glob_pipeline: &'a PipelineState) {
+        let mut render_pass = render_utils.create_render_pass();
+        self.render_texture(render_pass.borrow_mut(), texture_state, glob_pipeline.get_pipeline(ShapeType::TEXTURE).unwrap())
+    }
+
     #[deprecated]
-    pub fn render_shape(&'a self, render_pass: &mut wgpu::RenderPass<'a>,
-                        shape_pipeline: &'a RenderPipeline) {
+    fn render_shape(&'a self, render_pass: &mut wgpu::RenderPass<'a>,
+                    shape_pipeline: &'a RenderPipeline) {
         render_pass.set_pipeline(shape_pipeline);
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
         render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
         render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
     }
 
-    pub fn render_texture(&'a self, render_pass: &mut wgpu::RenderPass<'a>, texture_state: &'a TextureBuffer,
-                          render_pipeline: &'a RenderPipeline) {
+    fn render_texture(&'a self, render_pass: &mut wgpu::RenderPass<'a>,
+                      texture_state: &'a TextureBuffer,
+                      render_pipeline: &'a RenderPipeline) {
         render_pass.set_pipeline(&render_pipeline);
         render_pass.set_bind_group(0, &texture_state.diffuse_bind_group, &[]);
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));

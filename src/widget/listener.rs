@@ -1,5 +1,3 @@
-use std::fmt::{Debug, Formatter};
-
 use winit::event::*;
 
 use crate::graphic::base::shape::Point;
@@ -24,16 +22,13 @@ pub trait Listener {
                 }
             }
             WindowEvent::MouseInput {
-                state: ElementState::Pressed,
+                state,
                 button: MouseButton::Left,
                 ..
             }
             => {
-                match cursor_pos {
-                    None => {}
-                    Some(pos) => {
-                        input = self.action_listener(pos);
-                    }
+                if let Some(pos) = cursor_pos {
+                    input = self.action_listener(*state, pos);
                 }
             }
             _ => {}
@@ -46,5 +41,5 @@ pub trait Listener {
     }
 
     /// 鼠标事件监听器
-    fn action_listener(&mut self, position: Point<f32>) -> bool { false }
+    fn action_listener(&mut self, state: ElementState, position: Point<f32>) -> bool { false }
 }

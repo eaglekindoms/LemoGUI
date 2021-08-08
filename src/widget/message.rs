@@ -37,14 +37,14 @@ impl Message {
         }
         return &None;
     }
-    pub fn action(callback: Box<dyn Fn()>) -> Message {
+    pub fn action(callback: CallBack) -> Message {
         Message {
             keyboard: None,
             action: Some(callback),
         }
     }
 
-    pub fn set_action(mut self, callback: Box<dyn Fn()>) -> Self {
+    pub fn set_action(mut self, callback: CallBack) -> Self {
         self.action = Some(callback);
         self
     }

@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use image::GenericImageView;
 use simple_logger::SimpleLogger;
 use winit::window::Icon;
@@ -9,7 +11,6 @@ use LemoGUI::graphic::base::shape::*;
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::drawing_board::ShapeBoard;
 use LemoGUI::widget::frame::Frame;
-use std::path::Path;
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();

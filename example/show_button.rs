@@ -26,9 +26,8 @@ fn frame(wgcontext: WGContext) -> Frame
     let rect = Rectangle::new(100.0, 100.0, 170, 40);
     let style = Style::default()
         .no_border()
-        // .border(RGBA([0.1, 0.5, 0.2, 1.0]))
-        .hover_color(RGBA(0.5, 0.0, 0.5, 0.5))
-        .back_color(RGBA(0.4, 0.8, 0.8, 1.0))
+        .hover_color(RGBA(0.0, 0.75, 1.0, 0.5))
+        .back_color(RGBA(1.0, 0.5, 0.5, 1.0))
         .font_color(RGBA(0.0, 0.0, 0.0, 1.0))
         .round();
     let button = Button::new_with_style(rect, style, "button1");
@@ -39,8 +38,8 @@ fn frame(wgcontext: WGContext) -> Frame
             Button::new(
                 Point { x: 100.0, y: 300.0 },
                 "按钮2")
-                .message(Some(Message::key(Key1, Some(Box::new(call)))
-                    .set_action(Box::new(call)))));
+                .message(Message::key(Key1, Some(Box::new(|| {})))
+                    .set_action(Box::new(call))));
     frame
 }
 

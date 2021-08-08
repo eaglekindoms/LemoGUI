@@ -60,7 +60,7 @@ impl VertexLayout for TextureVertex {
 }
 
 impl TextureVertex {
-    pub fn from_shape_to_vector(device: &Device, sc_desc: &SwapChainDescriptor, rect: &Rectangle) -> VertexBuffer {
+    pub fn new(device: &Device, sc_desc: &SwapChainDescriptor, rect: &Rectangle) -> VertexBuffer {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.width, sc_desc.height);
         let vect: Vec<TextureVertex> = vec![

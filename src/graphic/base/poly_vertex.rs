@@ -3,7 +3,6 @@ use wgpu::*;
 use crate::graphic::base::color::*;
 use crate::graphic::base::shape::*;
 use crate::graphic::render_middle::pipeline_state::Shader;
-use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
 /// 圆形顶点数据布局结构体
@@ -69,14 +68,5 @@ impl VertexLayout for PolygonVertex {
             vs_module,
             fs_module,
         }
-    }
-}
-
-impl PolygonVertex {
-    pub fn from_shape_to_vector(device: &Device, sc_desc: &wgpu::SwapChainDescriptor, circle: PolygonVertex) -> VertexBuffer {
-        let vect = vec![circle];
-        let cricle_buffer = VertexBuffer::create_vertex_buf::<PolygonVertex>
-            (device, vect, RECT_INDEX);
-        cricle_buffer
     }
 }
