@@ -1,23 +1,27 @@
-use winit::event::WindowEvent;
+use std::fmt::Debug;
 
-use crate::device::display_window::WGContext;
+use winit::event::WindowEvent;
+use winit::event_loop::EventLoopProxy;
+
+use crate::device::event_context::ELContext;
+use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::shape::Point;
 use crate::widget::component::ComponentModel;
 use crate::widget::listener::Listener;
+use crate::widget::message::Message;
 
 /// 渲染容器trait
 /// 在事件循环时会调用实现该trait的对象
 /// 作用：定义渲染所需的公共接口
-pub trait Container: Sized {
+pub trait Container<M>: Sized {
     /// 通过提供的图形上下文结构体进行实例化
     fn new(wgcontext: WGContext) -> Self;
     /// 添加子组件
     fn add_comp<C>(&mut self, comp: C)
-        where C: ComponentModel + Listener + 'static
-    ;
+        where C: ComponentModel<M> + 'static;
     // fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>);
     /// 事件响应
-    fn input(&mut self, cursor_pos: Option<Point<f32>>, event: &WindowEvent) -> bool;
+    fn input(&mut self, el_context: &ELContext<'_, M>) -> bool;
     /// 状态更新
     fn update(&mut self) {}
     /// 容器渲染

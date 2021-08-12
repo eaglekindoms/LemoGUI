@@ -31,13 +31,13 @@ impl<'a> VertexBuffer {
         log::info!("----create wgpu buffer----");
         let vertex_buffer = device
             .create_buffer_init(&BufferInitDescriptor {
-                label: Some("vertex Buffer"),
+                label: None,
                 contents: bytemuck::cast_slice(vect.as_slice()),
                 usage: wgpu::BufferUsage::VERTEX,
             });
         let index_buffer = device.create_buffer_init(
             &BufferInitDescriptor {
-                label: Some("index Buffer"),
+                label: None,
                 contents: bytemuck::cast_slice(indices),
                 usage: wgpu::BufferUsage::INDEX,
             });

@@ -1,4 +1,4 @@
-use crate::device::display_window::WGContext;
+use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::color::LIGHT_BLUE;
 use crate::graphic::base::shape::ShapeGraph;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
@@ -13,7 +13,9 @@ pub struct ShapeBoard {
     pub style: Style,
 }
 
-impl ComponentModel for ShapeBoard {
+impl<M> Listener<M> for ShapeBoard {}
+
+impl<M> ComponentModel<M> for ShapeBoard {
     fn draw(&mut self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
         let mut style = self.style;
         for shape in &self.shape_arr {
@@ -23,5 +25,3 @@ impl ComponentModel for ShapeBoard {
         }
     }
 }
-
-impl Listener for ShapeBoard {}

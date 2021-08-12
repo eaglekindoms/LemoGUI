@@ -1,4 +1,4 @@
-use crate::device::display_window::WGContext;
+use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::color::*;
 use crate::graphic::base::poly_vertex::PolygonVertex;
 use crate::graphic::base::rect_vertex::RectVertex;

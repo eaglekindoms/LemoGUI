@@ -1,12 +1,17 @@
+use std::fmt::Debug;
+
 use winit::event::*;
+use winit::event_loop::EventLoopProxy;
 
 use crate::device::container::Container;
-use crate::device::display_window::WGContext;
+use crate::device::event_context::ELContext;
+use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::shape::Point;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::widget::component::ComponentModel;
 use crate::widget::listener::Listener;
+use crate::widget::message::Message;
 
 /// 默认窗口帧背景色
 const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
@@ -18,13 +23,13 @@ const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
 
 /// 窗口帧结构体
 /// 作用：用作gui控件的容器
-pub struct Frame {
+pub struct Frame<M> {
     pub glob_pipeline: PipelineState,
-    pub comp_graph_arr: Vec<Box<dyn ComponentModel>>,
+    pub comp_graph_arr: Vec<Box<dyn ComponentModel<M>>>,
     pub wgcontext: WGContext,
 }
 
-impl Frame {
+impl<M> Frame<M> {
     fn new(wgcontext: WGContext) -> Self {
         let glob_pipeline = PipelineState::default(&wgcontext.device);
 
@@ -36,23 +41,24 @@ impl Frame {
         }
     }
 
-    fn add_comp_arr(&mut self, comp: Box<dyn ComponentModel>) {
+    fn add_comp_arr(&mut self, comp: Box<dyn ComponentModel<M>>) {
         self.comp_graph_arr.push(comp);
     }
 }
 
-impl Container for Frame {
+impl<M> Container<M> for Frame<M> {
     fn new(wgcontext: WGContext) -> Self {
         Frame::new(wgcontext)
     }
 
     fn add_comp<C>(&mut self, comp: C)
-        where C: ComponentModel + Listener + 'static {
+        where C: ComponentModel<M> + 'static {
         self.add_comp_arr(Box::new(comp))
     }
 
-    fn input(&mut self, cursor_pos: Option<Point<f32>>, event: &WindowEvent) -> bool {
-        match event {
+    fn input(&mut self, el_context: &ELContext<'_, M>) -> bool
+    {
+        match el_context.window_event.as_ref().unwrap() {
             WindowEvent::Resized(new_inner_size) => {
                 self.wgcontext.sc_desc.width = new_inner_size.width;
                 self.wgcontext.sc_desc.height = new_inner_size.height;
@@ -61,7 +67,7 @@ impl Container for Frame {
         }
         let mut input = false;
         for comp in &mut self.comp_graph_arr {
-            if comp.listener(cursor_pos, event) {
+            if comp.listener(el_context) {
                 input = true;
             }
         }

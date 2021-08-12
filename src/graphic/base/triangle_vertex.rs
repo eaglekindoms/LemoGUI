@@ -1,6 +1,6 @@
 use wgpu::*;
 
-use crate::device::display_window::WGContext;
+use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::shape::*;
 use crate::graphic::render_middle::pipeline_state::Shader;
