@@ -2,8 +2,6 @@ use std::fmt::Debug;
 use std::option::Option::Some;
 
 use winit::event::*;
-use winit::event::VirtualKeyCode::Key1;
-use winit::event_loop::EventLoopProxy;
 
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
@@ -14,8 +12,9 @@ use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::style::*;
 use crate::widget::component::ComponentModel;
+use crate::widget::listener;
 use crate::widget::listener::Listener;
-use crate::widget::message::Message;
+use crate::widget::message::{EventType, State};
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -27,9 +26,7 @@ pub struct Button<M: Copy> {
     /// 内容文本
     pub text: String,
     /// 控件状态
-    pub message: Option<Message>,
-    pub custom: Option<M>,
-    pub list: Option<M>,
+    pub state: Option<State<M>>,
 }
 
 impl<'a, M: Copy + PartialEq> Button<M> {
@@ -38,10 +35,8 @@ impl<'a, M: Copy + PartialEq> Button<M> {
         Self {
             size: rect.set_style(style),
             text: text.into(),
-            message: None,
+            state: None,
             style,
-            custom: None,
-            list: None,
         }
     }
 
@@ -53,40 +48,31 @@ impl<'a, M: Copy + PartialEq> Button<M> {
             size: rect,
             style: Style::default(),
             text,
-            message: None,
-            custom: None,
-            list: None,
+            state: None,
         }
     }
 
     /// 更新状态
-    pub fn message(mut self, message: Message) -> Self {
-        self.message = Some(message);
+    pub fn action(mut self, message: M) -> Self {
+        self.state = Some(State {
+            event: EventType::mouse,
+            message: Some(message),
+        });
         self
     }
 
-    /// 更新内容
-    pub fn update_content<S: Into<String>>(&mut self, text: S) {
-        self.text = text.into();
-    }
-
-    pub fn set_custom(mut self, custom: M) -> Self {
-        self.custom = Some(custom);
-        self
-    }
-    pub fn set_list(mut self, list: M) -> Self {
-        self.list = Some(list);
-        self
-    }
-
-    pub fn get_customer(&self) -> M {
-        self.custom.unwrap()
+    pub fn match_message(&self, des_m: &M) -> bool {
+        if self.state.is_some() {
+            self.state.as_ref().unwrap().match_message(des_m)
+        } else {
+            false
+        }
     }
 }
 
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
-    fn draw(&mut self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
+    fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
         let image_vertex_buffer =
             TextureVertex::new
                 (&wgcontext.device, &wgcontext.sc_desc, &self.size);
@@ -101,47 +87,19 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
 }
 
 impl<'a, M: Copy + PartialEq> Listener<M> for Button<M> {
-    fn key_listener(&mut self, virtual_keycode: Option<VirtualKeyCode>) -> bool {
-        let mut input = false;
-        if let Some(state) = self.message.as_ref() {
-            if virtual_keycode == state.get_key() {
-                // if let Some(callback) = state.get_key_callback() {
-                //     callback();
-                // }
-                input = true;
-            }
-        }
-        input
+    fn key_listener(&mut self, action_state: ElementState,
+                    el_context: &ELContext<'_, M>, virtual_keycode: Option<VirtualKeyCode>) -> bool {
+        listener::action_animation::<M>(&mut self.style, action_state,
+                                        &el_context.message_channel, &self.state, virtual_keycode)
     }
-    fn action_listener(&mut self, state: ElementState, el_context: &ELContext<'_, M>) -> bool
+    fn action_listener(&mut self, action_state: ElementState, el_context: &ELContext<'_, M>) -> bool
     {
         let input = self.size
             .contain_coord(el_context.cursor_pos.unwrap());
         if input {
-            let hover_color = self.style.get_hover_color();
-            let back_color = self.style.get_back_color();
-            if state == ElementState::Pressed {
-                self.style.display_color(hover_color);
-                if let Some(state) = self.message.as_ref() {
-                    if self.custom.is_some() {
-                        let custom = self.get_customer();
-                        el_context.event_loop_proxy.send_event(custom).ok();
-                    }
-                }
-            } else if state == ElementState::Released {
-                self.style.display_color(back_color);
-            }
+            listener::action_animation::<M>(&mut self.style, action_state,
+                                            &el_context.message_channel, &self.state, None);
         }
         input
-    }
-
-    fn sub_listener(&mut self, broadcast: &M) -> bool {
-        if let Some(list) = self.list.as_ref() {
-            if *list == *broadcast {
-                self.text = "nnnn".to_string();
-                return true;
-            }
-        }
-        return false;
     }
 }

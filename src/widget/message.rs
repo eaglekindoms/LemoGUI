@@ -4,66 +4,26 @@ use winit::event::VirtualKeyCode;
 
 type CallBack = Box<dyn Fn()>;
 
-/// 控件状态结构体
-/// 作用：记录控件当前聚焦的事件
-// #[derive(Debug, Default)]
-pub struct Message {
-    keyboard: Option<VirtualKeyCode>,
-    // action: Option<CallBack>,
+/// 事件类型枚举
+#[derive(Debug, PartialOrd, PartialEq)]
+pub enum EventType {
+    mouse,
+    KeyBoard(VirtualKeyCode),
 }
 
-impl Message {
-    pub fn key(key: VirtualKeyCode) -> Message {
-        Message {
-            keyboard: Some(key),
-            // action: None,
+/// 组件状态结构体，记录绑定的事件、及与事件联动的消息
+#[derive(Debug)]
+pub struct State<M> {
+    pub event: EventType,
+    pub message: Option<M>,
+}
+
+impl<M: PartialEq> State<M> {
+    pub fn match_message(&self, des_m: &M) -> bool {
+        if self.message.is_some() {
+            self.message.as_ref().unwrap() == des_m
+        } else {
+            false
         }
     }
-
-    // pub fn set_key(mut self, key: VirtualKeyCode, callback: Option<CallBack>) -> Self {
-    //     self.keyboard = Some((key, callback));
-    //     self
-    // }
-
-    pub fn get_key(&self) -> Option<VirtualKeyCode> {
-        self.keyboard
-    }
-    // pub fn get_key_callback(&self) -> &Option<CallBack> {
-    //     if let Some((_, callback)) = &self.keyboard {
-    //         return callback
-    //     }
-    //     return &None;
-    // }
-    // pub fn action(callback: CallBack) -> Message {
-    //     Message {
-    //         keyboard: None,
-    //         action: Some(callback),
-    //     }
-    // }
-    //
-    // pub fn set_action(mut self, callback: CallBack) -> Self {
-    //     self.action = Some(callback);
-    //     self
-    // }
-    //
-    // pub fn get_action_callback(&self) -> &Option<CallBack> {
-    //     &self.action
-    // }
 }
-
-impl Debug for Message {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Message")
-            .field("key", &self.get_key())
-            // .field("action", &self.action.is_some())
-            .finish()
-    }
-}
-
-impl Clone for Message {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl Copy for Message {}

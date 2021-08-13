@@ -16,7 +16,7 @@ pub struct ShapeBoard {
 impl<M> Listener<M> for ShapeBoard {}
 
 impl<M> ComponentModel<M> for ShapeBoard {
-    fn draw(&mut self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
+    fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
         let mut style = self.style;
         for shape in &self.shape_arr {
             shape.to_buffer(wgcontext, style.get_back_color())

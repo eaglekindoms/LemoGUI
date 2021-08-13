@@ -7,5 +7,5 @@ use crate::widget::listener::Listener;
 /// 作用：定义组件必须的公共方法接口
 pub trait ComponentModel<M>: Listener<M> {
     /// 组件绘制方法实现
-    fn draw(&mut self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState);
+    fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState);
 }

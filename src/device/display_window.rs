@@ -3,7 +3,6 @@ use std::future::Future;
 
 use futures::{StreamExt, task};
 use futures::channel::mpsc;
-use log::Log;
 use winit::event::*;
 use winit::event_loop::*;
 use winit::window::*;
@@ -12,7 +11,6 @@ use crate::device::container::Container;
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::shape::Point;
-use crate::widget::message::Message;
 
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文
@@ -47,8 +45,8 @@ async fn init<C, M>(builder: WindowBuilder, build_container: &Fn(WGContext) -> C
         window_id: window.id(),
         cursor_pos: None,
         window_event: None,
-        custom_event: None,
-        event_loop_proxy: event_loop.create_proxy(),
+        message: None,
+        message_channel: event_loop.create_proxy(),
     };
 
     let (mut sender, receiver) = mpsc::unbounded();
@@ -106,7 +104,7 @@ async fn event_listener<C, M>(mut el_context: ELContext<'_, M>,
             } if window_id == el_context.window_id => {
                 // 监听到组件关注事件，决定是否重绘
                 el_context.window_event = Some(event);
-                if container.input(&el_context) {
+                if container.input(&mut el_context) {
                     container.render();
                 }
                 match el_context.window_event.as_ref().unwrap() {
@@ -126,14 +124,8 @@ async fn event_listener<C, M>(mut el_context: ELContext<'_, M>,
                 container.render();
             }
             Event::UserEvent(event) => {
-                el_context.custom_event = Some(event);
+                el_context.message = Some(event);
             },
-
-            // Event::MainEventsCleared => {
-            //     // RedrawRequested will only trigger once, unless we manually
-            //     // request it.
-            //     display_device.window.request_redraw();
-            // }
             _ => {}
         }
     };

@@ -1,17 +1,12 @@
-use std::fmt::Debug;
-
 use winit::event::*;
-use winit::event_loop::EventLoopProxy;
 
 use crate::device::container::Container;
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::shape::Point;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::widget::component::ComponentModel;
-use crate::widget::listener::Listener;
-use crate::widget::message::Message;
+use crate::widget::listener;
 
 /// 默认窗口帧背景色
 const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
@@ -56,7 +51,7 @@ impl<M> Container<M> for Frame<M> {
         self.add_comp_arr(Box::new(comp))
     }
 
-    fn input(&mut self, el_context: &ELContext<'_, M>) -> bool
+    fn input(&mut self, el_context: &mut ELContext<'_, M>) -> bool
     {
         match el_context.window_event.as_ref().unwrap() {
             WindowEvent::Resized(new_inner_size) => {
@@ -67,9 +62,11 @@ impl<M> Container<M> for Frame<M> {
         }
         let mut input = false;
         for comp in &mut self.comp_graph_arr {
-            if comp.listener(el_context) {
+            if listener::component_listener::<M>(comp, el_context) {
                 input = true;
             }
+            // 清除消息，防止重复发送
+            el_context.message = None;
         }
         input
     }

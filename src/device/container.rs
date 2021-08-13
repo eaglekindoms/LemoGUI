@@ -1,14 +1,6 @@
-use std::fmt::Debug;
-
-use winit::event::WindowEvent;
-use winit::event_loop::EventLoopProxy;
-
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::shape::Point;
 use crate::widget::component::ComponentModel;
-use crate::widget::listener::Listener;
-use crate::widget::message::Message;
 
 /// 渲染容器trait
 /// 在事件循环时会调用实现该trait的对象
@@ -21,7 +13,7 @@ pub trait Container<M>: Sized {
         where C: ComponentModel<M> + 'static;
     // fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>);
     /// 事件响应
-    fn input(&mut self, el_context: &ELContext<'_, M>) -> bool;
+    fn input(&mut self, el_context: &mut ELContext<'_, M>) -> bool;
     /// 状态更新
     fn update(&mut self) {}
     /// 容器渲染
