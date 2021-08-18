@@ -1,6 +1,9 @@
+use std::path::Path;
+
 use simple_logger::SimpleLogger;
 use winit::event::ElementState;
 use winit::event::VirtualKeyCode::Key1;
+use winit::window::Icon;
 
 use LemoGUI::device::container::Container;
 use LemoGUI::device::display_window::*;
@@ -15,6 +18,7 @@ use LemoGUI::widget::button::Button;
 use LemoGUI::widget::component::ComponentModel;
 use LemoGUI::widget::frame::Frame;
 use LemoGUI::widget::listener::Listener;
+use LemoGUI::widget::text_input::TextInput;
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 enum Ms {
@@ -25,9 +29,13 @@ enum Ms {
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
     log::info!("build window");
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/res/icon.png");
+
+    let icon = load_icon(Path::new(path));
     let mut builder = winit::window::WindowBuilder::new();
-    builder = builder.with_title("hello")
-        .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0));
+    builder = builder.with_title("Counter")
+        .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0))
+        .with_window_icon(Some(icon));
 
     start(builder, &frame)
 }
@@ -40,13 +48,13 @@ fn frame(wgcontext: WGContext) -> Frame<Ms>
         .no_border()
         .hover_color(RGBA(0.0, 0.75, 1.0, 0.5))
         .back_color(RGBA(1.0, 0.5, 0.5, 1.0))
-        .font_color(RGBA(0.0, 0.0, 0.0, 1.0))
+        .font_color(RGBA(0.0, 0.0, 0.0, 1.0), 45.)
         .round();
     let b1
         = Button::new_with_style(rect, style, "button1").action(Ms::Add);
     let b2 = Button::new(
-        Point { x: 100.0, y: 300.0 },
-        "按钮2")
+        Point { x: 100.0, y: 200.0 },
+        "sub button减")
         .action(Ms::Sub);
 
     let counter = Counter {
@@ -54,10 +62,11 @@ fn frame(wgcontext: WGContext) -> Frame<Ms>
         b1,
         b2,
     };
+    let v = TextInput::new(Point::new(120., 320.), "self.value.to_string()");
 
     let mut frame = Frame::new(wgcontext);
     frame.add_comp(counter);
-
+    frame.add_comp(v);
     frame
 }
 
@@ -85,9 +94,21 @@ impl<M: Copy + PartialEq> Listener<M> for Counter<M> {
 
 impl<M: Copy + PartialEq> ComponentModel<M> for Counter<M> {
     fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
-        let v = Button::<M>::new(Point::new(120., 20.), self.value.to_string());
+        let v = TextInput::<M>::new(Point::new(120., 20.), self.value.to_string());
         v.draw(wgcontext, render_utils, glob_pipeline);
         self.b1.draw(wgcontext, render_utils, glob_pipeline);
         self.b2.draw(wgcontext, render_utils, glob_pipeline);
     }
+}
+
+fn load_icon(path: &Path) -> Icon {
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = image::open(path)
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+    Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }

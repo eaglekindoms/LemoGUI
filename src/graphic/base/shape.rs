@@ -1,7 +1,7 @@
 use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::color::*;
-use crate::graphic::base::poly_vertex::PolygonVertex;
-use crate::graphic::base::rect_vertex::RectVertex;
+use crate::graphic::render_middle::poly_vertex::PolygonVertex;
+use crate::graphic::render_middle::rect_vertex::RectVertex;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::style::Style;
 
@@ -81,8 +81,8 @@ impl Rectangle {
 
     /// 判断点是否在矩形内
     pub fn contain_coord(&self, position: Point<f32>) -> bool {
-        let rel_x = (position.x - self.position.x);
-        let rel_y = (position.y - self.position.y);
+        let rel_x = position.x - self.position.x;
+        let rel_y = position.y - self.position.y;
         (rel_x < self.width as f32) &&
             (rel_y < self.height as f32) &&
             (rel_x > 0.) &&

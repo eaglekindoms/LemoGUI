@@ -1,13 +1,13 @@
 use winit::event::WindowEvent;
 use winit::event_loop::EventLoopProxy;
-use winit::window::WindowId;
+use winit::window::{Window, WindowId};
 
 use crate::graphic::base::shape::Point;
 
 /// 事件上下文
 pub struct ELContext<'a, M: 'static> {
     /// 窗口id
-    pub window_id: WindowId,
+    pub window: Window,
     /// 鼠标位置
     pub cursor_pos: Option<Point<f32>>,
     /// 窗口事件

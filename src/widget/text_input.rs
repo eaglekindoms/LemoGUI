@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::option::Option::Some;
 
 use winit::event::*;
+use winit::window::CursorIcon;
 
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
@@ -19,7 +20,7 @@ use crate::widget::message::{EventType, State};
 
 /// 按钮控件结构体
 #[derive(Debug)]
-pub struct Button<M: Copy> {
+pub struct TextInput<M: Copy> {
     /// 组件尺寸
     pub size: Rectangle,
     /// 组件样式
@@ -30,7 +31,7 @@ pub struct Button<M: Copy> {
     pub state: Option<State<M>>,
 }
 
-impl<'a, M: Copy + PartialEq> Button<M> {
+impl<'a, M: Copy + PartialEq> TextInput<M> {
     pub fn new_with_style<S: Into<String>>(mut rect: Rectangle, style: Style, text: S) -> Self {
         log::info!("create the Button obj use new");
         Self {
@@ -71,7 +72,7 @@ impl<'a, M: Copy + PartialEq> Button<M> {
     }
 }
 
-impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
+impl<'a, M: Copy + PartialEq> ComponentModel<M> for TextInput<M> {
     /// 组件绘制方法实现
     fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
         let text_buffer = draw_text(45.0, self.style.get_font_color(), self.text.as_str());
@@ -88,19 +89,23 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     }
 }
 
-impl<'a, M: Copy + PartialEq> Listener<M> for Button<M> {
+impl<'a, M: Copy + PartialEq> Listener<M> for TextInput<M> {
     fn key_listener(&mut self, action_state: ElementState,
                     el_context: &ELContext<'_, M>, virtual_keycode: Option<VirtualKeyCode>) -> bool {
         listener::action_animation::<M>(&mut self.style, action_state,
                                         &el_context.message_channel, &self.state, virtual_keycode)
     }
-    fn action_listener(&mut self, action_state: ElementState, el_context: &ELContext<'_, M>) -> bool
+    fn hover_listener(&mut self, el_context: &ELContext<'_, M>) -> bool
     {
+        if el_context.cursor_pos.is_none() { return false; }
         let input = self.size
             .contain_coord(el_context.cursor_pos.unwrap());
         if input {
-            listener::action_animation::<M>(&mut self.style, action_state,
-                                            &el_context.message_channel, &self.state, None);
+            el_context.window.set_cursor_icon(CursorIcon::Text);
+            // listener::action_animation::<M>(&mut self.style, action_state,
+            //                                 &el_context.message_channel, &self.state, None);
+        } else {
+            el_context.window.set_cursor_icon(CursorIcon::Default);
         }
         input
     }

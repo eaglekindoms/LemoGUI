@@ -1,10 +1,10 @@
 use wgpu::*;
 
+use crate::graphic::base::color::RGBA;
 use crate::graphic::base::shape::Rectangle;
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 use crate::graphic::style::{Bordering, Rounding};
-use crate::graphic::base::color::RGBA;
 
 /// 矩形顶点数据布局结构体
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -51,7 +51,7 @@ impl VertexLayout for RectVertex {
         }
     }
 
-    fn set_shader(device: &Device) -> Shader {
+    fn get_shader(device: &Device) -> Shader {
         let vs_module = device
             .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.vert.spv")));
         let fs_module = device

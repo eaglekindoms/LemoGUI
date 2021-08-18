@@ -10,17 +10,19 @@ use crate::widget::message::{EventType, State};
 /// 作用：监听用户交互事件
 pub trait Listener<M> {
     /// 键盘事件监听器
-    fn key_listener(&mut self, action_state: ElementState, el_context: &ELContext<'_, M>, virtual_keycode: Option<VirtualKeyCode>) -> bool {
+    fn key_listener(&mut self, _action_state: ElementState, _el_context: &ELContext<'_, M>, _virtual_keycode: Option<VirtualKeyCode>) -> bool {
         false
     }
 
     /// 鼠标事件监听器
-    fn action_listener(&mut self, action_state: ElementState,
-                       el_context: &ELContext<'_, M>) -> bool
+    fn action_listener(&mut self, _action_state: ElementState,
+                       _el_context: &ELContext<'_, M>) -> bool
     { false }
-
+    fn hover_listener(&mut self,
+                      _el_context: &ELContext<'_, M>) -> bool
+    { false }
     // 组件消息监听器
-    fn message_listener(&mut self, broadcast: &M) -> bool { false }
+    fn message_listener(&mut self, _broadcast: &M) -> bool { false }
 }
 
 pub fn component_listener<M>(listener: &mut Box<dyn ComponentModel<M>>,
@@ -45,7 +47,8 @@ pub fn component_listener<M>(listener: &mut Box<dyn ComponentModel<M>>,
             ..
         }
         => {
-            input = listener.action_listener(*state, el_context);
+            input = el_context.cursor_pos.is_some() &&
+                listener.action_listener(*state, el_context);
         }
         _ => {}
     }
@@ -53,7 +56,9 @@ pub fn component_listener<M>(listener: &mut Box<dyn ComponentModel<M>>,
     if let Some(broadcast) = el_context.message.as_ref() {
         custom = listener.message_listener(broadcast);
     }
-    input || custom
+
+    let hover = listener.hover_listener(el_context);
+    input || custom || hover
 }
 
 pub fn action_animation<M: Copy>(style: &mut Style,
@@ -67,13 +72,13 @@ pub fn action_animation<M: Copy>(style: &mut Style,
         let hover_color = style.get_hover_color();
         let back_color = style.get_back_color();
         if let Some(state) = com_state {
-            if (state.event == EventType::mouse)
+            if (state.event == EventType::Mouse)
                 || (virtual_keycode.is_some()
                 && state.event == EventType::KeyBoard(virtual_keycode.unwrap())) {
                 if action_state == ElementState::Pressed {
                     style.display_color(hover_color);
                     if let Some(message) = state.message {
-                        event_loop_proxy.send_event(message);
+                        event_loop_proxy.send_event(message).ok();
                     }
                 } else if action_state == ElementState::Released {
                     style.display_color(back_color);

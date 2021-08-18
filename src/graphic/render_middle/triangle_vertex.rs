@@ -45,7 +45,7 @@ impl VertexLayout for PointVertex {
         }
     }
 
-    fn set_shader(device: &Device) -> Shader {
+    fn get_shader(device: &Device) -> Shader {
         let vs_module = device
             .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/triangle.vert.spv")));
         let fs_module = device

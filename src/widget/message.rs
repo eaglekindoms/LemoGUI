@@ -2,12 +2,10 @@ use std::fmt::*;
 
 use winit::event::VirtualKeyCode;
 
-type CallBack = Box<dyn Fn()>;
-
 /// 事件类型枚举
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum EventType {
-    mouse,
+    Mouse,
     KeyBoard(VirtualKeyCode),
 }
 

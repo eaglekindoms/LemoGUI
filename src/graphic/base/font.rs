@@ -1,15 +1,17 @@
 use ab_glyph::*;
 
 use crate::graphic::base::color::RGBA;
+use crate::graphic::base::image::Image;
 
 #[deprecated]
-pub fn draw_text(f_scale: f32, font_color: RGBA, text: &str) -> (u32, u32, Vec<u8>) {
+pub fn draw_text(f_scale: f32, font_color: RGBA, text: &str) -> Image {
     let font = FontRef::try_from_slice(include_bytes!("../../../res/SourceHanSansCN-Regular.otf")).unwrap();
     default_draw_text(font, f_scale, font_color, text)
 }
 
 
-pub fn default_draw_text(font: FontRef, font_scale: f32, font_color: RGBA, text: &str) -> (u32, u32, Vec<u8>) {
+pub fn default_draw_text(font: FontRef,
+                         font_scale: f32, font_color: RGBA, text: &str) -> Image {
 
     // The font size to use
     let scale = PxScale::from(font_scale);
@@ -41,7 +43,7 @@ pub fn default_draw_text(font: FontRef, font_scale: f32, font_color: RGBA, text:
             outlined.draw(|x, y, v| {
                 // Offset the position by the glyph bounding box
                 // println!("x: {} y: {}", x, y);
-                let index = x + bounds.min.x as u32 -10  + (glyphs_width   ) * (y + bounds.min.y as u32 - 22);
+                let index = x + bounds.min.x as u32 - 10 + (glyphs_width) * (y + bounds.min.y as u32 - 22);
                 bufs1[(index * 4) as usize] = colour.0;
                 bufs1[(index * 4) as usize + 1] = colour.1;
                 bufs1[(index * 4) as usize + 2] = colour.2;
@@ -50,8 +52,11 @@ pub fn default_draw_text(font: FontRef, font_scale: f32, font_color: RGBA, text:
             });
         }
     }
-
-    (glyphs_width  , glyphs_height, bufs1)
+    Image {
+        width: glyphs_width,
+        height: glyphs_height,
+        data: bufs1,
+    }
 }
 
 fn layout_paragraph<F, SF>(

@@ -3,8 +3,7 @@ use std::option::Option::None;
 
 use wgpu::*;
 
-use crate::graphic::base::color::RGBA;
-use crate::graphic::base::font::draw_text;
+use crate::graphic::base::image::Image;
 
 #[derive(Debug)]
 pub struct TextureBuffer {
@@ -12,16 +11,9 @@ pub struct TextureBuffer {
     pub diffuse_bind_group: BindGroup,
 }
 
-#[derive(Debug)]
-pub struct TextureContext<'a> {
-    pub x: u32,
-    pub y: u32,
-    pub buf: &'a [u8],
-}
-
 impl<'a> TextureBuffer {
-    pub fn default(device: &Device, queue: &wgpu::Queue, texture_buf: &'a TextureContext) -> Self {
-        let texture_size = Self::create_texture_size(texture_buf.x, texture_buf.y);
+    pub fn create_font_image(device: &Device, queue: &wgpu::Queue, image: Image) -> Self {
+        let texture_size = Self::create_texture_size(image.width, image.height);
         let diffuse_texture = device.create_texture(
             &Self::create_texture_descriptor(&texture_size)
         );
@@ -30,9 +22,9 @@ impl<'a> TextureBuffer {
             Self::create_texture_copy_view(&diffuse_texture),
             // The actual pixel data
             // diffuse_rgba,
-            texture_buf.buf,
+            image.data.as_slice(),
             // The layout of the texture
-            Self::create_texture_data_layout(texture_buf.x, texture_buf.y),
+            Self::create_texture_data_layout(image.width, image.height),
             texture_size,
         );
 
@@ -65,13 +57,6 @@ impl<'a> TextureBuffer {
             // texture_bind_group_layout,
             diffuse_bind_group,
         }
-    }
-    #[deprecated]
-    pub fn create_font_image(device: &Device, queue: &wgpu::Queue, font_color: RGBA, text: &'a str) -> Self {
-        // let text = "hello button";
-        let (x, y, buf) = draw_text(45.0, font_color, text);
-        let texture_buf = TextureContext { x, y, buf: buf.as_slice() };
-        Self::default(device, queue, &texture_buf)
     }
 
     #[deprecated]

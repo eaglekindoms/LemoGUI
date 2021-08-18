@@ -8,7 +8,7 @@ pub trait VertexLayout: Sized {
     /// 设置图形顶点缓存布局
     fn set_vertex_desc<'a>() -> wgpu::VertexBufferLayout<'a>;
     /// 设置图元渲染器
-    fn set_shader(device: &Device) -> Shader;
+    fn get_shader(device: &Device) -> Shader;
     /// 设置渲染管线布局
     fn set_pipeline_layout(device: &Device) -> PipelineLayout {
         let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -22,7 +22,7 @@ pub trait VertexLayout: Sized {
     fn create_render_pipeline(device: &Device,
                               fill_topology: PrimitiveTopology,
     ) -> RenderPipeline {
-        let shader = Self::set_shader(device);
+        let shader = Self::get_shader(device);
         let render_pipeline = device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some("Render Pipeline"),

@@ -42,7 +42,7 @@ async fn init<C, M>(builder: WindowBuilder, build_container: &Fn(WGContext) -> C
     let container = build_container(wgcontext.await);
 
     let el_context = ELContext {
-        window_id: window.id(),
+        window,
         cursor_pos: None,
         window_event: None,
         message: None,
@@ -101,7 +101,7 @@ async fn event_listener<C, M>(mut el_context: ELContext<'_, M>,
             Event::WindowEvent {
                 event,
                 window_id,
-            } if window_id == el_context.window_id => {
+            } if window_id == el_context.window.id() => {
                 // 监听到组件关注事件，决定是否重绘
                 el_context.window_event = Some(event);
                 if container.input(&mut el_context) {
@@ -120,7 +120,7 @@ async fn event_listener<C, M>(mut el_context: ELContext<'_, M>,
                 }
             }
             Event::RedrawRequested(window_id)
-            if window_id == el_context.window_id => {
+            if window_id == el_context.window.id() => {
                 container.render();
             }
             Event::UserEvent(event) => {
