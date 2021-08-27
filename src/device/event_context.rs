@@ -1,6 +1,6 @@
 use winit::event::WindowEvent;
 use winit::event_loop::EventLoopProxy;
-use winit::window::{Window, WindowId};
+use winit::window::Window;
 
 use crate::graphic::base::shape::Point;
 

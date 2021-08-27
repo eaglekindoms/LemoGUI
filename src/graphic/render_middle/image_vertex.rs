@@ -18,7 +18,7 @@ impl VertexLayout for TextureVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<TextureVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Instance,
+            step_mode: wgpu::VertexStepMode::Instance,
             attributes: &[
                 wgpu::VertexAttribute {
                     offset: 0,
@@ -60,7 +60,7 @@ impl VertexLayout for TextureVertex {
 }
 
 impl TextureVertex {
-    pub fn new(device: &Device, sc_desc: &SwapChainDescriptor, rect: &Rectangle) -> VertexBuffer {
+    pub fn new(device: &Device, sc_desc: &SurfaceConfiguration, rect: &Rectangle) -> VertexBuffer {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.width, sc_desc.height);
         let vect: Vec<TextureVertex> = vec![

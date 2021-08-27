@@ -32,7 +32,7 @@ impl VertexLayout for PolygonVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<PolygonVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Instance,
+            step_mode: wgpu::VertexStepMode::Instance,
             attributes: &[
                 wgpu::VertexAttribute {
                     offset: 0,

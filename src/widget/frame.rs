@@ -72,19 +72,20 @@ impl<M> Container<M> for Frame<M> {
     }
 
     fn render(&mut self) {
-        let screen_displayed = self.wgcontext
-            .device
-            .create_swap_chain(&self.wgcontext.surface, &self.wgcontext.sc_desc);
-        let target = screen_displayed.get_current_frame().unwrap().output;
         let mut encoder = self.wgcontext.device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
+        let view = self.wgcontext.surface
+            .get_current_frame().unwrap()
+            .output
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
         {
             let mut _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[wgpu::RenderPassColorAttachment {
-                    view: &target.view,
+                    view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(BACKGROUND_COLOR),
@@ -96,11 +97,11 @@ impl<M> Container<M> for Frame<M> {
         }
         let mut utils = RenderUtil {
             encoder,
-            target,
+            view,
         };
         log::info!("graph_context size:{}", self.comp_graph_arr.len());
-        for view in &mut self.comp_graph_arr {
-            view.draw(&self.wgcontext, &mut utils, &self.glob_pipeline);
+        for comp in &mut self.comp_graph_arr {
+            comp.draw(&self.wgcontext, &mut utils, &self.glob_pipeline);
         }
         self.wgcontext.queue.submit(std::iter::once(utils.encoder.finish()));
     }

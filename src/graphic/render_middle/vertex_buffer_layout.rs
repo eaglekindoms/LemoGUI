@@ -45,7 +45,7 @@ pub trait VertexLayout: Sized {
                     entry_point: "main",
                     targets: &[wgpu::ColorTargetState {
                         format: wgpu::TextureFormat::Bgra8UnormSrgb,
-                        write_mask: wgpu::ColorWrite::ALL,
+                        write_mask: wgpu::ColorWrites::ALL,
                         blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     }],
                 }),

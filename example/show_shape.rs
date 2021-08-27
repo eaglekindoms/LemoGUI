@@ -37,8 +37,8 @@ fn frame(wgcontext: WGContext) -> Frame<()>
 
 fn shapes() -> ShapeBoard {
     let mut shapes: Vec<Box<dyn ShapeGraph>> = Vec::with_capacity(10);
-    let rect = Rectangle::new(21.0, 31.0, 221, 111);
-    let rect2 = Rectangle::new(21.0, 181.0, 221, 111);
+    // let rect = Rectangle::new(21.0, 31.0, 221, 111);
+    // let rect2 = Rectangle::new(21.0, 181.0, 221, 111);
     let circle = Circle::new(401., 160.2, 110.2);
     let triangle = Polygon::new(
         Circle::new(331., 560.2, 100.2), 3);
@@ -49,8 +49,8 @@ fn shapes() -> ShapeBoard {
     let rects = Polygon::new(
         Circle::new(631., 510.2, 110.2), 4);
 
-    shapes.push(Box::new(rect));
-    shapes.push(Box::new(rect2));
+    // shapes.push(Box::new(rect));
+    // shapes.push(Box::new(rect2));
     shapes.push(Box::new(circle));
     shapes.push(Box::new(triangle));
     shapes.push(Box::new(polygon));

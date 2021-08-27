@@ -32,7 +32,7 @@ impl PipelineState {
         let mut glob_pipeline = Self {
             context,
         };
-        glob_pipeline.set_pipeline::<RectVertex>(device, TriangleStrip, ShapeType::ROUND);
+        // glob_pipeline.set_pipeline::<RectVertex>(device, TriangleStrip, ShapeType::ROUND);
         glob_pipeline.set_pipeline::<PolygonVertex>(device, TriangleStrip, ShapeType::POLYGON);
         glob_pipeline.set_pipeline::<PointVertex>(device, TriangleList, ShapeType::POINT);
         glob_pipeline.set_pipeline::<PointVertex>(device, LineStrip, ShapeType::BORDER);
