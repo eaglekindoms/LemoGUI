@@ -34,16 +34,14 @@ impl VertexLayout for TextureVertex {
         }
     }
 
-    fn get_shader(device: &Device) -> Shader {
-        let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/image.vert.spv")));
-        let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/image.frag.spv")));
-
-        Shader {
-            vs_module,
-            fs_module,
-        }
+    fn get_shader(device: &Device) -> ShaderModule {
+        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some("texture shader"),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/image.wgsl")),
+            )),
+            flags: Default::default(),
+        })
     }
 
     fn set_pipeline_layout(device: &Device) -> PipelineLayout {

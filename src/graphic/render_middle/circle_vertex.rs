@@ -9,14 +9,14 @@ use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 /// 顶点顺序为左下开始逆时针排序
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct PolygonVertex {
+pub struct CircleVertex {
     pub position: [f32; 2],
     pub color: [f32; 4],
     pub radius: f32,
     pub edge: u32,
 }
 
-impl PolygonVertex {
+impl CircleVertex {
     pub fn new(point: &Circle, edge: u32, color: RGBA) -> Self {
         log::info!("create the PolygonVertex obj");
         Self {
@@ -28,10 +28,10 @@ impl PolygonVertex {
     }
 }
 
-impl VertexLayout for PolygonVertex {
+impl VertexLayout for CircleVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<PolygonVertex>() as wgpu::BufferAddress,
+            array_stride: std::mem::size_of::<CircleVertex>() as wgpu::BufferAddress,
             step_mode: wgpu::InputStepMode::Instance,
             attributes: &[
                 wgpu::VertexAttribute {
@@ -58,15 +58,13 @@ impl VertexLayout for PolygonVertex {
         }
     }
 
-    fn get_shader(device: &Device) -> Shader {
-        let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/polygon.vert.spv")));
-        let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/polygon.frag.spv")));
-
-        Shader {
-            vs_module,
-            fs_module,
-        }
+    fn get_shader(device: &Device) -> ShaderModule {
+        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some("circle shader"),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/circle.wgsl")),
+            )),
+            flags: Default::default(),
+        })
     }
 }

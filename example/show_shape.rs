@@ -40,20 +40,28 @@ fn shapes() -> ShapeBoard {
     let rect = Rectangle::new(21.0, 31.0, 221, 111);
     let rect2 = Rectangle::new(21.0, 181.0, 221, 111);
     let circle = Circle::new(401., 160.2, 110.2);
-    let triangle = Polygon::new(
+    let triangle = RegularPolygon::new(
         Circle::new(331., 560.2, 100.2), 3);
 
-    let polygon = Polygon::new(
+    let polygon = RegularPolygon::new(
         Circle::new(131., 510.2, 110.2), 6);
 
-    let rects = Polygon::new(
+    let rects = RegularPolygon::new(
         Circle::new(631., 510.2, 110.2), 4);
-
+    let points = Polygon::new(vec![
+        Point::new(0.2, -0.6),//0
+        Point::new(0.4, -0.6),//1
+        Point::new(0.5, -0.4),//2
+        Point::new(0.4, -0.2),//3
+        Point::new(0.2, -0.2),//4
+        Point::new(0.1, -0.4),//5
+    ]);
     shapes.push(Box::new(rect));
     shapes.push(Box::new(rect2));
     shapes.push(Box::new(circle));
     shapes.push(Box::new(triangle));
     shapes.push(Box::new(polygon));
+    shapes.push(Box::new(points));
     shapes.push(Box::new(rects));
     let style = Style::default().back_color(LIGHT_BLUE);
 
