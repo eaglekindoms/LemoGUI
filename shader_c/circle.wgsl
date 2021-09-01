@@ -32,12 +32,10 @@ fn vs_main(input: VertexInput) -> VertexOutput  {
                                         vec2<f32>(-1.0, -1.0),
                                         vec2<f32>(1.0, -1.0));
     let coord: vec2<f32> = positions[gl_VertexIndex];
-    out.gl_Position= vec4<f32>(coord.x, coord.y, 0.0, 1.0);
+    out.gl_Position= vec4<f32>(coord, 0.0, 1.0);
 
     return out;
 }
-
-var uv: vec2<f32> = vec2<f32>(0.0, 0.0);
 
 fn circle(uvs: vec2<f32>, pos: vec2<f32>, rad: f32) -> f32 {
     var d: f32;

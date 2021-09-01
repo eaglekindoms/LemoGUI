@@ -17,3 +17,10 @@ pub struct ELContext<'a, M: 'static> {
     /// 自定义事件广播器
     pub message_channel: EventLoopProxy<M>,
 }
+
+impl<'a, M: 'static> ELContext<'a, M> {
+    // 更新鼠标坐标
+    pub fn update_cursor(&mut self, pos: Point<f32>) {
+        self.cursor_pos = Some(pos);
+    }
+}

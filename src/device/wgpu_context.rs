@@ -1,5 +1,7 @@
 use winit::window::Window;
 
+use crate::graphic::base::shape::Point;
+
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体
 pub struct WGContext {
@@ -16,7 +18,7 @@ pub struct WGContext {
 impl WGContext {
     pub async fn new(window: &Window) -> WGContext {
         log::info!("Initializing the surface...");
-        let instance = wgpu::Instance::new(wgpu::Backends::DX12);
+        let instance = wgpu::Instance::new(wgpu::Backends::all());
         let size = window.inner_size();
 
         let surface = unsafe { instance.create_surface(window) };
@@ -59,5 +61,11 @@ impl WGContext {
             queue,
             sc_desc,
         }
+    }
+    // 更新交换缓冲区
+    pub fn update_surface_configure(&mut self, size: Point<u32>) {
+        self.sc_desc.width = size.x;
+        self.sc_desc.height = size.y;
+        self.surface.configure(&self.device, &self.sc_desc);
     }
 }

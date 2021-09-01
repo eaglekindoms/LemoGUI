@@ -39,7 +39,6 @@ impl VertexLayout for RectVertex {
             source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
                 include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.wgsl")),
             )),
-            flags: Default::default(),
         })
     }
 }

@@ -1,7 +1,5 @@
 use wgpu::*;
 
-use crate::graphic::render_middle::pipeline_state::Shader;
-
 /// wgpu图形顶点布局trait
 /// 作用：定义顶点布局接口
 pub trait VertexLayout: Sized {
