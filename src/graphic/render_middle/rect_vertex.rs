@@ -51,16 +51,14 @@ impl VertexLayout for RectVertex {
         }
     }
 
-    fn get_shader(device: &Device) -> Shader {
-        let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.vert.spv")));
-        let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.frag.spv")));
-
-        Shader {
-            vs_module,
-            fs_module,
-        }
+    fn get_shader(device: &Device) -> ShaderModule {
+        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some("round_rect shader"),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.wgsl")),
+            )),
+            flags: Default::default(),
+        })
     }
 }
 
