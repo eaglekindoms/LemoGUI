@@ -45,16 +45,14 @@ impl VertexLayout for PointVertex {
         }
     }
 
-    fn get_shader(device: &Device) -> Shader {
-        let vs_module = device
-            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/triangle.vert.spv")));
-        let fs_module = device
-            .create_shader_module(&wgpu::include_spirv!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/triangle.frag.spv")));
-
-        Shader {
-            vs_module,
-            fs_module,
-        }
+    fn get_shader(device: &Device) -> ShaderModule {
+        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some("triangle::shader"),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/triangle.wgsl")),
+            )),
+            flags: Default::default(),
+        })
     }
 }
 

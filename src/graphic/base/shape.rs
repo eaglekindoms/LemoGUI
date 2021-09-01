@@ -1,7 +1,8 @@
 use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::color::*;
-use crate::graphic::render_middle::poly_vertex::PolygonVertex;
+use crate::graphic::render_middle::circle_vertex::CircleVertex;
 use crate::graphic::render_middle::rect_vertex::RectVertex;
+use crate::graphic::render_middle::triangle_vertex::PointVertex;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::style::Style;
 
@@ -12,7 +13,7 @@ pub enum ShapeType {
     ROUND = 1,
     BORDER = 2,
     POINT = 3,
-    POLYGON = 4,
+    Circle = 4,
 }
 
 /// 点结构体
@@ -42,7 +43,7 @@ pub struct Circle {
 
 /// 多边形结构体
 #[derive(Debug)]
-pub struct Polygon {
+pub struct RegularPolygon {
     pub point: Circle,
     pub edge: u32,
 }
@@ -52,6 +53,19 @@ impl<T> Point<T> {
         Point {
             x,
             y,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Polygon {
+    pub points: Vec<Point<f32>>,
+}
+
+impl Polygon {
+    pub fn new(points: Vec<Point<f32>>) -> Polygon {
+        Polygon {
+            points
         }
     }
 }
@@ -99,9 +113,9 @@ impl Circle {
     }
 }
 
-impl Polygon {
-    pub fn new(point: Circle, edge: u32) -> Polygon {
-        Polygon {
+impl RegularPolygon {
+    pub fn new(point: Circle, edge: u32) -> RegularPolygon {
+        RegularPolygon {
             point,
             edge,
         }
@@ -132,27 +146,37 @@ impl ShapeGraph for Rectangle {
 impl ShapeGraph for Circle {
     fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
         let circle_vertex
-            = PolygonVertex::new(&self, 0, color);
-        let cricle_buffer = VertexBuffer::create_vertex_buf::<PolygonVertex>
+            = CircleVertex::new(&self, 0, color);
+        let cricle_buffer = VertexBuffer::create_vertex_buf::<CircleVertex>
             (&wgcontext.device, vec![circle_vertex], RECT_INDEX);
         cricle_buffer
     }
 
     fn get_type(&self) -> ShapeType {
-        ShapeType::POLYGON
+        ShapeType::Circle
+    }
+}
+
+impl ShapeGraph for RegularPolygon {
+    fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
+        let circle_vertex
+            = CircleVertex::new(&self.point, self.edge, color);
+        let cricle_buffer = VertexBuffer::create_vertex_buf::<CircleVertex>
+            (&wgcontext.device, vec![circle_vertex], RECT_INDEX);
+        cricle_buffer
+    }
+
+    fn get_type(&self) -> ShapeType {
+        ShapeType::Circle
     }
 }
 
 impl ShapeGraph for Polygon {
     fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
-        let circle_vertex
-            = PolygonVertex::new(&self.point, self.edge, color);
-        let cricle_buffer = VertexBuffer::create_vertex_buf::<PolygonVertex>
-            (&wgcontext.device, vec![circle_vertex], RECT_INDEX);
-        cricle_buffer
+        PointVertex::from_shape_to_vector(wgcontext, &self.points, color)
     }
 
     fn get_type(&self) -> ShapeType {
-        ShapeType::POLYGON
+        ShapeType::POINT
     }
 }
