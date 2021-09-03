@@ -1,6 +1,6 @@
 use winit::event::WindowEvent;
 use winit::event_loop::EventLoopProxy;
-use winit::window::{Window, WindowId};
+use winit::window::Window;
 
 use crate::graphic::base::shape::Point;
 
@@ -16,4 +16,11 @@ pub struct ELContext<'a, M: 'static> {
     pub message: Option<M>,
     /// 自定义事件广播器
     pub message_channel: EventLoopProxy<M>,
+}
+
+impl<'a, M: 'static> ELContext<'a, M> {
+    // 更新鼠标坐标
+    pub fn update_cursor(&mut self, pos: Point<f32>) {
+        self.cursor_pos = Some(pos);
+    }
 }

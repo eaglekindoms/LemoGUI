@@ -3,6 +3,7 @@ use winit::event::*;
 use crate::device::container::Container;
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
+use crate::graphic::base::shape::Point;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::widget::component::ComponentModel;
@@ -54,9 +55,15 @@ impl<M> Container<M> for Frame<M> {
     fn input(&mut self, el_context: &mut ELContext<'_, M>) -> bool
     {
         match el_context.window_event.as_ref().unwrap() {
-            WindowEvent::Resized(new_inner_size) => {
-                self.wgcontext.sc_desc.width = new_inner_size.width;
-                self.wgcontext.sc_desc.height = new_inner_size.height;
+            WindowEvent::Resized(new_size) => {
+                // 更新swapChain交换缓冲区
+                self.wgcontext
+                    .update_surface_configure(Point::new(new_size.width, new_size.height));
+            }
+            // 储存鼠标位置坐标
+            WindowEvent::CursorMoved { position, .. }
+            => {
+                el_context.update_cursor(Point::new(position.x as f32, position.y as f32));
             }
             _ => {}
         }
@@ -72,37 +79,43 @@ impl<M> Container<M> for Frame<M> {
     }
 
     fn render(&mut self) {
-        let screen_displayed = self.wgcontext
-            .device
-            .create_swap_chain(&self.wgcontext.surface, &self.wgcontext.sc_desc);
-        let target = screen_displayed.get_current_frame().unwrap().output;
-        let mut encoder = self.wgcontext.device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Render Encoder"),
-            });
-        {
-            let mut _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: None,
-                color_attachments: &[wgpu::RenderPassColorAttachment {
-                    view: &target.view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(BACKGROUND_COLOR),
-                        store: true,
-                    },
-                }],
-                depth_stencil_attachment: None,
-            });
+        match self.wgcontext.surface.get_current_frame() {
+            Err(error) => {
+                log::error!("{}", error);
+            }
+            Ok(frame) => {
+                let view = frame.output
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
+                let mut encoder = self.wgcontext.device
+                    .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                        label: Some("Render Encoder"),
+                    });
+                {
+                    let mut _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                        label: None,
+                        color_attachments: &[wgpu::RenderPassColorAttachment {
+                            view: &view,
+                            resolve_target: None,
+                            ops: wgpu::Operations {
+                                load: wgpu::LoadOp::Clear(BACKGROUND_COLOR),
+                                store: true,
+                            },
+                        }],
+                        depth_stencil_attachment: None,
+                    });
+                }
+                let mut utils = RenderUtil {
+                    encoder,
+                    view,
+                };
+                log::info!("graph_context size:{}", self.comp_graph_arr.len());
+                for comp in &mut self.comp_graph_arr {
+                    comp.draw(&self.wgcontext, &mut utils, &self.glob_pipeline);
+                }
+                self.wgcontext.queue.submit(Some(utils.encoder.finish()));
+            }
         }
-        let mut utils = RenderUtil {
-            encoder,
-            target,
-        };
-        log::info!("graph_context size:{}", self.comp_graph_arr.len());
-        for view in &mut self.comp_graph_arr {
-            view.draw(&self.wgcontext, &mut utils, &self.glob_pipeline);
-        }
-        self.wgcontext.queue.submit(std::iter::once(utils.encoder.finish()));
     }
 }
 

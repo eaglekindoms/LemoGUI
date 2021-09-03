@@ -1,12 +1,13 @@
 [package]
 name = "LemoGUI"
-version = "0.0.1-nightly"
+version = "0.0.1"
 authors = ["eaglekindoms <huyongmao35@outlook.com>"]
 edition = "2018"
 description = "GUI library dependent on wgpu"
 license = "MIT"
 keywords = ["graphics", "gui"]
 repository = "https://github.com/eaglekindoms/LemoGUI"
+resolver = "2"
 
 [[example]]
 name = "show_button"
@@ -25,9 +26,9 @@ name = "test_graph_algo"
 path = "example/proto/test_algo.rs"
 
 [dependencies]
-wgpu = "0.9.0"
+wgpu = { version = "0.10.1", features = ["spirv"] }
 async-trait = "0.1.51"
-winit = "0.24.0"
+winit = "0.25.0"
 futures = "0.3.10"
 cgmath = "0.17"
 log = "0.4.14"
@@ -36,6 +37,19 @@ rand = "0.8.2"
 bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
 ab_glyph = "0.2.11"
+##metal = "0.2.75"
+#web-sys = " 0.3.53"
+#js-sys = " 0.3.53"
+#wasm-bindgen = "0.2.75"
+#naga = { git = "https://hub.fastgit.org/gfx-rs/naga", rev = "995a775" }
+
+#[dependencies.wgpu]
+#git = "https://github.com/gfx-rs/wgpu"
+##path = "../wgpu-master/wgpu"
+#features = ["spirv"]
+
+#[patch.crates-io]
+
 
 [build-dependencies]
 shaderc = "0.7.0"

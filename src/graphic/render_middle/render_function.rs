@@ -1,11 +1,11 @@
-use wgpu::{CommandEncoder, SwapChainTexture};
+use wgpu::{CommandEncoder, TextureView};
 
 /// 渲染工具封装结构体
 /// 作用：省事
 #[derive(Debug)]
 pub struct RenderUtil {
     pub encoder: CommandEncoder,
-    pub target: SwapChainTexture,
+    pub view: TextureView,
 }
 
 impl RenderUtil {
@@ -14,7 +14,7 @@ impl RenderUtil {
         let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[wgpu::RenderPassColorAttachment {
-                view: &self.target.view,
+                view: &self.view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Load,

@@ -10,7 +10,6 @@ use winit::window::*;
 use crate::device::container::Container;
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::shape::Point;
 
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文
@@ -102,21 +101,14 @@ async fn event_listener<C, M>(mut el_context: ELContext<'_, M>,
                 event,
                 window_id,
             } if window_id == el_context.window.id() => {
+                // 捕获窗口关闭请求
+                if event == WindowEvent::CloseRequested {
+                    break;
+                }
                 // 监听到组件关注事件，决定是否重绘
                 el_context.window_event = Some(event);
                 if container.input(&mut el_context) {
                     container.render();
-                }
-                match el_context.window_event.as_ref().unwrap() {
-                    // 捕获窗口关闭请求
-                    WindowEvent::CloseRequested =>
-                        break,
-                    // 储存鼠标位置
-                    WindowEvent::CursorMoved { position, .. }
-                    => {
-                        el_context.cursor_pos = Some(Point::new(position.x as f32, position.y as f32));
-                    }
-                    _ => {}
                 }
             }
             Event::RedrawRequested(window_id)

@@ -2,7 +2,6 @@ use wgpu::*;
 
 use crate::graphic::base::color::*;
 use crate::graphic::base::shape::*;
-use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
 /// 圆形顶点数据布局结构体
@@ -32,7 +31,7 @@ impl VertexLayout for CircleVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<CircleVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Instance,
+            step_mode: wgpu::VertexStepMode::Instance,
             attributes: &[
                 wgpu::VertexAttribute {
                     offset: 0,
@@ -64,7 +63,6 @@ impl VertexLayout for CircleVertex {
             source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
                 include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/circle.wgsl")),
             )),
-            flags: Default::default(),
         })
     }
 }

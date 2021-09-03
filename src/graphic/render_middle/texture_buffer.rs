@@ -88,7 +88,7 @@ impl<'a> TextureBuffer {
             entries: &[
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStage::FRAGMENT,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Texture {
                         sample_type: wgpu::TextureSampleType::Float { filterable: true },
                         view_dimension: wgpu::TextureViewDimension::D2,
@@ -98,7 +98,7 @@ impl<'a> TextureBuffer {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    visibility: wgpu::ShaderStage::FRAGMENT,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Sampler {
                         filtering: true,
                         comparison: false,
@@ -134,7 +134,7 @@ impl<'a> TextureBuffer {
             format: wgpu::TextureFormat::Rgba8UnormSrgb,
             // SAMPLED tells wgpu that we want to use this texture in shaders
             // COPY_DST means that we want to copy data to this texture
-            usage: wgpu::TextureUsage::SAMPLED | wgpu::TextureUsage::COPY_DST,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             label: Some("diffuse_texture"),
         }
     }
@@ -147,6 +147,7 @@ impl<'a> TextureBuffer {
             texture: diffuse_texture,
             mip_level: 0,
             origin: wgpu::Origin3d::ZERO,
+            aspect: wgpu::TextureAspect::default()
         }
     }
 

@@ -17,37 +17,19 @@ pub struct RectVertex {
     pub is_round_or_border: [u32; 2],
 }
 
+const attrs: [VertexAttribute; 5] = wgpu::vertex_attr_array![
+                0 => Float32x2,
+                1 => Float32x2,
+                2 => Float32x4,
+                3 => Float32x4,
+                4 => Uint32x2];
+
 impl VertexLayout for RectVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<RectVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Instance,
-            attributes: &[
-                wgpu::VertexAttribute {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float32x2,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x2,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
-                    shader_location: 2,
-                    format: wgpu::VertexFormat::Float32x4,
-                }, wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 8]>() as wgpu::BufferAddress,
-                    shader_location: 3,
-                    format: wgpu::VertexFormat::Float32x4,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 12]>() as wgpu::BufferAddress,
-                    shader_location: 4,
-                    format: wgpu::VertexFormat::Uint32x2,
-                },
-            ],
+            step_mode: wgpu::VertexStepMode::Instance,
+            attributes: &attrs,
         }
     }
 
@@ -57,13 +39,12 @@ impl VertexLayout for RectVertex {
             source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
                 include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.wgsl")),
             )),
-            flags: Default::default(),
         })
     }
 }
 
 impl RectVertex {
-    pub fn new(rect: &Rectangle, sc_desc: &wgpu::SwapChainDescriptor, color: RGBA) -> RectVertex {
+    pub fn new(rect: &Rectangle, sc_desc: &wgpu::SurfaceConfiguration, color: RGBA) -> RectVertex {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.width, sc_desc.height);
         let mut border_color = [0.0, 0.0, 0.0, 0.0];

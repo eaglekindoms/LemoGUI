@@ -3,7 +3,6 @@ use wgpu::*;
 use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::color::RGBA;
 use crate::graphic::base::shape::*;
-use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
@@ -29,7 +28,7 @@ impl VertexLayout for PointVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<PointVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Vertex,
+            step_mode: wgpu::VertexStepMode::Vertex,
             attributes: &[
                 wgpu::VertexAttribute {
                     offset: 0,
@@ -47,11 +46,10 @@ impl VertexLayout for PointVertex {
 
     fn get_shader(device: &Device) -> ShaderModule {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some("triangle::shader"),
+            label: Some("triangle shader"),
             source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
                 include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/triangle.wgsl")),
             )),
-            flags: Default::default(),
         })
     }
 }

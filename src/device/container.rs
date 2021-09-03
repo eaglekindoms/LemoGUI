@@ -12,7 +12,7 @@ pub trait Container<M>: Sized {
     fn add_comp<C>(&mut self, comp: C)
         where C: ComponentModel<M> + 'static;
     // fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>);
-    /// 事件响应
+    /// 键鼠输入事件响应
     fn input(&mut self, el_context: &mut ELContext<'_, M>) -> bool;
     /// 状态更新
     fn update(&mut self) {}

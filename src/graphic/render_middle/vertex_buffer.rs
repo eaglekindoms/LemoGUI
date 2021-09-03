@@ -33,13 +33,13 @@ impl<'a> VertexBuffer {
             .create_buffer_init(&BufferInitDescriptor {
                 label: None,
                 contents: bytemuck::cast_slice(vect.as_slice()),
-                usage: wgpu::BufferUsage::VERTEX,
+                usage: wgpu::BufferUsages::VERTEX,
             });
         let index_buffer = device.create_buffer_init(
             &BufferInitDescriptor {
                 label: None,
                 contents: bytemuck::cast_slice(indices),
-                usage: wgpu::BufferUsage::INDEX,
+                usage: wgpu::BufferUsages::INDEX,
             });
         let num_indices = indices.len() as u32;
         Self {

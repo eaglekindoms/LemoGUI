@@ -1,7 +1,5 @@
 use wgpu::*;
 
-use crate::graphic::render_middle::pipeline_state::Shader;
-
 /// wgpu图形顶点布局trait
 /// 作用：定义顶点布局接口
 pub trait VertexLayout: Sized {
@@ -45,7 +43,7 @@ pub trait VertexLayout: Sized {
                     entry_point: "fs_main",
                     targets: &[wgpu::ColorTargetState {
                         format: wgpu::TextureFormat::Bgra8UnormSrgb,
-                        write_mask: wgpu::ColorWrite::ALL,
+                        write_mask: wgpu::ColorWrites::ALL,
                         blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     }],
                 }),
