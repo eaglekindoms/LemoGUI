@@ -13,9 +13,8 @@ use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::style::*;
+use crate::widget::component;
 use crate::widget::component::ComponentModel;
-use crate::widget::listener;
-use crate::widget::listener::Listener;
 use crate::widget::message::{EventType, State};
 
 /// 按钮控件结构体
@@ -78,7 +77,7 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for TextInput<M> {
         let text_buffer = draw_text(45.0, self.style.get_font_color(), self.text.as_str());
         let image_vertex_buffer =
             TextureVertex::new
-                (&wgcontext.device, &wgcontext.sc_desc, &self.size);
+                (&wgcontext.device, wgcontext.get_surface_size(), &self.size);
         let back_buffer = self.size.to_buffer(wgcontext, self.style.get_display_color());
         let font_buffer =
             TextureBuffer::create_font_image
@@ -87,13 +86,10 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for TextInput<M> {
         back_buffer.render(render_utils, glob_pipeline, self.size.get_type());
         image_vertex_buffer.render_t(render_utils, &font_buffer, &glob_pipeline);
     }
-}
-
-impl<'a, M: Copy + PartialEq> Listener<M> for TextInput<M> {
     fn key_listener(&mut self, action_state: ElementState,
                     el_context: &ELContext<'_, M>, virtual_keycode: Option<VirtualKeyCode>) -> bool {
-        listener::action_animation::<M>(&mut self.style, action_state,
-                                        &el_context.message_channel, &self.state, virtual_keycode)
+        component::action_animation::<M>(&mut self.style, action_state,
+                                         &el_context.message_channel, &self.state, virtual_keycode)
     }
     fn hover_listener(&mut self, el_context: &ELContext<'_, M>) -> bool
     {

@@ -1,6 +1,6 @@
 use wgpu::*;
 
-use crate::graphic::base::shape::Rectangle;
+use crate::graphic::base::shape::{Point, Rectangle};
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
@@ -57,9 +57,9 @@ impl VertexLayout for TextureVertex {
 }
 
 impl TextureVertex {
-    pub fn new(device: &Device, sc_desc: &SurfaceConfiguration, rect: &Rectangle) -> VertexBuffer {
+    pub fn new(device: &Device, sc_desc: Point<u32>, rect: &Rectangle) -> VertexBuffer {
         let (t_x, t_y, t_w, t_h) =
-            rect.get_coord(sc_desc.width, sc_desc.height);
+            rect.get_coord(sc_desc.x, sc_desc.y);
         let vect: Vec<TextureVertex> = vec![
             TextureVertex { position: [t_x, t_y], tex_coords: [t_w, t_h] }
         ];

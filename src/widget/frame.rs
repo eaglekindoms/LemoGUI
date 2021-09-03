@@ -6,8 +6,8 @@ use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::shape::Point;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
+use crate::widget::component;
 use crate::widget::component::ComponentModel;
-use crate::widget::listener;
 
 /// 默认窗口帧背景色
 const BACKGROUND_COLOR: wgpu::Color = wgpu::Color {
@@ -69,7 +69,7 @@ impl<M> Container<M> for Frame<M> {
         }
         let mut input = false;
         for comp in &mut self.comp_graph_arr {
-            if listener::component_listener::<M>(comp, el_context) {
+            if component::component_listener::<M>(comp, el_context) {
                 input = true;
             }
             // 清除消息，防止重复发送

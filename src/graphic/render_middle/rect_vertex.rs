@@ -1,7 +1,7 @@
 use wgpu::*;
 
 use crate::graphic::base::color::RGBA;
-use crate::graphic::base::shape::Rectangle;
+use crate::graphic::base::shape::{Point, Rectangle};
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 use crate::graphic::style::{Bordering, Rounding};
@@ -44,9 +44,9 @@ impl VertexLayout for RectVertex {
 }
 
 impl RectVertex {
-    pub fn new(rect: &Rectangle, sc_desc: &wgpu::SurfaceConfiguration, color: RGBA) -> RectVertex {
+    pub fn new(rect: &Rectangle, sc_desc: Point<u32>, color: RGBA) -> RectVertex {
         let (t_x, t_y, t_w, t_h) =
-            rect.get_coord(sc_desc.width, sc_desc.height);
+            rect.get_coord(sc_desc.x, sc_desc.y);
         let mut border_color = [0.0, 0.0, 0.0, 0.0];
         let frame_color = color.to_vec();
         let mut is_round = 0;

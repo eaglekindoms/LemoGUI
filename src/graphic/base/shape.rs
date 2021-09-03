@@ -132,7 +132,7 @@ pub trait ShapeGraph {
 
 impl ShapeGraph for Rectangle {
     fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
-        let rect_vertex = RectVertex::new(&self, &wgcontext.sc_desc, color);
+        let rect_vertex = RectVertex::new(&self, wgcontext.get_surface_size(), color);
         let rect_vertex = VertexBuffer::create_vertex_buf::<RectVertex>
             (&wgcontext.device, vec![rect_vertex], RECT_INDEX);
         rect_vertex

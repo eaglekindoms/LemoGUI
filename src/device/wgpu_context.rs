@@ -12,7 +12,7 @@ pub struct WGContext {
     /// 渲染命令队列
     pub queue: wgpu::Queue,
     /// 交换缓冲区描述符
-    pub sc_desc: wgpu::SurfaceConfiguration,
+    sc_desc: wgpu::SurfaceConfiguration,
 }
 
 impl WGContext {
@@ -67,5 +67,9 @@ impl WGContext {
         self.sc_desc.width = size.x;
         self.sc_desc.height = size.y;
         self.surface.configure(&self.device, &self.sc_desc);
+    }
+
+    pub fn get_surface_size(&self) -> Point<u32> {
+        Point::new(self.sc_desc.width, self.sc_desc.height)
     }
 }

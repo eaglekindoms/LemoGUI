@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use std::future::Future;
+use std::path::Path;
 
 use futures::{StreamExt, task};
 use futures::channel::mpsc;
@@ -10,27 +11,24 @@ use winit::window::*;
 use crate::device::container::Container;
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
+use crate::graphic::base::shape::Point;
 
-/// 窗口结构体
-/// 作用：封装窗体，事件循环器，图形上下文
-pub struct DisplayWindow<'a, M: 'static> {
-    /// 图形上下文
-    pub wgcontext: WGContext,
-    /// 事件上下文
-    pub event_context: Option<ELContext<'a, M>>,
+pub trait DisplayWindow {
+    fn create_frame<C, M>(wgcontext: WGContext) -> C
+        where C: Container<M> + 'static, M: 'static + Debug;
 }
 
 /// 装填组件容器，启动窗口
-pub fn start<C, M>(builder: WindowBuilder, build_container: &Fn(WGContext) -> C)
+pub fn start<C, M>(builder: WindowBuilder, build_container: impl Fn(WGContext) -> C)
     where C: Container<M> + 'static, M: 'static + Debug
 {
     use futures::executor::block_on;
-    block_on(init::<C, M>(builder, build_container));
+    block_on(init(builder, build_container));
     log::info!("Initializing the example...");
 }
 
 /// 初始化窗口
-async fn init<C, M>(builder: WindowBuilder, build_container: &Fn(WGContext) -> C)
+async fn init<C, M>(builder: WindowBuilder, build_container: impl Fn(WGContext) -> C)
     where C: Container<M> + 'static, M: 'static + Debug {
     log::info!("Initializing the window...");
     let event_loop = EventLoop::<M>::with_user_event();
@@ -121,4 +119,17 @@ async fn event_listener<C, M>(mut el_context: ELContext<'_, M>,
             _ => {}
         }
     };
+}
+
+/// 加载icon
+pub fn load_icon(path: &Path) -> Icon {
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = image::open(path)
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+    Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }
