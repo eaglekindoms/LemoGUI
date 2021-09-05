@@ -7,6 +7,9 @@ pub const BLACK: RGBA = RGBA(0.0, 0.0, 0.0, 1.0);
 pub const LIGHT_WHITE: RGBA = RGBA(0.8, 0.8, 0.8, 1.0);
 pub const LIGHT_BLUE: RGBA = RGBA(0.0, 0.75, 1.0, 0.5);
 
+/// 默认窗口帧背景色
+pub const BACKGROUND_COLOR: RGBA = RGBA(0.9, 0.9, 0.9, 1.0);
+
 impl RGBA {
     pub fn to_u8(&self) -> (u8, u8, u8, u8) {
         let r = (self.0 * 255.0) as u8;

@@ -4,7 +4,6 @@ use std::path::Path;
 use simple_logger::SimpleLogger;
 use winit::event::ElementState;
 use winit::event::VirtualKeyCode::Key1;
-use winit::window::Icon;
 
 use LemoGUI::device::container::Container;
 use LemoGUI::device::display_window::*;
@@ -33,14 +32,20 @@ struct Counter<M: Copy + PartialEq> {
 }
 
 impl<M: Copy + PartialEq> ComponentModel<M> for Counter<M> {
-    fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
-        let v = TextInput::<M>::new(Point::new(120., 20.), self.value.to_string());
+    fn draw(&self,
+            wgcontext: &WGContext,
+            render_utils: &mut RenderUtil,
+            glob_pipeline: &PipelineState) {
+        let v
+            = TextInput::<M>::new(Point::new(120., 20.), self.value.to_string());
         v.draw(wgcontext, render_utils, glob_pipeline);
         self.b1.draw(wgcontext, render_utils, glob_pipeline);
         self.b2.draw(wgcontext, render_utils, glob_pipeline);
     }
 
-    fn action_listener(&mut self, action_state: ElementState, el_context: &ELContext<'_, M>) -> bool {
+    fn action_listener(&mut self,
+                       action_state: ElementState,
+                       el_context: &ELContext<'_, M>) -> bool {
         self.b1.action_listener(action_state, el_context) ||
             self.b2.action_listener(action_state, el_context)
     }
@@ -56,7 +61,7 @@ impl<M: Copy + PartialEq> ComponentModel<M> for Counter<M> {
     }
 }
 
-fn build_container(wgcontext: WGContext) -> Frame<Ms> {
+fn build_counter() -> Counter<Ms> {
     // 自定义设置
     let rect = Rectangle::new(100.0, 100.0, 170, 40);
     let style = Style::default()
@@ -70,19 +75,12 @@ fn build_container(wgcontext: WGContext) -> Frame<Ms> {
     let b2 = Button::new(Point::new(100.0, 200.0), "sub button 减")
         .action(Ms::Sub);
 
-    let counter = Counter {
+    Counter {
         value: 0,
         b1,
         b2,
-    };
-    let v = TextInput::new(Point::new(120., 320.), "self.value.to_string()");
-
-    let mut frame = Frame::new(wgcontext);
-    frame.add_comp(counter);
-    frame.add_comp(v);
-    frame
+    }
 }
-
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
@@ -94,6 +92,8 @@ fn main() {
     builder = builder.with_title("Counter")
         .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0))
         .with_window_icon(Some(icon));
-
-    start(builder, &build_container)
+    let display_window = DisplayWindow::new(builder);
+    let mut frame = display_window.request_container::<Frame<Ms>>();
+    frame.add_comp(build_counter());
+    display_window.start(frame);
 }

@@ -12,13 +12,19 @@ use crate::widget::message::{EventType, State};
 /// 作用：定义组件必须的公共方法接口
 pub trait ComponentModel<M> {
     /// 组件绘制方法实现
-    fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState);
+    fn draw(&self, wgcontext: &WGContext,
+            render_utils: &mut RenderUtil,
+            glob_pipeline: &PipelineState);
     /// 键盘事件监听器
-    fn key_listener(&mut self, _action_state: ElementState, _el_context: &ELContext<'_, M>, _virtual_keycode: Option<VirtualKeyCode>) -> bool {
+    fn key_listener(&mut self,
+                    _action_state: ElementState,
+                    _el_context: &ELContext<'_, M>,
+                    _virtual_keycode: Option<VirtualKeyCode>) -> bool {
         false
     }
     /// 鼠标点击事件监听器
-    fn action_listener(&mut self, _action_state: ElementState,
+    fn action_listener(&mut self,
+                       _action_state: ElementState,
                        _el_context: &ELContext<'_, M>) -> bool
     { false }
     /// 鼠标悬停事件监听器

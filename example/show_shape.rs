@@ -2,7 +2,6 @@ use std::path::Path;
 
 use image::GenericImageView;
 use simple_logger::SimpleLogger;
-use winit::window::Icon;
 
 use LemoGUI::device::container::Container;
 use LemoGUI::device::display_window::*;
@@ -28,7 +27,7 @@ fn main() {
     start(builder, &frame)
 }
 
-fn frame(wgcontext: WGContext) -> Frame<()>
+fn frame(wgcontext: &WGContext) -> Frame<()>
 {
     let mut frame = Frame::new(wgcontext);
     frame.add_comp(shapes());

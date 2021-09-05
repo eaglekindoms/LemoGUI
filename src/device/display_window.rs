@@ -11,32 +11,73 @@ use winit::window::*;
 use crate::device::container::Container;
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::shape::Point;
 
-pub trait DisplayWindow {
-    fn create_frame<C, M>(wgcontext: WGContext) -> C
-        where C: Container<M> + 'static, M: 'static + Debug;
+/// 窗口结构体
+/// 作用：封装窗体，事件循环器，图形上下文
+pub struct DisplayWindow<'a, M: 'static> {
+    // /// 图形上下文
+    pub wgcontext: WGContext,
+    event_loop: EventLoop<M>,
+    /// 事件上下文
+    event_context: ELContext<'a, M>,
+}
+
+impl<M: 'static + Debug> DisplayWindow<'static, M> {
+    pub fn start<C>(self, container: C) where C: Container<M> + 'static {
+        run_instance(self.event_loop, self.wgcontext, container, self.event_context);
+    }
+
+    pub fn request_container<C>(&self) -> C where C: Container<M> + 'static {
+        C::new(&self.wgcontext)
+    }
+    pub fn new<'a>(builder: WindowBuilder) -> DisplayWindow<'a, M> {
+        use futures::executor::block_on;
+        block_on(Self::init_window(builder))
+    }
+    /// 初始化窗口
+    async fn init_window<'a>(builder: WindowBuilder) -> DisplayWindow<'a, M>
+    {
+        log::info!("Initializing the window...");
+        let event_loop = EventLoop::<M>::with_user_event();
+        let window = builder.build(&event_loop).unwrap();
+        let wgcontext = WGContext::new(&window).await;
+
+        let el_context = ELContext {
+            window,
+            cursor_pos: None,
+            window_event: None,
+            message: None,
+            message_channel: event_loop.create_proxy(),
+        };
+        let display_window = DisplayWindow {
+            wgcontext,
+            event_loop,
+            event_context: el_context,
+        };
+        return display_window;
+    }
 }
 
 /// 装填组件容器，启动窗口
-pub fn start<C, M>(builder: WindowBuilder, build_container: impl Fn(WGContext) -> C)
+pub fn start<C, M>(builder: WindowBuilder, build_container: impl Fn(&WGContext) -> C)
     where C: Container<M> + 'static, M: 'static + Debug
 {
     use futures::executor::block_on;
-    block_on(init(builder, build_container));
+    block_on(init_with_container(builder, build_container));
     log::info!("Initializing the example...");
 }
 
-/// 初始化窗口
-async fn init<C, M>(builder: WindowBuilder, build_container: impl Fn(WGContext) -> C)
+/// 通过容器回调函数初始化窗口
+async fn init_with_container<C, M>(builder: WindowBuilder,
+                                   build_container: impl Fn(&WGContext) -> C)
     where C: Container<M> + 'static, M: 'static + Debug {
     log::info!("Initializing the window...");
     let event_loop = EventLoop::<M>::with_user_event();
     let window = builder.build(&event_loop).unwrap();
 
-    let wgcontext = WGContext::new(&window);
+    let wgcontext = WGContext::new(&window).await;
 
-    let container = build_container(wgcontext.await);
+    let container = build_container(&wgcontext);
 
     let el_context = ELContext {
         window,
@@ -45,9 +86,17 @@ async fn init<C, M>(builder: WindowBuilder, build_container: impl Fn(WGContext) 
         message: None,
         message_channel: event_loop.create_proxy(),
     };
+    run_instance(event_loop, wgcontext, container, el_context);
+}
 
-    let (mut sender, receiver) = mpsc::unbounded();
-    let mut instance = Box::pin(event_listener(el_context, container, receiver));
+/// 运行窗口实例
+fn run_instance<C, M>(event_loop: EventLoop<M>, wgcontext: WGContext,
+                      container: C, el_context: ELContext<'static, M>)
+    where C: Container<M> + 'static, M: 'static + Debug {
+    let (mut sender, receiver)
+        = mpsc::unbounded();
+    let mut instance
+        = Box::pin(event_listener(wgcontext, el_context, container, receiver));
     let mut context = task::Context::from_waker(task::noop_waker_ref());
     event_loop.run(move |event, _, control_flow| {
         if let ControlFlow::Exit = control_flow {
@@ -87,7 +136,8 @@ async fn init<C, M>(builder: WindowBuilder, build_container: impl Fn(WGContext) 
 }
 
 /// 事件监听方法
-async fn event_listener<C, M>(mut el_context: ELContext<'_, M>,
+async fn event_listener<C, M>(mut wgcontext: WGContext,
+                              mut el_context: ELContext<'_, M>,
                               mut container: C,
                               mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>)
     where C: Container<M> + 'static, M: 'static + Debug
@@ -105,17 +155,17 @@ async fn event_listener<C, M>(mut el_context: ELContext<'_, M>,
                 }
                 // 监听到组件关注事件，决定是否重绘
                 el_context.window_event = Some(event);
-                if container.input(&mut el_context) {
-                    container.render();
+                if container.input(&mut wgcontext, &mut el_context) {
+                    container.render(&mut wgcontext);
                 }
             }
             Event::RedrawRequested(window_id)
             if window_id == el_context.window.id() => {
-                container.render();
+                container.render(&mut wgcontext);
             }
             Event::UserEvent(event) => {
                 el_context.message = Some(event);
-            },
+            }
             _ => {}
         }
     };

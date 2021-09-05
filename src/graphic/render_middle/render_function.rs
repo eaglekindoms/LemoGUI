@@ -1,4 +1,7 @@
-use wgpu::{CommandEncoder, TextureView};
+use wgpu::{CommandEncoder, SurfaceFrame, TextureView};
+
+use crate::device::wgpu_context::WGContext;
+use crate::graphic::base::color::RGBA;
 
 /// 渲染工具封装结构体
 /// 作用：省事
@@ -9,8 +12,22 @@ pub struct RenderUtil {
 }
 
 impl RenderUtil {
+    pub fn new(surface_frame: &SurfaceFrame, wgcontext: &WGContext) -> Self {
+        let view = surface_frame.output
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+        let encoder = wgcontext.device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Render Encoder"),
+            });
+        RenderUtil {
+            encoder,
+            view,
+        }
+    }
+
     /// 创建渲染中间变量
-    pub fn create_render_pass<'a>(&'a mut self) -> wgpu::RenderPass<'a> {
+    pub fn create_render_pass(&mut self) -> wgpu::RenderPass {
         let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[wgpu::RenderPassColorAttachment {
@@ -24,5 +41,25 @@ impl RenderUtil {
             depth_stencil_attachment: None,
         });
         render_pass
+    }
+
+    pub fn clear_frame(&mut self, color: RGBA) {
+        self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: None,
+            color_attachments: &[wgpu::RenderPassColorAttachment {
+                view: &self.view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: color.0 as f64,
+                        g: color.1 as f64,
+                        b: color.2 as f64,
+                        a: color.3 as f64,
+                    }),
+                    store: true,
+                },
+            }],
+            depth_stencil_attachment: None,
+        });
     }
 }
