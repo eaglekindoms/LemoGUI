@@ -4,6 +4,7 @@ use crate::graphic::base::shape::Point;
 
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体
+#[derive(Debug)]
 pub struct WGContext {
     /// 渲染面板
     pub surface: wgpu::Surface,
