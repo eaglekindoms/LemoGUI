@@ -13,11 +13,11 @@ pub struct ShapeBoard {
 }
 
 impl<M> ComponentModel<M> for ShapeBoard {
-    fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
+    fn draw(&self, render_utils: &mut RenderUtil) {
         let mut style = self.style;
         for shape in &self.shape_arr {
-            shape.to_buffer(wgcontext, style.get_back_color())
-                .render(render_utils, &glob_pipeline, shape.get_type());
+            shape.to_buffer(render_utils.context, style.get_back_color())
+                .render(render_utils, shape.get_type());
             style = Style::default().back_color(LIGHT_BLUE).round();
         }
     }

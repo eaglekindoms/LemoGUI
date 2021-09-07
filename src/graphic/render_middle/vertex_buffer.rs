@@ -50,17 +50,17 @@ impl<'a> VertexBuffer {
         }
     }
 
-    pub fn render(&'a self, render_utils: &mut RenderUtil,
-                  glob_pipeline: &'a PipelineState, shape_type: ShapeType) {
+    pub fn render(&'a self, render_utils: &mut RenderUtil, shape_type: ShapeType) {
+        let pipeline = render_utils.pipeline.get_pipeline(shape_type).unwrap();
         let mut render_pass = render_utils.create_render_pass();
-        self.render_shape(render_pass.borrow_mut(), glob_pipeline.get_pipeline(shape_type).unwrap())
+        self.render_shape(render_pass.borrow_mut(), pipeline)
     }
 
     pub fn render_t(&'a self, render_utils: &mut RenderUtil,
-                    texture_state: &'a TextureBuffer,
-                    glob_pipeline: &'a PipelineState) {
+                    texture_state: &'a TextureBuffer) {
+        let pipeline = render_utils.pipeline.get_pipeline(ShapeType::TEXTURE).unwrap();
         let mut render_pass = render_utils.create_render_pass();
-        self.render_texture(render_pass.borrow_mut(), texture_state, glob_pipeline.get_pipeline(ShapeType::TEXTURE).unwrap())
+        self.render_texture(render_pass.borrow_mut(), texture_state, pipeline)
     }
 
     #[deprecated]

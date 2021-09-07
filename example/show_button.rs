@@ -8,10 +8,8 @@ use winit::event::VirtualKeyCode::Key1;
 use LemoGUI::device::container::Container;
 use LemoGUI::device::display_window::*;
 use LemoGUI::device::event_context::ELContext;
-use LemoGUI::device::wgpu_context::WGContext;
 use LemoGUI::graphic::base::color::*;
 use LemoGUI::graphic::base::shape::{Point, Rectangle};
-use LemoGUI::graphic::render_middle::pipeline_state::PipelineState;
 use LemoGUI::graphic::render_middle::render_function::RenderUtil;
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::button::Button;
@@ -32,15 +30,11 @@ struct Counter<M: Copy + PartialEq> {
 }
 
 impl<M: Copy + PartialEq> ComponentModel<M> for Counter<M> {
-    fn draw(&self,
-            wgcontext: &WGContext,
-            render_utils: &mut RenderUtil,
-            glob_pipeline: &PipelineState) {
-        let v
-            = TextInput::<M>::new(Point::new(120., 20.), self.value.to_string());
-        v.draw(wgcontext, render_utils, glob_pipeline);
-        self.b1.draw(wgcontext, render_utils, glob_pipeline);
-        self.b2.draw(wgcontext, render_utils, glob_pipeline);
+    fn draw(&self, render_utils: &mut RenderUtil) {
+        let v = TextInput::<M>::new(Point::new(120., 20.), self.value.to_string());
+        v.draw(render_utils);
+        self.b1.draw(render_utils);
+        self.b2.draw(render_utils);
     }
 
     fn action_listener(&mut self,

@@ -72,18 +72,18 @@ impl<'a, M: Copy + PartialEq> Button<M> {
 
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
-    fn draw(&self, wgcontext: &WGContext, render_utils: &mut RenderUtil, glob_pipeline: &PipelineState) {
+    fn draw(&self, render_utils: &mut RenderUtil) {
         let text_buffer = draw_text(45.0, self.style.get_font_color(), self.text.as_str());
         let image_vertex_buffer =
             TextureVertex::new
-                (&wgcontext.device, wgcontext.get_surface_size(), &self.size);
-        let back_buffer = self.size.to_buffer(wgcontext, self.style.get_display_color());
+                (&render_utils.context.device, render_utils.context.get_surface_size(), &self.size);
+        let back_buffer = self.size.to_buffer(render_utils.context, self.style.get_display_color());
         let font_buffer =
             TextureBuffer::create_font_image
-                (&wgcontext.device,
-                 &wgcontext.queue, text_buffer);
-        back_buffer.render(render_utils, glob_pipeline, self.size.get_type());
-        image_vertex_buffer.render_t(render_utils, &font_buffer, &glob_pipeline);
+                (&render_utils.context.device,
+                 &render_utils.context.queue, text_buffer);
+        back_buffer.render(render_utils, self.size.get_type());
+        image_vertex_buffer.render_t(render_utils, &font_buffer);
     }
     fn key_listener(&mut self, action_state: ElementState,
                     el_context: &ELContext<'_, M>, virtual_keycode: Option<VirtualKeyCode>) -> bool {

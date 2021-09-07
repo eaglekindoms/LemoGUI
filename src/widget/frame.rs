@@ -77,11 +77,12 @@ impl<M> Container<M> for Frame<M> {
                 log::error!("{}", error);
             }
             Ok(surface_frame) => {
-                let mut utils = RenderUtil::new(&surface_frame, wgcontext);
+                let mut utils
+                    = RenderUtil::new(&surface_frame, wgcontext, &self.glob_pipeline);
                 utils.clear_frame(BACKGROUND_COLOR);
                 log::info!("graph_context size:{}", self.comp_graph_arr.len());
                 for comp in &mut self.comp_graph_arr {
-                    comp.draw(wgcontext, &mut utils, &self.glob_pipeline);
+                    comp.draw(&mut utils);
                 }
                 wgcontext.queue.submit(Some(utils.encoder.finish()));
             }
