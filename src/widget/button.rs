@@ -3,14 +3,13 @@ use std::option::Option::Some;
 
 use winit::event::*;
 
-use crate::device::event_context::ELContext;
-use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::font::draw_text;
-use crate::graphic::base::shape::{Point, Rectangle, ShapeGraph};
-use crate::graphic::render_middle::image_vertex::TextureVertex;
-use crate::graphic::render_middle::pipeline_state::PipelineState;
-use crate::graphic::render_middle::render_function::RenderUtil;
-use crate::graphic::render_middle::texture_buffer::TextureBuffer;
+use crate::device::ELContext;
+use crate::device::WGContext;
+use crate::graphic::base::*;
+use crate::graphic::render_middle::PipelineState;
+use crate::graphic::render_middle::RenderUtil;
+use crate::graphic::render_middle::TextureBuffer;
+use crate::graphic::render_middle::TextureVertex;
 use crate::graphic::style::*;
 use crate::widget::component;
 use crate::widget::component::ComponentModel;

@@ -1,7 +1,6 @@
 use wgpu::*;
 
-use crate::graphic::base::color::RGBA;
-use crate::graphic::base::shape::{Point, Rectangle};
+use crate::graphic::base::*;
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 use crate::graphic::style::{Bordering, Rounding};
@@ -67,6 +66,9 @@ impl RectVertex {
                 Rounding::NoRound => is_round = 0,
             }
         }
+        // let projection: cgmath::Matrix4<f32> = shape::orthographic_projection(sc_desc.x as f32, sc_desc.y as f32).into();
+        // let position: cgmath::Vector4<f32> = cgmath::Vector4::new(rect.position.x, rect.position.y, 0.0, 0.0);
+        // let view: cgmath::Vector4<f32> = projection * position;
         RectVertex {
             size: [t_w, t_h],
             position: [t_w / 2.0 + t_x, t_y - t_h / 2.0],

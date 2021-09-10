@@ -1,9 +1,9 @@
-use crate::device::wgpu_context::WGContext;
+use crate::device::WGContext;
 use crate::graphic::base::color::*;
-use crate::graphic::render_middle::circle_vertex::CircleVertex;
-use crate::graphic::render_middle::rect_vertex::RectVertex;
-use crate::graphic::render_middle::triangle_vertex::PointVertex;
-use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
+use crate::graphic::render_middle::{RECT_INDEX, VertexBuffer};
+use crate::graphic::render_middle::CircleVertex;
+use crate::graphic::render_middle::PointVertex;
+use crate::graphic::render_middle::RectVertex;
 use crate::graphic::style::Style;
 
 /// 图形类型枚举
@@ -102,6 +102,15 @@ impl Rectangle {
             (rel_x > 0.) &&
             (rel_y > 0.)
     }
+}
+
+pub fn orthographic_projection(w: f32, h: f32) -> [[f32; 4]; 4] {
+    [
+        [2.0 / w, 0.0, 0.0, 0.0],
+        [0.0, 2.0 / h, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [-1.0, -1.0, 0.0, 1.0],
+    ]
 }
 
 impl Circle {

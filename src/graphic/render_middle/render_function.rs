@@ -1,7 +1,7 @@
 use wgpu::{CommandEncoder, SurfaceFrame, TextureView};
 
-use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::color::RGBA;
+use crate::device::WGContext;
+use crate::graphic::base::RGBA;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 
 /// 渲染工具封装结构体

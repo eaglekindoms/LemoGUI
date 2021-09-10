@@ -1,6 +1,6 @@
 use wgpu::*;
 
-use crate::graphic::base::shape::{Point, Rectangle};
+use crate::graphic::base::{Point, Rectangle};
 use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};

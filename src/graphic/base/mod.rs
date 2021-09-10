@@ -1,4 +1,10 @@
-pub mod color;
-pub mod font;
-pub mod shape;
-pub mod image;
+pub use color::*;
+pub use font::*;
+pub use images::*;
+pub use shape::*;
+
+mod color;
+mod font;
+mod shape;
+mod images;
+

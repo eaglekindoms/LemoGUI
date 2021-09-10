@@ -1,6 +1,6 @@
 use winit::window::Window;
 
-use crate::graphic::base::shape::Point;
+use crate::graphic::base::*;
 
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体

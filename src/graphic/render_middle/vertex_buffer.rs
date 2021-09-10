@@ -4,9 +4,10 @@ use bytemuck::Pod;
 use wgpu::{Device, RenderPipeline};
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
-use crate::graphic::base::shape::ShapeType;
+use crate::graphic::base::ShapeType;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 use crate::graphic::render_middle::render_function::RenderUtil;
+use crate::graphic::render_middle::texture::GTexture;
 use crate::graphic::render_middle::texture_buffer::TextureBuffer;
 
 /// 渲染顶点缓冲结构体
@@ -77,6 +78,18 @@ impl<'a> VertexBuffer {
                       render_pipeline: &'a RenderPipeline) {
         render_pass.set_pipeline(&render_pipeline);
         render_pass.set_bind_group(0, &texture_state.diffuse_bind_group, &[]);
+        render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+        render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+    }
+
+    pub fn render_g_texture(&'a self,
+                            render_pass: &mut wgpu::RenderPass<'a>,
+                            render_pipeline: &'a RenderPipeline,
+                            g_texture: &'a GTexture)
+    {
+        render_pass.set_pipeline(&render_pipeline);
+        render_pass.set_bind_group(0, &g_texture.bind_group, &[]);
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
         render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
         render_pass.draw_indexed(0..self.num_indices, 0, 0..1);

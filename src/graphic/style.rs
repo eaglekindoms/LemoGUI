@@ -1,4 +1,4 @@
-use crate::graphic::base::color::{BLACK, LIGHT_BLUE, LIGHT_WHITE, RGBA};
+use crate::graphic::base::*;
 
 /// 边框枚举
 #[derive(Copy, Clone, Debug)]
