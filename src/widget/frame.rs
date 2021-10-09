@@ -72,19 +72,20 @@ impl<M> Container<M> for Frame<M> {
     }
 
     fn render(&mut self, wgcontext: &mut WGContext) {
-        match wgcontext.surface.get_current_frame() {
+        match wgcontext.surface.get_current_texture() {
             Err(error) => {
                 log::error!("{}", error);
             }
-            Ok(surface_frame) => {
+            Ok(frame) => {
                 let mut utils
-                    = RenderUtil::new(&surface_frame, wgcontext, &self.glob_pipeline);
+                    = RenderUtil::new(&frame, wgcontext, &self.glob_pipeline);
                 utils.clear_frame(BACKGROUND_COLOR);
                 log::info!("graph_context size:{}", self.comp_graph_arr.len());
                 for comp in &mut self.comp_graph_arr {
                     comp.draw(&mut utils);
                 }
                 wgcontext.queue.submit(Some(utils.encoder.finish()));
+                frame.present();
             }
         }
     }

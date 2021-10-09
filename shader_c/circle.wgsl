@@ -14,7 +14,7 @@ struct VertexOutput {
     [[location(2)]] radius: f32;
     [[location(3)]] edge: f32;
 };
-var gl_VertexIndex: i32;
+// var gl_VertexIndex: i32;
 
 [[stage(vertex)]]
 fn vs_main(input: VertexInput) -> VertexOutput  {
@@ -25,7 +25,7 @@ fn vs_main(input: VertexInput) -> VertexOutput  {
     out.radius = input.radius;
     out.edge = f32(input.edge);
 
-    gl_VertexIndex = i32(input.gl_VertexIndex);
+    let gl_VertexIndex = i32(input.gl_VertexIndex);
     var positions: array<vec2<f32>,4u> =
                     array<vec2<f32>,4u>(vec2<f32>(-1.0, 1.0),
                                         vec2<f32>(1.0, 1.0),

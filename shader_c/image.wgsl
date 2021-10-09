@@ -9,13 +9,13 @@ struct VertexOutput {
     [[builtin(position)]] gl_Position: vec4<f32>;
 	[[location(0)]] v_tex_coords: vec2<f32>;
 };
-var gl_VertexIndex: i32;
+// var gl_VertexIndex: i32;
 
 [[stage(vertex)]]
 fn vs_main(input: VertexInput) -> VertexOutput  {
 	var out: VertexOutput;
 
-    gl_VertexIndex = i32(input.gl_VertexIndex);
+    let gl_VertexIndex = i32(input.gl_VertexIndex);
     var positions: array<vec2<f32>,4u> =
                     array<vec2<f32>,4u>(vec2<f32>(-1.0, 1.0),
                                         vec2<f32>(1.0, 1.0),

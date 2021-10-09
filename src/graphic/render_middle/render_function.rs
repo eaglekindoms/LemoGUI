@@ -1,4 +1,4 @@
-use wgpu::{CommandEncoder, SurfaceFrame, TextureView};
+use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
 use crate::device::wgpu_context::WGContext;
 use crate::graphic::base::color::RGBA;
@@ -15,10 +15,10 @@ pub struct RenderUtil<'a> {
 }
 
 impl<'a> RenderUtil<'a> {
-    pub fn new(surface_frame: &SurfaceFrame,
+    pub fn new(frame: &SurfaceTexture,
                wgcontext: &'a WGContext,
                glob_pipeline: &'a PipelineState) -> Self {
-        let view = surface_frame.output
+        let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
         let encoder = wgcontext.device

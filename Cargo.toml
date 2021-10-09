@@ -26,7 +26,7 @@ name = "test_graph_algo"
 path = "example/proto/test_algo.rs"
 
 [dependencies]
-wgpu = { version = "0.10.1", features = ["spirv"] }
+wgpu = { version = "0.11", features = ["spirv"] }
 async-trait = "0.1.51"
 winit = "0.25.0"
 futures = "0.3.10"
