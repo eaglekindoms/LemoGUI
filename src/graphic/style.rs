@@ -23,8 +23,8 @@ pub enum Rounding {
 pub enum FontStyle {
     // 无字体
     NoFont,
-    // 字体颜色，字体大小
-    Font(RGBA, f32),
+    // 字体颜色
+    Font(RGBA),
 }
 
 /// 形状样式
@@ -84,8 +84,8 @@ impl Style {
         *self
     }
 
-    pub fn font_color(&mut self, color: RGBA, f_scale: f32) -> Self {
-        self.font_style = FontStyle::Font(color, f_scale);
+    pub fn font_color(&mut self, color: RGBA) -> Self {
+        self.font_style = FontStyle::Font(color);
         *self
     }
 
@@ -120,14 +120,7 @@ impl Style {
     pub fn get_font_color(&self) -> RGBA {
         match self.font_style {
             FontStyle::NoFont => DEFAULT_FONT_COLOR,
-            FontStyle::Font(color, _) => color
-        }
-    }
-
-    pub fn get_font_size(&self) -> f32 {
-        match self.font_style {
-            FontStyle::NoFont => DEFAULT_FONT_SIZE,
-            FontStyle::Font(_, size) => size
+            FontStyle::Font(color) => color
         }
     }
 

@@ -1,5 +1,7 @@
 use std::num::NonZeroU32;
 
+use wgpu::TextureFormat;
+
 use crate::graphic::base::*;
 
 #[derive(Debug)]
@@ -44,11 +46,24 @@ impl GTexture {
             height: raw_data.height,
             depth_or_array_layers: 1,
         };
+        // 参数：纹理数据来源的尺寸
+        // 用途：指定纹理数据的布局
+        // 具体含义：偏移量，行数宽度，列数宽度
+        // 注：图像纹理导入后会被转化为包含每个像素点rgba颜色值的一维数组
+        // 因此行数宽度为图像宽度*4，列数宽度不变
+        let image_width: u32;
+        match texture_format {
+            TextureFormat::R8Unorm => image_width = raw_data.width,
+            _ => image_width = raw_data.width * 4
+        }
         let image_layout = wgpu::ImageDataLayout {
             offset: 0,
-            bytes_per_row: NonZeroU32::new(raw_data.width),
+            bytes_per_row: NonZeroU32::new(image_width),
             rows_per_image: NonZeroU32::new(raw_data.height),
         };
+        // 定义纹理描述符
+        // 参数：纹理尺寸
+        // 输出配置：定义纹理尺寸，维度：2d，颜色格式：rgba，纹理来源：sampled,copy_dst
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
             size,
@@ -90,6 +105,7 @@ pub fn writer_data_to_texture(queue: &wgpu::Queue,
     return texture.create_view(&wgpu::TextureViewDescriptor::default());
 }
 
+/// 描述纹理顶点数据布局,用于着色器识别数据
 pub fn bind_group(device: &wgpu::Device,
                   bind_group_layout: &wgpu::BindGroupLayout,
                   target: &wgpu::TextureView,
@@ -113,7 +129,14 @@ pub fn bind_group(device: &wgpu::Device,
     )
 }
 
-
+/// 默认采样器描述符
+///
+/// 用途：配置纹理采样方式（环绕、过滤，多级渐远纹理过滤）
+/// 此配置为：环绕=ClampToEdge纹理被约束到0-1之间，造成拉伸效果（大图缩小，小图边缘重复填充）
+/// 过滤：纹理被缩小的时候使用邻近过滤Nearest，被放大时使用线性过滤Linear
+/// 多级渐远纹理过滤选项Nearest，多级渐远纹理主要是使用在纹理被缩小的情况下的：纹理放大不会使用多级渐远纹理
+/// GL_NEAREST产生颗粒状的图案，GL_LINEAR产生更平滑的图案
+/// 参考文档：["https://learnopengl-cn.github.io/01%20Getting%20started/06%20Textures/"]
 pub const DEFAULT_TEXTURE_SAMPLER: &wgpu::SamplerDescriptor = &wgpu::SamplerDescriptor {
     label: None,
     address_mode_u: wgpu::AddressMode::ClampToEdge,
@@ -129,6 +152,10 @@ pub const DEFAULT_TEXTURE_SAMPLER: &wgpu::SamplerDescriptor = &wgpu::SamplerDesc
     border_color: None,
 };
 
+/// 默认着色器绑定组描述符
+///
+/// 用途：设定片段着色器程序传入参数在数据中的位置
+/// 此配置为：指定纹理二维坐标，及默认采样器配置
 pub const DEFAULT_BIND_GROUP_LAYOUT: &wgpu::BindGroupLayoutDescriptor =
     &wgpu::BindGroupLayoutDescriptor {
         entries: &[

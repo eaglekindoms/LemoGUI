@@ -41,7 +41,7 @@ impl Instance for Counter {
             .no_border()
             .hover_color(RGBA(0.0, 0.75, 1.0, 0.5))
             .back_color(RGBA(1.0, 0.5, 0.5, 1.0))
-            .font_color(RGBA(0.1, 0.3, 0.8, 1.0), 45.)
+            .font_color(RGBA(0.1, 0.3, 0.8, 1.0))
             .round();
         let b1 = Button::new_with_style(rect, style, "add button 加")
             .action(Ms::Add);
@@ -58,7 +58,7 @@ impl Instance for Counter {
         }
     }
 
-    fn run() {
+    fn setting() -> winit::window::WindowBuilder {
         log::info!("build window");
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/res/icon.png");
 
@@ -67,8 +67,6 @@ impl Instance for Counter {
         builder = builder.with_title("Counter")
             .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0))
             .with_window_icon(Some(icon));
-        let display_window = DisplayWindow::new(builder);
-        let frame = display_window.request_container::<Frame<Ms>>();
-        display_window.start(frame, Self::new());
+        builder
     }
 }
