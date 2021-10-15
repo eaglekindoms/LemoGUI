@@ -4,11 +4,8 @@ use std::option::Option::Some;
 use winit::event::*;
 
 use crate::device::ELContext;
-use crate::device::WGContext;
 use crate::graphic::base::*;
-use crate::graphic::render_middle::PipelineState;
 use crate::graphic::render_middle::RenderUtil;
-use crate::graphic::render_middle::TextureBuffer;
 use crate::graphic::render_middle::TextureVertex;
 use crate::graphic::style::*;
 use crate::widget::component;
@@ -72,15 +69,11 @@ impl<'a, M: Copy + PartialEq> Button<M> {
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
     fn draw(&self, render_utils: &mut RenderUtil) {
-        let text_buffer = draw_text(45.0, self.style.get_font_color(), self.text.as_str());
         let image_vertex_buffer =
             TextureVertex::new
                 (&render_utils.context.device, render_utils.context.get_surface_size(), &self.size);
         let back_buffer = self.size.to_buffer(render_utils.context, self.style.get_display_color());
-        let font_buffer =
-            TextureBuffer::create_font_image
-                (&render_utils.context.device,
-                 &render_utils.context.queue, text_buffer);
+        let font_buffer = render_utils.context.get_text_buffer(self.text.as_str());
         back_buffer.render(render_utils, self.size.get_type());
         image_vertex_buffer.render_t(render_utils, &font_buffer);
     }

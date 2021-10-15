@@ -1,6 +1,4 @@
-use crate::device::WGContext;
 use crate::graphic::base::*;
-use crate::graphic::render_middle::PipelineState;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::Style;
 use crate::widget::component::ComponentModel;

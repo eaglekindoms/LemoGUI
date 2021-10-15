@@ -2,12 +2,14 @@
 struct VertexInput {
 	[[location(0)]] pos: vec2<f32>;
 	[[location(1)]] size: vec2<f32>;
+	[[location(2)]] color: vec4<f32>;
 	[[builtin(vertex_index)]] gl_VertexIndex: u32;
 };
 
 struct VertexOutput {
     [[builtin(position)]] gl_Position: vec4<f32>;
 	[[location(0)]] v_tex_coords: vec2<f32>;
+	[[location(1)]] color: vec4<f32>;
 };
 var gl_VertexIndex: i32;
 
@@ -44,7 +46,7 @@ fn vs_main(input: VertexInput) -> VertexOutput  {
 
     out.gl_Position = vec4<f32>(coord.x, coord.y, 0.0, 1.0);
 	out.v_tex_coords = tex_coords[gl_VertexIndex];
-
+    out.color = input.color;
     return out;
 }
 
@@ -56,7 +58,10 @@ var s_diffuse: sampler;
 [[stage(fragment)]]
 fn fs_main(input: VertexOutput) -> [[location(0)]] vec4<f32> {
 
-    var texColor: vec4<f32>;
-    texColor = textureSample(t_diffuse, s_diffuse, input.v_tex_coords) * vec4<f32>(1.0, 1.0, 1.0, 1.0);
-    return texColor;
+    //var texColor: vec4<f32>;
+    //texColor = textureSample(t_diffuse, s_diffuse, input.v_tex_coords) * vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    //return texColor;
+    let color = input.color;
+    return vec4<f32>(color.x,color.y,color.z,textureSample(t_diffuse, s_diffuse, input.v_tex_coords).x);
+
 }

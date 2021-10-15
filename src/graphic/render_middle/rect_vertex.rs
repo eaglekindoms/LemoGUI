@@ -1,7 +1,6 @@
 use wgpu::*;
 
 use crate::graphic::base::*;
-use crate::graphic::render_middle::pipeline_state::Shader;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 use crate::graphic::style::{Bordering, Rounding};
 
@@ -16,7 +15,7 @@ pub struct RectVertex {
     pub is_round_or_border: [u32; 2],
 }
 
-const attrs: [VertexAttribute; 5] = wgpu::vertex_attr_array![
+const ATTRS: [VertexAttribute; 5] = wgpu::vertex_attr_array![
                 0 => Float32x2,
                 1 => Float32x2,
                 2 => Float32x4,
@@ -28,7 +27,7 @@ impl VertexLayout for RectVertex {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<RectVertex>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &attrs,
+            attributes: &ATTRS,
         }
     }
 

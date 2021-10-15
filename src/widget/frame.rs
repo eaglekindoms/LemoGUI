@@ -89,7 +89,7 @@ impl<M: Copy + PartialEq> Container<M> for Frame<M> {
                 for comp in &self.display_panel {
                     comp.draw(&mut utils)
                 }
-                wgcontext.queue.submit(Some(utils.encoder.finish()));
+                utils.context.queue.submit(Some(utils.encoder.finish()));
             }
         }
     }

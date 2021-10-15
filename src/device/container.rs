@@ -1,6 +1,5 @@
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
-use crate::widget::ComponentModel;
 use crate::widget::Instance;
 
 /// 渲染容器trait

@@ -7,7 +7,6 @@ use winit::event::VirtualKeyCode::Key1;
 
 use LemoGUI::device::*;
 use LemoGUI::graphic::base::*;
-use LemoGUI::graphic::render_middle::RenderUtil;
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::*;
 
@@ -42,7 +41,7 @@ impl Instance for Counter {
             .no_border()
             .hover_color(RGBA(0.0, 0.75, 1.0, 0.5))
             .back_color(RGBA(1.0, 0.5, 0.5, 1.0))
-            .font_color(RGBA(0.0, 0.0, 0.0, 1.0), 45.)
+            .font_color(RGBA(0.1, 0.3, 0.8, 1.0), 45.)
             .round();
         let b1 = Button::new_with_style(rect, style, "add button 加")
             .action(Ms::Add);

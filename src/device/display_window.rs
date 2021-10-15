@@ -16,8 +16,9 @@ use crate::widget::Instance;
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文
 pub struct DisplayWindow<'a, M: 'static> {
-    // /// 图形上下文
+    /// 图形上下文
     pub wgcontext: WGContext,
+    /// 时间监听器
     event_loop: EventLoop<M>,
     /// 事件上下文
     event_context: ELContext<'a, M>,
@@ -59,37 +60,6 @@ impl<M: 'static + Debug> DisplayWindow<'static, M> {
         return display_window;
     }
 }
-//
-// /// 装填组件容器，启动窗口
-// pub fn start<C, M>(builder: WindowBuilder, build_container: impl Fn(&WGContext) -> C)
-//     where C: Container<M> + 'static, M: 'static + Debug
-// {
-//     use futures::executor::block_on;
-//     block_on(init_with_container(builder, build_container));
-//     log::info!("Initializing the example...");
-// }
-//
-// /// 通过容器回调函数初始化窗口
-// async fn init_with_container<C, M>(builder: WindowBuilder,
-//                                    build_container: impl Fn(&WGContext) -> C)
-//     where C: Container<M> + 'static, M: 'static + Debug {
-//     log::info!("Initializing the window...");
-//     let event_loop = EventLoop::<M>::with_user_event();
-//     let window = builder.build(&event_loop).unwrap();
-//
-//     let wgcontext = WGContext::new(&window).await;
-//
-//     let container = build_container(&wgcontext);
-//
-//     let el_context = ELContext {
-//         window,
-//         cursor_pos: None,
-//         window_event: None,
-//         message: None,
-//         message_channel: event_loop.create_proxy(),
-//     };
-// run_instance(event_loop, wgcontext, container, el_context);
-// }
 
 /// 运行窗口实例
 fn run_instance<C, M>(event_loop: EventLoop<M>, wgcontext: WGContext,

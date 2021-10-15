@@ -10,13 +10,13 @@ use crate::graphic::render_middle::pipeline_state::PipelineState;
 pub struct RenderUtil<'a> {
     pub encoder: CommandEncoder,
     pub view: TextureView,
-    pub context: &'a WGContext,
+    pub context: &'a mut WGContext,
     pub pipeline: &'a PipelineState,
 }
 
 impl<'a> RenderUtil<'a> {
     pub fn new(surface_frame: &SurfaceFrame,
-               wgcontext: &'a WGContext,
+               wgcontext: &'a mut WGContext,
                glob_pipeline: &'a PipelineState) -> Self {
         let view = surface_frame.output
             .texture

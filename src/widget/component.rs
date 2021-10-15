@@ -2,8 +2,6 @@ use winit::event::*;
 use winit::event_loop::EventLoopProxy;
 
 use crate::device::ELContext;
-use crate::device::WGContext;
-use crate::graphic::render_middle::PipelineState;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::Style;
 use crate::widget::Component;

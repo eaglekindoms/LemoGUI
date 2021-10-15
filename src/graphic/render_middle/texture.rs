@@ -13,16 +13,6 @@ pub struct GTexture {
 }
 
 impl GTexture {
-    // pub fn from_bytes(
-    //     device: &wgpu::Device,
-    //     queue: &wgpu::Queue,
-    //     bytes: &[u8],
-    //     label: &str,
-    // ) -> Result<Self> {
-    //     let img = image::load_from_memory(bytes)?;
-    //     Self::from_image(device, queue, &img, Some(label))
-    // }
-
     pub fn from_char(
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -30,6 +20,25 @@ impl GTexture {
     ) -> Self {
         let raw_data = ch.to_raw();
 
+        Self::from_raw_image(device, queue, raw_data, wgpu::TextureFormat::R8Unorm)
+    }
+
+    pub fn from_text(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        char_map: &mut GCharMap,
+        text: &str,
+    ) -> Self {
+        let raw_data = char_map.text_to_image(text);
+        Self::from_raw_image(device, queue, raw_data, wgpu::TextureFormat::R8Unorm)
+    }
+
+    pub fn from_raw_image(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        raw_data: ImageRaw,
+        texture_format: wgpu::TextureFormat,
+    ) -> Self {
         let size = wgpu::Extent3d {
             width: raw_data.width,
             height: raw_data.height,
@@ -46,7 +55,7 @@ impl GTexture {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::R8Unorm,
+            format: texture_format,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
         });
         let view = writer_data_to_texture(queue, &texture, image_layout, size, raw_data);
