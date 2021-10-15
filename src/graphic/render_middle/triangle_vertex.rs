@@ -1,8 +1,7 @@
 use wgpu::*;
 
-use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::color::RGBA;
-use crate::graphic::base::shape::*;
+use crate::device::WGContext;
+use crate::graphic::base::*;
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 

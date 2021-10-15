@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use wgpu::*;
 use wgpu::PrimitiveTopology::*;
 
-use crate::graphic::base::shape::ShapeType;
+use crate::graphic::base::ShapeType;
 use crate::graphic::render_middle::circle_vertex::CircleVertex;
 use crate::graphic::render_middle::image_vertex::TextureVertex;
 use crate::graphic::render_middle::rect_vertex::RectVertex;

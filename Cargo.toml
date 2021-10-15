@@ -30,18 +30,15 @@ wgpu = { version = "0.11", features = ["spirv"] }
 async-trait = "0.1.51"
 winit = "0.25.0"
 futures = "0.3.10"
-cgmath = "0.17"
+cgmath = "0.18"
 log = "0.4.14"
 simple_logger = "1.11.0"
 rand = "0.8.2"
 bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
 ab_glyph = "0.2.11"
-##metal = "0.2.75"
-#web-sys = " 0.3.53"
-#js-sys = " 0.3.53"
-#wasm-bindgen = "0.2.75"
-#naga = { git = "https://hub.fastgit.org/gfx-rs/naga", rev = "995a775" }
+anyhow = "1.0"
+pollster = "0.2"
 
 #[dependencies.wgpu]
 #git = "https://github.com/gfx-rs/wgpu"

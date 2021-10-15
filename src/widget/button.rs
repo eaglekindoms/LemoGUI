@@ -3,14 +3,10 @@ use std::option::Option::Some;
 
 use winit::event::*;
 
-use crate::device::event_context::ELContext;
-use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::font::draw_text;
-use crate::graphic::base::shape::{Point, Rectangle, ShapeGraph};
-use crate::graphic::render_middle::image_vertex::TextureVertex;
-use crate::graphic::render_middle::pipeline_state::PipelineState;
-use crate::graphic::render_middle::render_function::RenderUtil;
-use crate::graphic::render_middle::texture_buffer::TextureBuffer;
+use crate::device::ELContext;
+use crate::graphic::base::*;
+use crate::graphic::render_middle::RenderUtil;
+use crate::graphic::render_middle::TextureVertex;
 use crate::graphic::style::*;
 use crate::widget::component;
 use crate::widget::component::ComponentModel;
@@ -73,15 +69,11 @@ impl<'a, M: Copy + PartialEq> Button<M> {
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
     fn draw(&self, render_utils: &mut RenderUtil) {
-        let text_buffer = draw_text(45.0, self.style.get_font_color(), self.text.as_str());
         let image_vertex_buffer =
             TextureVertex::new
                 (&render_utils.context.device, render_utils.context.get_surface_size(), &self.size);
         let back_buffer = self.size.to_buffer(render_utils.context, self.style.get_display_color());
-        let font_buffer =
-            TextureBuffer::create_font_image
-                (&render_utils.context.device,
-                 &render_utils.context.queue, text_buffer);
+        let font_buffer = render_utils.context.get_text_buffer(self.text.as_str());
         back_buffer.render(render_utils, self.size.get_type());
         image_vertex_buffer.render_t(render_utils, &font_buffer);
     }

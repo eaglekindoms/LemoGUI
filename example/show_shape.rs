@@ -3,14 +3,11 @@ use std::path::Path;
 use image::GenericImageView;
 use simple_logger::SimpleLogger;
 
-use LemoGUI::device::container::Container;
-use LemoGUI::device::display_window::*;
-use LemoGUI::device::wgpu_context::WGContext;
-use LemoGUI::graphic::base::color::*;
-use LemoGUI::graphic::base::shape::*;
+use LemoGUI::device::*;
+use LemoGUI::graphic::base::*;
 use LemoGUI::graphic::style::*;
-use LemoGUI::widget::drawing_board::ShapeBoard;
-use LemoGUI::widget::frame::Frame;
+use LemoGUI::widget::Frame;
+use LemoGUI::widget::ShapeBoard;
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();

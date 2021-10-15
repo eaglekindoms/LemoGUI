@@ -3,7 +3,7 @@ use std::option::Option::None;
 
 use wgpu::*;
 
-use crate::graphic::base::image::Image;
+use crate::graphic::base::*;
 
 #[derive(Debug)]
 pub struct TextureBuffer {
@@ -12,7 +12,7 @@ pub struct TextureBuffer {
 }
 
 impl<'a> TextureBuffer {
-    pub fn create_font_image(device: &Device, queue: &wgpu::Queue, image: Image) -> Self {
+    pub fn create_font_image(device: &Device, queue: &wgpu::Queue, image: ImageRaw) -> Self {
         let texture_size = Self::create_texture_size(image.width, image.height);
         let diffuse_texture = device.create_texture(
             &Self::create_texture_descriptor(&texture_size)
@@ -52,13 +52,13 @@ impl<'a> TextureBuffer {
                 label: Some("diffuse_bind_group"),
             }
         );
+
         log::info!("create the TextureState obj");
         Self {
             // texture_bind_group_layout,
             diffuse_bind_group,
         }
     }
-
     #[deprecated]
     /// 创建默认采样器描述符
     /// 用途：配置纹理采样方式（环绕、过滤，多级渐远纹理过滤）

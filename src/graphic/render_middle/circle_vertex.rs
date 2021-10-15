@@ -1,7 +1,6 @@
 use wgpu::*;
 
-use crate::graphic::base::color::*;
-use crate::graphic::base::shape::*;
+use crate::graphic::base::*;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
 /// 圆形顶点数据布局结构体

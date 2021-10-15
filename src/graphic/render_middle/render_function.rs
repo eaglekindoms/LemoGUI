@@ -1,7 +1,7 @@
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
-use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::color::RGBA;
+use crate::device::WGContext;
+use crate::graphic::base::RGBA;
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 
 /// 渲染工具封装结构体
@@ -10,13 +10,13 @@ use crate::graphic::render_middle::pipeline_state::PipelineState;
 pub struct RenderUtil<'a> {
     pub encoder: CommandEncoder,
     pub view: TextureView,
-    pub context: &'a WGContext,
+    pub context: &'a mut WGContext,
     pub pipeline: &'a PipelineState,
 }
 
 impl<'a> RenderUtil<'a> {
     pub fn new(frame: &SurfaceTexture,
-               wgcontext: &'a WGContext,
+               wgcontext: &'a mut WGContext,
                glob_pipeline: &'a PipelineState) -> Self {
         let view = frame
             .texture

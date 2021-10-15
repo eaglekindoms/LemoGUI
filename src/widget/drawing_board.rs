@@ -1,8 +1,5 @@
-use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::color::LIGHT_BLUE;
-use crate::graphic::base::shape::ShapeGraph;
-use crate::graphic::render_middle::pipeline_state::PipelineState;
-use crate::graphic::render_middle::render_function::RenderUtil;
+use crate::graphic::base::*;
+use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::Style;
 use crate::widget::component::ComponentModel;
 

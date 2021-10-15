@@ -1,8 +1,6 @@
 use wgpu::*;
 
-use crate::graphic::base::color::RGBA;
-use crate::graphic::base::shape::{Point, Rectangle};
-use crate::graphic::render_middle::pipeline_state::Shader;
+use crate::graphic::base::*;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 use crate::graphic::style::{Bordering, Rounding};
 
@@ -17,7 +15,7 @@ pub struct RectVertex {
     pub is_round_or_border: [u32; 2],
 }
 
-const attrs: [VertexAttribute; 5] = wgpu::vertex_attr_array![
+const ATTRS: [VertexAttribute; 5] = wgpu::vertex_attr_array![
                 0 => Float32x2,
                 1 => Float32x2,
                 2 => Float32x4,
@@ -29,7 +27,7 @@ impl VertexLayout for RectVertex {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<RectVertex>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &attrs,
+            attributes: &ATTRS,
         }
     }
 
@@ -67,6 +65,9 @@ impl RectVertex {
                 Rounding::NoRound => is_round = 0,
             }
         }
+        // let projection: cgmath::Matrix4<f32> = shape::orthographic_projection(sc_desc.x as f32, sc_desc.y as f32).into();
+        // let position: cgmath::Vector4<f32> = cgmath::Vector4::new(rect.position.x, rect.position.y, 0.0, 0.0);
+        // let view: cgmath::Vector4<f32> = projection * position;
         RectVertex {
             size: [t_w, t_h],
             position: [t_w / 2.0 + t_x, t_y - t_h / 2.0],
