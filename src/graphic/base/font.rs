@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use ab_glyph::*;
+use ab_glyph::{Font, FontRef, PxScale, PxScaleFont, ScaleFont};
 
-use crate::graphic::base::{BLACK, ImageRaw, RGBA};
-use crate::graphic::render_middle::GTexture;
+use crate::graphic::base::{BLACK, ImageRaw, Point, RGBA};
+use crate::graphic::render_middle::{RenderUtil, TextureBufferData};
 
 pub const DEFAULT_FONT_SIZE: f32 = 40.0;
 pub const DEFAULT_FONT_COLOR: RGBA = BLACK;
@@ -25,7 +25,7 @@ pub struct Character {
     ///    水平预留值，即原点到下一个字形原点的水平距离（单位：1/64像素）
     pub advance: u32,
     pub bitmap: Vec<u8>,
-    texture: Option<GTexture>,
+    texture: Option<TextureBufferData>,
 }
 
 impl Character {
@@ -93,10 +93,10 @@ impl Character {
         }
     }
 
-    pub fn texture(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) -> &GTexture {
+    pub fn texture(&mut self, render_utils: &mut RenderUtil) -> &TextureBufferData {
         if self.texture.is_none() {
-            let g_texture = GTexture::from_char(device, queue, &self);
-            self.texture = Some(g_texture);
+            self.texture = Some(render_utils
+                .g_texture.fill_char(render_utils.context, &self));
         }
         return self.texture.as_ref().unwrap();
     }

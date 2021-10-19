@@ -2,48 +2,27 @@ use std::num::NonZeroU32;
 
 use wgpu::TextureFormat;
 
+use crate::device::WGContext;
 use crate::graphic::base::*;
+
+pub type TextureBufferData = wgpu::BindGroup;
 
 #[derive(Debug)]
 pub struct GTexture {
-    // pub texture: wgpu::Texture,
-    // pub view: wgpu::TextureView,
-    // pub sampler: wgpu::Sampler,
-    pub bind_group: wgpu::BindGroup,
-    // pub bind_group_layout:wgpu::BindGroupLayout,
-    pub size: Point<u32>,
+    pub texture: wgpu::Texture,
+    pub sampler: wgpu::Sampler,
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub texture_format: wgpu::TextureFormat,
+    pub image_layout: wgpu::ImageDataLayout,
+    pub size: wgpu::Extent3d,
 }
 
 impl GTexture {
-    pub fn from_char(
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        ch: &Character,
-    ) -> Self {
-        let raw_data = ch.to_raw();
-
-        Self::from_raw_image(device, queue, raw_data, wgpu::TextureFormat::R8Unorm)
-    }
-
-    pub fn from_text(
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        char_map: &mut GCharMap,
-        text: &str,
-    ) -> Self {
-        let raw_data = char_map.text_to_image(text);
-        Self::from_raw_image(device, queue, raw_data, wgpu::TextureFormat::R8Unorm)
-    }
-
-    pub fn from_raw_image(
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        raw_data: ImageRaw,
-        texture_format: wgpu::TextureFormat,
-    ) -> Self {
+    pub fn new(device: &wgpu::Device, data_size: Point<u32>,
+               texture_format: wgpu::TextureFormat) -> Self {
         let size = wgpu::Extent3d {
-            width: raw_data.width,
-            height: raw_data.height,
+            width: data_size.x,
+            height: data_size.y,
             depth_or_array_layers: 1,
         };
         // 参数：纹理数据来源的尺寸
@@ -53,36 +32,73 @@ impl GTexture {
         // 因此行数宽度为图像宽度*4，列数宽度不变
         let image_width: u32;
         match texture_format {
-            TextureFormat::R8Unorm => image_width = raw_data.width,
-            _ => image_width = raw_data.width * 4
+            TextureFormat::R8Unorm => image_width = data_size.x,
+            _ => image_width = data_size.x * 4
         }
         let image_layout = wgpu::ImageDataLayout {
             offset: 0,
             bytes_per_row: NonZeroU32::new(image_width),
-            rows_per_image: NonZeroU32::new(raw_data.height),
+            rows_per_image: NonZeroU32::new(data_size.y),
         };
-        // 定义纹理描述符
-        // 参数：纹理尺寸
-        // 输出配置：定义纹理尺寸，维度：2d，颜色格式：rgba，纹理来源：sampled,copy_dst
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: None,
-            size,
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: texture_format,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-        });
-        let view = writer_data_to_texture(queue, &texture, image_layout, size, raw_data);
+
+        let texture = create_2d_texture(device, size, texture_format);
         let sampler = device.create_sampler(DEFAULT_TEXTURE_SAMPLER);
         let layout = device.create_bind_group_layout(DEFAULT_BIND_GROUP_LAYOUT);
-        let bind_group = bind_group(device, &layout, &view, &sampler);
         Self {
-            bind_group,
-            // bind_group_layout:layout,
-            size: Point::new(size.width, size.height),
+            texture,
+            sampler,
+            bind_group_layout: layout,
+            texture_format,
+            image_layout,
+            size,
         }
     }
+
+    pub fn update_size(&mut self, device: &wgpu::Device, size: Point<u32>) {
+        self.size.width = size.x;
+        self.size.height = size.y;
+        self.texture = create_2d_texture(device, self.size, self.texture_format);
+        match self.texture_format {
+            TextureFormat::R8Unorm => self.image_layout.bytes_per_row = NonZeroU32::new(size.x),
+            _ => self.image_layout.bytes_per_row = NonZeroU32::new(size.x * 4),
+        }
+        self.image_layout.rows_per_image = NonZeroU32::new(size.y);
+    }
+
+    pub fn create_bind_group(&mut self, device: &wgpu::Device,
+                             queue: &wgpu::Queue, raw_data: ImageRaw) -> TextureBufferData {
+        if raw_data.height != self.size.height || raw_data.width != self.size.width {
+            self.update_size(device, Point::new(raw_data.width, raw_data.height));
+        }
+        let view = writer_data_to_texture(queue,
+                                          &self.texture, self.image_layout, self.size, raw_data);
+        bind_group(device, &self.bind_group_layout, &view, &self.sampler)
+    }
+    pub fn fill_char(&mut self, wg_context: &WGContext, ch: &Character) -> TextureBufferData {
+        let raw_data = ch.to_raw();
+        self.create_bind_group(&wg_context.device, &wg_context.queue, raw_data)
+    }
+
+    pub fn fill_text(&mut self, wg_context: &mut WGContext, text: &str) -> TextureBufferData {
+        let raw_data = wg_context.font_map.text_to_image(text);
+        self.create_bind_group(&wg_context.device, &wg_context.queue, raw_data)
+    }
+}
+
+/// 定义纹理描述符
+/// 参数：纹理尺寸
+/// 输出配置：定义纹理尺寸，维度：2d，颜色格式：rgba，纹理来源：sampled,copy_dst
+pub fn create_2d_texture(device: &wgpu::Device, texture_size: wgpu::Extent3d,
+                         texture_format: wgpu::TextureFormat) -> wgpu::Texture {
+    device.create_texture(&wgpu::TextureDescriptor {
+        label: None,
+        size: texture_size,
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: texture_format,
+        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+    })
 }
 
 pub fn writer_data_to_texture(queue: &wgpu::Queue,
@@ -92,12 +108,7 @@ pub fn writer_data_to_texture(queue: &wgpu::Queue,
                               raw_data: ImageRaw) -> wgpu::TextureView
 {
     queue.write_texture(
-        wgpu::ImageCopyTexture {
-            aspect: wgpu::TextureAspect::All,
-            texture: &texture,
-            mip_level: 0,
-            origin: wgpu::Origin3d::ZERO,
-        },
+        texture.as_image_copy(),
         raw_data.data.as_slice(),
         image_layout,
         size,

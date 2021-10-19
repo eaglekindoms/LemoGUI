@@ -2,7 +2,6 @@ use ab_glyph::FontRef;
 use winit::window::Window;
 
 use crate::graphic::base::*;
-use crate::graphic::render_middle::GTexture;
 
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体
@@ -15,7 +14,7 @@ pub struct WGContext {
     /// 渲染命令队列
     pub queue: wgpu::Queue,
     /// 字体缓冲
-    pub font_buffer: GCharMap<'static>,
+    pub font_map: GCharMap<'static>,
     /// 交换缓冲区描述符
     sc_desc: wgpu::SurfaceConfiguration,
 }
@@ -69,7 +68,7 @@ impl WGContext {
             surface,
             device,
             queue,
-            font_buffer: characters,
+            font_map: characters,
             sc_desc,
         }
     }

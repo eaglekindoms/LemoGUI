@@ -7,7 +7,6 @@ use winit::window::CursorIcon;
 use crate::device::ELContext;
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
-use crate::graphic::render_middle::TextureVertex;
 use crate::graphic::style::*;
 use crate::widget::{component, Component};
 use crate::widget::component::ComponentModel;

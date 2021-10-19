@@ -1,7 +1,7 @@
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
 use crate::device::WGContext;
-use crate::graphic::base::{ImageRaw, Rectangle, RGBA, ShapeGraph};
+use crate::graphic::base::{ImageRaw, Point, Rectangle, RGBA, ShapeGraph};
 use crate::graphic::render_middle::{GTexture, TextureVertex};
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 
@@ -13,6 +13,7 @@ pub struct RenderUtil<'a> {
     pub view: TextureView,
     pub context: &'a mut WGContext,
     pub pipeline: &'a PipelineState,
+    pub g_texture: GTexture,
 }
 
 impl<'a> RenderUtil<'a> {
@@ -26,11 +27,14 @@ impl<'a> RenderUtil<'a> {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
+        let g_texture = GTexture::new(&wgcontext.device,
+                                      Point::new(40, 40), wgpu::TextureFormat::R8Unorm);
         RenderUtil {
             encoder,
             view,
             context: wgcontext,
             pipeline: glob_pipeline,
+            g_texture,
         }
     }
 
@@ -76,11 +80,11 @@ impl<'a> RenderUtil<'a> {
         rect_buffer.render(self, rect.get_type());
     }
     pub fn draw_text(&mut self, text_rect: &Rectangle, text: &str, text_color: RGBA) {
-        let image_vertex_buffer = TextureVertex::new(&self.context.device,
-                                                     self.context.get_surface_size(), text_rect, text_color);
-        let font_buffer = GTexture::from_text(&self.context.device,
-                                              &self.context.queue,
-                                              &mut self.context.font_buffer, text);
+        let image_vertex_buffer =
+            TextureVertex::new(&self.context.device,
+                               self.context.get_surface_size(), text_rect, text_color);
+        let font_buffer = self.g_texture
+            .fill_text(self.context, text);
         image_vertex_buffer.render_t(self, &font_buffer);
     }
 

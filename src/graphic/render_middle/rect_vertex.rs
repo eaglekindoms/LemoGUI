@@ -2,7 +2,6 @@ use wgpu::*;
 
 use crate::graphic::base::*;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
-use crate::graphic::style::{Bordering, Rounding};
 
 /// 矩形顶点数据布局结构体
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
