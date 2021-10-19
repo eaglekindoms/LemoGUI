@@ -1,6 +1,6 @@
 use wgpu::*;
 
-use crate::graphic::base::{Point, Rectangle};
+use crate::graphic::base::{Point, Rectangle, RGBA};
 use crate::graphic::render_middle::DEFAULT_BIND_GROUP_LAYOUT;
 use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
@@ -62,14 +62,10 @@ impl VertexLayout for TextureVertex {
 }
 
 impl TextureVertex {
-    pub fn new(device: &Device, sc_desc: Point<u32>, rect: &Rectangle) -> VertexBuffer {
+    pub fn new(device: &Device, sc_desc: Point<u32>, rect: &Rectangle, font_color: RGBA) -> VertexBuffer {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.x, sc_desc.y);
-        let color: [f32; 4];
-        match rect.style {
-            None => { color = [0.0, 0.0, 0.0, 0.0] }
-            Some(style) => { color = style.get_font_color().to_vec(); }
-        }
+        let color: [f32; 4] = font_color.to_vec();
         let vect: Vec<TextureVertex> = vec![
             TextureVertex { position: [t_x, t_y], tex_coords: [t_w, t_h], color }
         ];

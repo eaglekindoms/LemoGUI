@@ -47,6 +47,7 @@ impl Instance for Counter {
             .action(Ms::Add);
         Panel::new()
             .push(Button::new(Point::new(100.0, 200.0), "sub button 减").action(Ms::Sub))
+            .push(TextInput::new(Point::new(100.0, 300.0), "sub button 减"))
             .push(b1)
             .push(Button::new(Point::new(120., 20.), self.value.to_string()))
     }

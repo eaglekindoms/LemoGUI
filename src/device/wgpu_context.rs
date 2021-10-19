@@ -83,8 +83,4 @@ impl WGContext {
     pub fn get_surface_size(&self) -> Point<u32> {
         Point::new(self.sc_desc.width, self.sc_desc.height)
     }
-
-    pub fn get_text_buffer(&mut self, text: &str) -> GTexture {
-        GTexture::from_text(&self.device, &self.queue, &mut self.font_buffer, text)
-    }
 }

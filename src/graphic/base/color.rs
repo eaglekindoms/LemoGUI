@@ -4,6 +4,7 @@
 pub struct RGBA(pub f32, pub f32, pub f32, pub f32);
 
 pub const BLACK: RGBA = RGBA(0.0, 0.0, 0.0, 1.0);
+pub const WHITE: RGBA = RGBA(1.0, 1.0, 1.0, 1.0);
 pub const LIGHT_WHITE: RGBA = RGBA(0.8, 0.8, 0.8, 1.0);
 pub const LIGHT_BLUE: RGBA = RGBA(0.0, 0.75, 1.0, 0.5);
 

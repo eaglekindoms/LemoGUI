@@ -4,7 +4,7 @@ use crate::graphic::render_middle::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::CircleVertex;
 use crate::graphic::render_middle::PointVertex;
 use crate::graphic::render_middle::RectVertex;
-use crate::graphic::style::Style;
+use crate::graphic::style::{Bordering, Rounding, Style};
 
 /// 图形类型枚举
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
@@ -31,7 +31,10 @@ pub struct Rectangle {
     pub position: Point<f32>,
     pub width: u32,
     pub height: u32,
-    pub style: Option<Style>
+    /// 是否有边界
+    pub border: u32,
+    /// 是否圆角
+    pub round: u32,
 }
 
 /// 圆形结构体
@@ -76,12 +79,28 @@ impl Rectangle {
             position: Point { x, y },
             width: w,
             height: h,
-            style: None,
+            border: 0,
+            round: 0,
         }
     }
 
     pub fn set_style(&mut self, style: Style) -> Self {
-        self.style = Some(style);
+        let mut is_round = 0;
+        let mut is_border = 0;
+        match style.get_border() {
+            Bordering::Border(color) => {
+                is_border = 1;
+            }
+            Bordering::NoBorder => {
+                is_border = 0;
+            }
+        }
+        match style.get_round() {
+            Rounding::Round => is_round = 1,
+            Rounding::NoRound => is_round = 0,
+        }
+        self.border = is_border;
+        self.round = is_round;
         *self
     }
 

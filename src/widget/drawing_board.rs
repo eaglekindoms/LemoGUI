@@ -1,12 +1,19 @@
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::Style;
+use crate::widget::Component;
 use crate::widget::component::ComponentModel;
 
 /// 图形绘制面板控件结构体
 pub struct ShapeBoard {
     pub shape_arr: Vec<Box<dyn ShapeGraph>>,
     pub style: Style,
+}
+
+impl<M: Copy + PartialEq + 'static> From<ShapeBoard> for Component<M> {
+    fn from(shape_board: ShapeBoard) -> Self {
+        Component::new(shape_board)
+    }
 }
 
 impl<M> ComponentModel<M> for ShapeBoard {

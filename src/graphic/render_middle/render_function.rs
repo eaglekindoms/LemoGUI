@@ -1,7 +1,8 @@
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
 use crate::device::WGContext;
-use crate::graphic::base::RGBA;
+use crate::graphic::base::{ImageRaw, Rectangle, RGBA, ShapeGraph};
+use crate::graphic::render_middle::{GTexture, TextureVertex};
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 
 /// 渲染工具封装结构体
@@ -69,4 +70,19 @@ impl<'a> RenderUtil<'a> {
             depth_stencil_attachment: None,
         });
     }
+
+    pub fn draw_rect(&mut self, rect: &Rectangle, rect_color: RGBA) {
+        let rect_buffer = rect.to_buffer(self.context, rect_color);
+        rect_buffer.render(self, rect.get_type());
+    }
+    pub fn draw_text(&mut self, text_rect: &Rectangle, text: &str, text_color: RGBA) {
+        let image_vertex_buffer = TextureVertex::new(&self.context.device,
+                                                     self.context.get_surface_size(), text_rect, text_color);
+        let font_buffer = GTexture::from_text(&self.context.device,
+                                              &self.context.queue,
+                                              &mut self.context.font_buffer, text);
+        image_vertex_buffer.render_t(self, &font_buffer);
+    }
+
+    pub fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {}
 }

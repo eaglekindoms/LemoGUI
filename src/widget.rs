@@ -29,14 +29,6 @@ impl<M: Copy + PartialEq> Component<M> {
     }
 }
 
-
-impl<M: Copy + PartialEq + 'static> From<button::Button<M>> for Component<M> {
-    fn from(button: button::Button<M>) -> Self {
-        Component::new(button)
-    }
-}
-
-
 pub struct Panel<M> where M: PartialEq, M: std::marker::Copy {
     pub widgets: Vec<Component<M>>,
 }
@@ -66,7 +58,7 @@ pub trait Instance {
     /// 组件布局
     fn layout(&self) -> Panel<Self::M>;
     /// 状态更新
-    fn update(&mut self, broadcast: &Self::M);
+    fn update(&mut self, _broadcast: &Self::M) {}
     /// 窗体设置
     fn setting() -> winit::window::WindowBuilder;
     /// 运行实例

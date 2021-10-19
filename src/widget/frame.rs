@@ -29,7 +29,7 @@ impl<M: Copy + PartialEq> Frame<M> {
         }
     }
 
-    fn add_widgets(&mut self, widgets: Panel<M>) {
+    pub fn add_widgets(&mut self, widgets: Panel<M>) {
         self.display_panel = Some(widgets);
     }
 }

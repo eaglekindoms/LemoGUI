@@ -9,7 +9,7 @@ use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::render_middle::TextureVertex;
 use crate::graphic::style::*;
-use crate::widget::component;
+use crate::widget::{component, Component};
 use crate::widget::component::ComponentModel;
 use crate::widget::message::{EventType, State};
 
@@ -24,6 +24,8 @@ pub struct TextInput<M: Copy> {
     pub text: String,
     /// 控件状态
     pub state: Option<State<M>>,
+    ///是否聚焦
+    pub is_focus: bool,
 }
 
 impl<'a, M: Copy + PartialEq> TextInput<M> {
@@ -34,6 +36,7 @@ impl<'a, M: Copy + PartialEq> TextInput<M> {
             text: text.into(),
             state: None,
             style,
+            is_focus: false
         }
     }
 
@@ -46,6 +49,7 @@ impl<'a, M: Copy + PartialEq> TextInput<M> {
             style: Style::default(),
             text,
             state: None,
+            is_focus: false
         }
     }
 
@@ -57,31 +61,21 @@ impl<'a, M: Copy + PartialEq> TextInput<M> {
         });
         self
     }
+}
 
-    pub fn match_message(&self, des_m: &M) -> bool {
-        if self.state.is_some() {
-            self.state.as_ref().unwrap().match_message(des_m)
-        } else {
-            false
-        }
+impl<M: Copy + PartialEq + 'static> From<TextInput<M>> for Component<M> {
+    fn from(text_input: TextInput<M>) -> Self {
+        Component::new(text_input)
     }
 }
 
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for TextInput<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil) {
-        let image_vertex_buffer =
-            TextureVertex::new
-                (&render_utils.context.device, render_utils.context.get_surface_size(), &self.size);
-        let back_buffer = self.size.to_buffer(render_utils.context, self.style.get_display_color());
-        let font_buffer = render_utils.context.get_text_buffer(self.text.as_str());
-        back_buffer.render(render_utils, self.size.get_type());
-        image_vertex_buffer.render_t(render_utils, &font_buffer);
-    }
+    fn draw(&self, render_utils: &mut RenderUtil) {}
     fn key_listener(&mut self, action_state: ElementState,
-                    el_context: &ELContext<'_, M>, virtual_keycode: Option<VirtualKeyCode>) -> bool {
-        component::action_animation::<M>(&mut self.style, action_state,
-                                         &el_context.message_channel, &self.state, virtual_keycode)
+                    el_context: &ELContext<'_, M>,
+                    virtual_keycode: Option<VirtualKeyCode>) -> bool {
+        false
     }
     fn hover_listener(&mut self, el_context: &ELContext<'_, M>) -> bool
     {

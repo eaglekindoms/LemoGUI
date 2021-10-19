@@ -8,7 +8,7 @@ use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::render_middle::TextureVertex;
 use crate::graphic::style::*;
-use crate::widget::component;
+use crate::widget::{component, Component};
 use crate::widget::component::ComponentModel;
 use crate::widget::message::{EventType, State};
 
@@ -66,16 +66,17 @@ impl<'a, M: Copy + PartialEq> Button<M> {
     }
 }
 
+impl<M: Copy + PartialEq + 'static> From<Button<M>> for Component<M> {
+    fn from(button: Button<M>) -> Self {
+        Component::new(button)
+    }
+}
+
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
     fn draw(&self, render_utils: &mut RenderUtil) {
-        let image_vertex_buffer =
-            TextureVertex::new
-                (&render_utils.context.device, render_utils.context.get_surface_size(), &self.size);
-        let back_buffer = self.size.to_buffer(render_utils.context, self.style.get_display_color());
-        let font_buffer = render_utils.context.get_text_buffer(self.text.as_str());
-        back_buffer.render(render_utils, self.size.get_type());
-        image_vertex_buffer.render_t(render_utils, &font_buffer);
+        render_utils.draw_rect(&self.size, self.style.get_display_color());
+        render_utils.draw_text(&self.size, self.text.as_str(), self.style.get_font_color());
     }
     fn key_listener(&mut self, action_state: ElementState,
                     el_context: &ELContext<'_, M>, virtual_keycode: Option<VirtualKeyCode>) -> bool {

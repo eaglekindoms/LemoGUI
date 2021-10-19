@@ -47,23 +47,10 @@ impl RectVertex {
             rect.get_coord(sc_desc.x, sc_desc.y);
         let mut border_color = [0.0, 0.0, 0.0, 0.0];
         let frame_color = color.to_vec();
-        let mut is_round = 0;
-        let mut is_border = 0;
-        if let Some(style) = rect.style {
-            match style.get_border() {
-                Bordering::Border(color) => {
-                    border_color = color.to_vec();
-                    is_border = 1;
-                }
-                Bordering::NoBorder => {
-                    border_color = [0.0, 0.0, 0.0, 0.0];
-                    is_border = 0;
-                }
-            }
-            match style.get_round() {
-                Rounding::Round => is_round = 1,
-                Rounding::NoRound => is_round = 0,
-            }
+        let is_round = rect.round;
+        let is_border = rect.border;
+        if is_border == 1 {
+            border_color = BLACK.to_vec();
         }
         // let projection: cgmath::Matrix4<f32> = shape::orthographic_projection(sc_desc.x as f32, sc_desc.y as f32).into();
         // let position: cgmath::Vector4<f32> = cgmath::Vector4::new(rect.position.x, rect.position.y, 0.0, 0.0);
