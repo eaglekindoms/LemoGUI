@@ -3,8 +3,8 @@ use std::fmt::Debug;
 pub use button::*;
 pub use component::*;
 pub use drawing_board::*;
+pub use event::*;
 pub use frame::*;
-pub use message::*;
 pub use text_input::*;
 
 use crate::device::DisplayWindow;
@@ -14,7 +14,7 @@ mod button;
 mod component;
 mod frame;
 mod drawing_board;
-mod message;
+mod event;
 mod text_input;
 
 pub struct Component<M> {

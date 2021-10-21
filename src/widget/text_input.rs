@@ -1,7 +1,5 @@
 use std::fmt::Debug;
-use std::option::Option::Some;
 
-use winit::event::*;
 use winit::window::CursorIcon;
 
 use crate::device::ELContext;
@@ -10,7 +8,6 @@ use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::*;
 use crate::widget::{component, Component};
 use crate::widget::component::ComponentModel;
-use crate::widget::message::{EventType, State};
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -22,7 +19,7 @@ pub struct TextInput<M: Copy> {
     /// 内容文本
     pub text: String,
     /// 控件状态
-    pub state: Option<State<M>>,
+    pub state: Option<M>,
     ///是否聚焦
     pub is_focus: bool,
 }
@@ -35,7 +32,7 @@ impl<'a, M: Copy + PartialEq> TextInput<M> {
             text: text.into(),
             state: None,
             style,
-            is_focus: false
+            is_focus: false,
         }
     }
 
@@ -48,17 +45,8 @@ impl<'a, M: Copy + PartialEq> TextInput<M> {
             style: Style::default(),
             text,
             state: None,
-            is_focus: false
+            is_focus: false,
         }
-    }
-
-    /// 更新状态
-    pub fn action(mut self, message: M) -> Self {
-        self.state = Some(State {
-            event: EventType::Mouse,
-            message: Some(message),
-        });
-        self
     }
 }
 
@@ -70,12 +58,11 @@ impl<M: Copy + PartialEq + 'static> From<TextInput<M>> for Component<M> {
 
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for TextInput<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil) {}
-    fn key_listener(&mut self, action_state: ElementState,
-                    el_context: &ELContext<'_, M>,
-                    virtual_keycode: Option<VirtualKeyCode>) -> bool {
-        false
+    fn draw(&self, render_utils: &mut RenderUtil) {
+        render_utils.draw_rect(&self.size, WHITE);
+        render_utils.draw_text(&self.size, self.text.as_str(), self.style.get_font_color());
     }
+
     fn hover_listener(&mut self, el_context: &ELContext<'_, M>) -> bool
     {
         if el_context.cursor_pos.is_none() { return false; }
@@ -84,10 +71,19 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for TextInput<M> {
         if input {
             el_context.window.set_cursor_icon(CursorIcon::Text);
             // listener::action_animation::<M>(&mut self.style, action_state,
-            //                                 &el_context.message_channel, &self.state, None);
+            //                                 &el_context.message_channel, &self.message, None);
         } else {
             el_context.window.set_cursor_icon(CursorIcon::Default);
         }
         input
+    }
+    fn received_character(&mut self, _el_context: &ELContext<'_, M>, c: char) -> bool {
+        log::info!("ime: {:?}",c);
+        if c == '\u{8}' {
+            self.text.pop();
+        } else {
+            self.text.push(c);
+        }
+        false
     }
 }
