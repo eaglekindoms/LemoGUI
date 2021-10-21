@@ -64,8 +64,10 @@ pub trait Instance {
     /// 运行实例
     fn run() where Self: 'static + Sized {
         let window = DisplayWindow::new(Self::setting());
-        let frame = window.request_container::<Frame<Self::M>>();
-        window.start(frame, Self::new())
+        let mut frame = Frame::new();
+        let instance = Self::new();
+        frame.add_widgets(instance.layout());
+        window.start(frame, instance)
     }
 }
 

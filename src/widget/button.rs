@@ -79,8 +79,7 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     }
     fn key_listener(&mut self, action_state: ElementState,
                     el_context: &ELContext<'_, M>, virtual_keycode: Option<VirtualKeyCode>) -> bool {
-        component::action_animation::<M>(&mut self.style, action_state,
-                                         &el_context.message_channel, &self.state, virtual_keycode)
+        false
     }
     fn action_listener(&mut self, action_state: ElementState, el_context: &ELContext<'_, M>) -> bool
     {
@@ -88,7 +87,7 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
             .contain_coord(el_context.cursor_pos.unwrap());
         if input {
             component::action_animation::<M>(&mut self.style, action_state,
-                                             &el_context.message_channel, &self.state, None);
+                                             &el_context.message_channel, &self.state);
         }
         input
     }

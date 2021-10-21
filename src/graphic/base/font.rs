@@ -162,7 +162,6 @@ impl<'font> GCharMap<'font> {
                 height = raw.height;
                 raw
             }).collect();
-        println!("{:?}", width);
 
         let mut buffer = vec![0u8; (width * height) as usize];
 

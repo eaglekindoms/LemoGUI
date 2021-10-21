@@ -1,3 +1,4 @@
+use winit::dpi::PhysicalSize;
 use winit::event::WindowEvent;
 use winit::event_loop::EventLoopProxy;
 use winit::window::Window;
@@ -20,7 +21,32 @@ pub struct ELContext<'a, M: 'static> {
 
 impl<'a, M: 'static> ELContext<'a, M> {
     // 更新鼠标坐标
-    pub fn update_cursor(&mut self, pos: Point<f32>) {
-        self.cursor_pos = Some(pos);
+    pub fn update_cursor<P: Into<Point<f32>>>(&mut self, pos: P) {
+        self.cursor_pos = Some(pos.into());
+    }
+}
+
+impl From<Point<f32>> for winit::dpi::Position {
+    #[inline]
+    fn from(position: Point<f32>) -> winit::dpi::Position {
+        winit::dpi::Position::Physical(
+            winit::dpi::PhysicalPosition
+            {
+                x: position.x as i32,
+                y: position.y as i32,
+            })
+    }
+}
+
+impl From<winit::dpi::PhysicalPosition<f64>> for Point<f32> {
+    #[inline]
+    fn from(position: winit::dpi::PhysicalPosition<f64>) -> Point<f32> {
+        Point::new(position.x as f32, position.y as f32)
+    }
+}
+
+impl From<winit::dpi::PhysicalSize<u32>> for Point<u32> {
+    fn from(position: PhysicalSize<u32>) -> Self {
+        Point::new(position.width, position.height)
     }
 }

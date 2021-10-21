@@ -63,17 +63,18 @@ impl WGContext {
             FontRef::try_from_slice(
                 include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
                 "/res/SourceHanSansCN-Regular.otf"))).expect("import font failed");
-        let characters = GCharMap::new(font, DEFAULT_FONT_SIZE);
+        let font_map = GCharMap::new(font, DEFAULT_FONT_SIZE);
         WGContext {
             surface,
             device,
             queue,
-            font_map: characters,
+            font_map,
             sc_desc,
         }
     }
     // 更新交换缓冲区
-    pub fn update_surface_configure(&mut self, size: Point<u32>) {
+    pub fn update_surface_configure<P: Into<Point<u32>>>(&mut self, size: P) {
+        let size = size.into();
         self.sc_desc.width = size.x;
         self.sc_desc.height = size.y;
         self.surface.configure(&self.device, &self.sc_desc);

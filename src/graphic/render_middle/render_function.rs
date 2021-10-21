@@ -17,10 +17,10 @@ pub struct RenderUtil<'a> {
 }
 
 impl<'a> RenderUtil<'a> {
-    pub fn new(frame: &SurfaceTexture,
+    pub fn new(target_view: &SurfaceTexture,
                wgcontext: &'a mut WGContext,
                glob_pipeline: &'a PipelineState) -> Self {
-        let view = frame
+        let view = target_view
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
         let encoder = wgcontext.device

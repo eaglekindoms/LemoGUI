@@ -116,8 +116,8 @@ impl Rectangle {
     pub fn contain_coord(&self, position: Point<f32>) -> bool {
         let rel_x = position.x - self.position.x;
         let rel_y = position.y - self.position.y;
-        (rel_x < self.width as f32) &&
-            (rel_y < self.height as f32) &&
+        (rel_x < (self.width as f32)) &&
+            (rel_y < (self.height as f32)) &&
             (rel_x > 0.) &&
             (rel_y > 0.)
     }
