@@ -3,7 +3,7 @@ use winit::event_loop::EventLoopProxy;
 use crate::device::ELContext;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::Style;
-use crate::widget::{Component, KeyCode, State};
+use crate::widget::{Component, KeyCode, Mouse, State};
 use crate::widget::event::{EventType, GEvent};
 
 /// 组件模型trait
@@ -43,12 +43,14 @@ pub fn component_listener<M>(listener: &mut Component<M>,
     let hover_listener;
     let g_event: GEvent = el_context.window_event.as_ref().unwrap().into();
     match g_event.event {
-        EventType::Mouse(_) => {
+        EventType::Mouse(mouse) => {
             if g_event.state == State::Released && el_context.cursor_pos.is_some() {
                 el_context.window.set_ime_position(el_context.cursor_pos.unwrap());
             }
-            mouse_listener = el_context.cursor_pos.is_some() &&
-                listener.widget.action_listener(g_event.state, el_context);
+            if mouse == Mouse::Left {
+                mouse_listener = el_context.cursor_pos.is_some() &&
+                    listener.widget.action_listener(g_event.state, el_context);
+            }
         }
         EventType::KeyBoard(key_code) => {
             key_listener = listener.widget.key_listener(g_event.state, el_context, key_code);
@@ -56,7 +58,7 @@ pub fn component_listener<M>(listener: &mut Component<M>,
         EventType::ReceivedCharacter(c) => {
             listener.widget.received_character(el_context, c);
         }
-        EventType::Other => {}
+        _ => {}
     }
     hover_listener = listener.widget.hover_listener(el_context);
     key_listener || mouse_listener || hover_listener
