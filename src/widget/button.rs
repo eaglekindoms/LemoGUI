@@ -5,7 +5,7 @@ use crate::device::ELContext;
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::*;
-use crate::widget::{Component, ComponentModel};
+use crate::widget::{Component, ComponentModel, KeyCode, Mouse};
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -62,11 +62,18 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
         render_utils.draw_rect(&self.size, self.style.get_display_color());
         render_utils.draw_text(&self.size, self.text.as_str(), self.style.get_font_color());
     }
-    fn key_listener(&mut self, el_context: &ELContext<'_, M>) -> bool {
+    fn key_listener(&mut self,
+                    _el_context: &ELContext<'_, M>,
+                    _key_code: Option<KeyCode>) -> bool {
         false
     }
-    fn action_listener(&mut self, el_context: &ELContext<'_, M>) -> bool
+    fn action_listener(&mut self,
+                       el_context: &ELContext<'_, M>,
+                       mouse: Mouse) -> bool
     {
-        el_context.action_animation(&mut self.style, &self.size, self.message)
+        if mouse == Mouse::Left {
+            return el_context.action_animation(&mut self.style, &self.size, self.message);
+        }
+        false
     }
 }

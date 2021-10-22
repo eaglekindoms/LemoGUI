@@ -4,7 +4,7 @@ use winit::window::Window;
 
 use crate::graphic::base::*;
 use crate::graphic::style::Style;
-use crate::widget::{GEvent, State};
+use crate::widget::{Component, EventType, GEvent, State};
 
 /// 事件上下文
 pub struct ELContext<'a, M: 'static> {
@@ -61,5 +61,34 @@ impl<'a, M: 'static> ELContext<'a, M> {
             return true;
         }
         return false;
+    }
+}
+
+impl<'a, M: 'static> ELContext<'a, M> {
+    /// 事件监听器
+    /// 作用：监听用户交互事件
+    pub fn component_listener(&self, listener: &mut Component<M>) -> bool
+    {
+        let mut key_listener = false;
+        let mut mouse_listener = false;
+        let hover_listener;
+        let g_event = self.get_event();
+        match g_event.event {
+            EventType::Mouse(mouse) => {
+                if g_event.state == State::Released {
+                    self.window.set_ime_position(self.cursor_pos);
+                }
+                mouse_listener = listener.widget.action_listener(&self, mouse);
+            }
+            EventType::KeyBoard(key_code) => {
+                key_listener = listener.widget.key_listener(&self, key_code);
+            }
+            EventType::ReceivedCharacter(c) => {
+                listener.widget.received_character(&self, c);
+            }
+            _ => {}
+        }
+        hover_listener = listener.widget.hover_listener(&self);
+        key_listener || mouse_listener || hover_listener
     }
 }

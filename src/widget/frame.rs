@@ -28,7 +28,7 @@ impl<M: Copy + PartialEq> Container<M> for Frame<M> {
         let mut input = false;
         for panel in &mut self.display_panel {
             for comp in &mut panel.widgets {
-                if component::component_listener::<M>(comp, el_context) {
+                if el_context.component_listener(comp) {
                     input = true;
                 }
             }
