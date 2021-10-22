@@ -6,8 +6,7 @@ use crate::device::ELContext;
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::*;
-use crate::widget::{component, Component};
-use crate::widget::component::ComponentModel;
+use crate::widget::{Component, ComponentModel};
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -65,13 +64,10 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for TextInput<M> {
 
     fn hover_listener(&mut self, el_context: &ELContext<'_, M>) -> bool
     {
-        if el_context.cursor_pos.is_none() { return false; }
         let input = self.size
-            .contain_coord(el_context.cursor_pos.unwrap());
+            .contain_coord(el_context.cursor_pos);
         if input {
             el_context.window.set_cursor_icon(CursorIcon::Text);
-            // listener::action_animation::<M>(&mut self.style, action_state,
-            //                                 &el_context.message_channel, &self.message, None);
         } else {
             el_context.window.set_cursor_icon(CursorIcon::Default);
         }

@@ -5,8 +5,7 @@ use crate::device::ELContext;
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::*;
-use crate::widget::{component, Component, KeyCode, State};
-use crate::widget::component::ComponentModel;
+use crate::widget::{Component, ComponentModel};
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -49,7 +48,6 @@ impl<'a, M: Copy + PartialEq> Button<M> {
         self.message = Some(message);
         self
     }
-
 }
 
 impl<M: Copy + PartialEq + 'static> From<Button<M>> for Component<M> {
@@ -64,18 +62,11 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
         render_utils.draw_rect(&self.size, self.style.get_display_color());
         render_utils.draw_text(&self.size, self.text.as_str(), self.style.get_font_color());
     }
-    fn key_listener(&mut self, action_state: State,
-                    el_context: &ELContext<'_, M>, virtual_keycode: Option<KeyCode>) -> bool {
+    fn key_listener(&mut self, el_context: &ELContext<'_, M>) -> bool {
         false
     }
-    fn action_listener(&mut self, action_state: State, el_context: &ELContext<'_, M>) -> bool
+    fn action_listener(&mut self, el_context: &ELContext<'_, M>) -> bool
     {
-        let input = self.size
-            .contain_coord(el_context.cursor_pos.unwrap());
-        if input {
-            component::action_animation::<M>(&mut self.style, action_state,
-                                             &el_context.message_channel, &self.message);
-        }
-        input
+        el_context.action_animation(&mut self.style, &self.size, self.message)
     }
 }

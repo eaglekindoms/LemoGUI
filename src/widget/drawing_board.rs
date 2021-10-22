@@ -1,8 +1,7 @@
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::Style;
-use crate::widget::Component;
-use crate::widget::component::ComponentModel;
+use crate::widget::{Component, ComponentModel};
 
 /// 图形绘制面板控件结构体
 pub struct ShapeBoard {

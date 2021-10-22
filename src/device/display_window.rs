@@ -45,13 +45,7 @@ impl<M: 'static + Debug> DisplayWindow<'static, M> {
         let window = builder.build(&event_loop).unwrap();
         let wgcontext = WGContext::new(&window).await;
 
-        let el_context = ELContext {
-            window,
-            cursor_pos: None,
-            window_event: None,
-            message: None,
-            message_channel: event_loop.create_proxy(),
-        };
+        let el_context = ELContext::new(window, &event_loop);
         let glob_pipeline = PipelineState::default(&wgcontext.device);
         let display_window = DisplayWindow {
             wgcontext,
