@@ -20,7 +20,7 @@ pub trait Instance {
         let window = DisplayWindow::new(Self::setting());
         let mut frame = Frame::new();
         let instance = Self::new();
-        frame.add_widgets(instance.layout());
-        window.start(frame, instance)
+        frame.add_instance(instance);
+        window.start(frame)
     }
 }

@@ -41,7 +41,7 @@ impl<'a, M: 'static> ELContext<'a, M> {
     }
 
     pub fn send_message(&self, message: M) {
-        self.message_channel.send_event(message);
+        self.message_channel.send_event(message).ok();
     }
     /// 键鼠单击动画效果
     pub fn action_animation(&self, style: &mut Style, position: &Rectangle,

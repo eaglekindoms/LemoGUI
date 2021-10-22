@@ -11,9 +11,7 @@ use winit::window::*;
 use crate::device::container::Container;
 use crate::device::event_context::ELContext;
 use crate::device::wgpu_context::WGContext;
-use crate::graphic::base::BACKGROUND_COLOR;
-use crate::graphic::render_middle::{PipelineState, RenderUtil};
-use crate::widget::Instance;
+use crate::graphic::render_middle::PipelineState;
 
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文
@@ -29,8 +27,9 @@ pub struct DisplayWindow<'a, M: 'static> {
 }
 
 impl<M: 'static + Debug> DisplayWindow<'static, M> {
-    pub fn start<C>(self, mut container: C, instance: impl Instance<M=M> + 'static) where C: Container<M> + 'static {
-        run_instance(self, container, instance);
+    pub fn start<C>(self, mut container: C)
+        where C: Container<M> + 'static {
+        run_instance(self, container);
     }
 
     pub fn new<'a>(builder: WindowBuilder) -> DisplayWindow<'a, M> {
@@ -58,8 +57,7 @@ impl<M: 'static + Debug> DisplayWindow<'static, M> {
 }
 
 /// 运行窗口实例
-fn run_instance<C, M>(window: DisplayWindow<'static, M>,
-                      container: C, instance: impl Instance<M=M> + 'static)
+fn run_instance<C, M>(window: DisplayWindow<'static, M>, container: C)
     where C: Container<M> + 'static, M: 'static + Debug {
     let (mut sender, receiver)
         = mpsc::unbounded();
@@ -67,7 +65,7 @@ fn run_instance<C, M>(window: DisplayWindow<'static, M>,
         = Box::pin(event_listener(window.wgcontext,
                                   window.glob_pipeline,
                                   window.event_context,
-                                  container, instance,
+                                  container,
                                   receiver));
     let mut context = task::Context::from_waker(task::noop_waker_ref());
     window.event_loop.run(move |event, _, control_flow| {
@@ -112,7 +110,6 @@ async fn event_listener<C, M>(mut wgcontext: WGContext,
                               glob_pipeline: PipelineState,
                               mut el_context: ELContext<'_, M>,
                               mut container: C,
-                              mut instance: impl Instance<M=M>,
                               mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>)
     where C: Container<M> + 'static, M: 'static + Debug
 {
@@ -140,13 +137,13 @@ async fn event_listener<C, M>(mut wgcontext: WGContext,
                 }
                 // 监听到组件关注事件，决定是否重绘
                 el_context.window_event = Some(event);
-                if container.input(&mut el_context, &mut instance) {
-                    present(&mut wgcontext, &glob_pipeline, &container)
+                if container.input(&mut el_context) {
+                    wgcontext.present(&glob_pipeline, &container)
                 }
             }
             Event::RedrawRequested(window_id)
             if window_id == el_context.window.id() => {
-                present(&mut wgcontext, &glob_pipeline, &container)
+                wgcontext.present(&glob_pipeline, &container)
             }
             Event::UserEvent(event) => {
                 el_context.message = Some(event);
@@ -154,26 +151,6 @@ async fn event_listener<C, M>(mut wgcontext: WGContext,
             _ => {}
         }
     };
-}
-
-/// 显示图形内容
-fn present<C, M>(wgcontext: &mut WGContext,
-                 glob_pipeline: &PipelineState, container: &C)
-    where C: Container<M> + 'static, M: 'static + Debug
-{
-    match wgcontext.surface.get_current_texture() {
-        Err(error) => {
-            log::error!("{}", error);
-        }
-        Ok(target_view) => {
-            let mut utils
-                = RenderUtil::new(&target_view, wgcontext, glob_pipeline);
-            utils.clear_frame(BACKGROUND_COLOR);
-            container.render(&mut utils);
-            utils.context.queue.submit(Some(utils.encoder.finish()));
-            target_view.present();
-        }
-    }
 }
 
 /// 加载icon

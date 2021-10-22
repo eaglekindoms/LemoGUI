@@ -1,3 +1,5 @@
+use std::fmt::Formatter;
+
 use crate::device::ELContext;
 use crate::graphic::render_middle::RenderUtil;
 use crate::widget::{KeyCode, Mouse};
@@ -36,5 +38,11 @@ impl<M: Copy + PartialEq> Component<M> {
         Component {
             widget: Box::new(widget)
         }
+    }
+}
+
+impl<M> std::fmt::Debug for Component<M> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("").finish()
     }
 }

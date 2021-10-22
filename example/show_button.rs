@@ -2,8 +2,6 @@ use std::fmt::Debug;
 use std::path::Path;
 
 use simple_logger::SimpleLogger;
-use winit::event::ElementState;
-use winit::event::VirtualKeyCode::Key1;
 
 use LemoGUI::device::*;
 use LemoGUI::graphic::base::*;

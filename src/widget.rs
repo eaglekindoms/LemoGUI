@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 pub use button::*;
 pub use component::*;
 pub use drawing_board::*;

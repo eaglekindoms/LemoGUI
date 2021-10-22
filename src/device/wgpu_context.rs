@@ -1,7 +1,11 @@
+use std::fmt::Debug;
+
 use ab_glyph::FontRef;
 use winit::window::Window;
 
+use crate::device::Container;
 use crate::graphic::base::*;
+use crate::graphic::render_middle::{PipelineState, RenderUtil};
 
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体
@@ -82,5 +86,25 @@ impl WGContext {
 
     pub fn get_surface_size(&self) -> Point<u32> {
         Point::new(self.sc_desc.width, self.sc_desc.height)
+    }
+
+    /// 显示图形内容
+    pub fn present<C, M>(&mut self,
+                         glob_pipeline: &PipelineState, container: &C)
+        where C: Container<M> + 'static, M: 'static + Debug
+    {
+        match self.surface.get_current_texture() {
+            Err(error) => {
+                log::error!("{}", error);
+            }
+            Ok(target_view) => {
+                let mut utils
+                    = RenderUtil::new(&target_view, self, glob_pipeline);
+                utils.clear_frame(BACKGROUND_COLOR);
+                container.render(&mut utils);
+                utils.context.queue.submit(Some(utils.encoder.finish()));
+                target_view.present();
+            }
+        }
     }
 }
