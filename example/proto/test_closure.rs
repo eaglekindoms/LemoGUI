@@ -26,7 +26,7 @@ pub fn closure<F>(num: F)
     println!("{:?}", x);
 }
 
-pub fn closure1<T>(x: T, num: &Fn(T) -> T) {
+pub fn closure1<T>(x: T, num: &dyn Fn(T) -> T) {
     num(x);
 }
 

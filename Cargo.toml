@@ -2,7 +2,7 @@
 name = "LemoGUI"
 version = "0.0.1"
 authors = ["eaglekindoms <huyongmao35@outlook.com>"]
-edition = "2018"
+edition = "2021"
 description = "GUI library dependent on wgpu"
 license = "MIT"
 keywords = ["graphics", "gui"]
