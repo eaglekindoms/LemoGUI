@@ -24,7 +24,7 @@ impl<M: Copy + PartialEq, I: Instance<M=M>> Frame<M, I> {
 }
 
 impl<M: Copy + PartialEq, I: Instance<M=M>> Container<M> for Frame<M, I> {
-    fn input(&mut self, el_context: &mut ELContext<'_, M>) -> bool
+    fn update(&mut self, el_context: &mut ELContext<'_, M>) -> bool
     {
         let mut is_update = false;
         let mut update_instance = Vec::with_capacity(self.display_panel.len());

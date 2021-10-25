@@ -5,7 +5,7 @@ use crate::device::ELContext;
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::*;
-use crate::widget::{Component, ComponentModel, KeyCode, Mouse};
+use crate::widget::{BindEvent, Component, ComponentModel, KeyCode, Mouse};
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -17,8 +17,9 @@ pub struct Button<M: Copy> {
     /// 内容文本
     pub text: String,
     /// 控件状态
-    pub message: Option<M>,
+    pub bind_event: BindEvent<M>,
 }
+
 
 impl<'a, M: Copy + PartialEq> Button<M> {
     pub fn new_with_style<S: Into<String>>(mut rect: Rectangle, style: Style, text: S) -> Self {
@@ -26,7 +27,7 @@ impl<'a, M: Copy + PartialEq> Button<M> {
         Self {
             size: rect.set_style(style),
             text: text.into(),
-            message: None,
+            bind_event: BindEvent::default(),
             style,
         }
     }
@@ -39,13 +40,13 @@ impl<'a, M: Copy + PartialEq> Button<M> {
             size: rect,
             style: Style::default(),
             text,
-            message: None,
+            bind_event: BindEvent::default(),
         }
     }
 
     /// 更新状态
     pub fn action(mut self, message: M) -> Self {
-        self.message = Some(message);
+        self.bind_event.message = Some(message);
         self
     }
 }
@@ -65,14 +66,19 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     fn key_listener(&mut self,
                     _el_context: &ELContext<'_, M>,
                     _key_code: Option<KeyCode>) -> bool {
+        if let Some(key_codes) = &self.bind_event.shortcuts {
+            if let Some(key) = _key_code {
+                return key_codes.contains(&key);
+            }
+        }
         false
     }
     fn action_listener(&mut self,
                        el_context: &ELContext<'_, M>,
                        mouse: Mouse) -> bool
     {
-        if mouse == Mouse::Left {
-            return el_context.action_animation(&mut self.style, &self.size, self.message);
+        if mouse == self.bind_event.mouse {
+            return el_context.action_animation(&mut self.style, &self.size, self.bind_event.message);
         }
         false
     }

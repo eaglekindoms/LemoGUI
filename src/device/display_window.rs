@@ -137,7 +137,7 @@ async fn event_listener<C, M>(mut wgcontext: WGContext,
                 }
                 // 监听到组件关注事件，决定是否重绘
                 el_context.window_event = Some(event);
-                if container.input(&mut el_context) {
+                if container.update(&mut el_context) {
                     wgcontext.present(&glob_pipeline, &container)
                 }
             }
