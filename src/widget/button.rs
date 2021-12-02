@@ -59,9 +59,9 @@ impl<M: Copy + PartialEq + 'static> From<Button<M>> for Component<M> {
 
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil) {
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>) {
         render_utils.draw_rect(&self.size, self.style.get_display_color());
-        render_utils.draw_text(&self.size, self.text.as_str(), self.style.get_font_color());
+        render_utils.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
     fn key_listener(&mut self,
                     _el_context: &ELContext<'_, M>,

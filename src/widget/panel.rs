@@ -1,4 +1,5 @@
 use crate::device::ELContext;
+use crate::graphic::base::GCharMap;
 use crate::graphic::render_middle::RenderUtil;
 use crate::widget::{Component, ComponentModel};
 
@@ -35,9 +36,9 @@ impl<M: Copy + PartialEq> Panel<M> {
 
 
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for Panel<M> {
-    fn draw(&self, render_utils: &mut RenderUtil) {
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>) {
         for widget in &self.widgets {
-            widget.widget.draw(render_utils);
+            widget.widget.draw(render_utils, font_map);
         }
     }
 }

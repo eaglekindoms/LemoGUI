@@ -9,7 +9,7 @@ use LemoGUI::graphic::style::*;
 use LemoGUI::widget::*;
 
 fn main() {
-    SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
+    // SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
     Counter::run();
 }
 

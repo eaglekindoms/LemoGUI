@@ -57,9 +57,9 @@ impl<M: Copy + PartialEq + 'static> From<TextInput<M>> for Component<M> {
 
 impl<'a, M: Copy + PartialEq> ComponentModel<M> for TextInput<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil) {
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>) {
         render_utils.draw_rect(&self.size, WHITE);
-        render_utils.draw_text(&self.size, self.text.as_str(), self.style.get_font_color());
+        render_utils.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
 
     fn hover_listener(&mut self, el_context: &ELContext<'_, M>) -> bool

@@ -138,12 +138,12 @@ async fn event_listener<C, M>(mut wgcontext: WGContext,
                 // 监听到组件关注事件，决定是否重绘
                 el_context.window_event = Some(event);
                 if container.update(&mut el_context) {
-                    wgcontext.present(&glob_pipeline, &container)
+                    wgcontext.present(&glob_pipeline, &mut container)
                 }
             }
             Event::RedrawRequested(window_id)
             if window_id == el_context.window.id() => {
-                wgcontext.present(&glob_pipeline, &container)
+                wgcontext.present(&glob_pipeline, &mut container)
             }
             Event::UserEvent(event) => {
                 el_context.message = Some(event);

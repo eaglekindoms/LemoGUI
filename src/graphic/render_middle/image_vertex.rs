@@ -62,7 +62,7 @@ impl VertexLayout for TextureVertex {
 }
 
 impl TextureVertex {
-    pub fn new(device: &Device, sc_desc: Point<u32>, rect: &Rectangle, font_color: RGBA) -> VertexBuffer {
+    pub fn new(device: &Device, sc_desc: &Point<u32>, rect: &Rectangle, font_color: RGBA) -> VertexBuffer {
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.x, sc_desc.y);
         let color: [f32; 4] = font_color.to_vec();

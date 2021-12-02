@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 
-use ab_glyph::FontRef;
 use winit::window::Window;
 
 use crate::device::Container;
@@ -17,8 +16,6 @@ pub struct WGContext {
     pub device: wgpu::Device,
     /// 渲染命令队列
     pub queue: wgpu::Queue,
-    /// 字体缓冲
-    pub font_map: GCharMap<'static>,
     /// 交换缓冲区描述符
     sc_desc: wgpu::SurfaceConfiguration,
 }
@@ -63,16 +60,10 @@ impl WGContext {
             present_mode: wgpu::PresentMode::Fifo,
         };
         surface.configure(&device, &sc_desc);
-        let font =
-            FontRef::try_from_slice(
-                include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
-                "/res/SourceHanSansCN-Regular.otf"))).expect("import font failed");
-        let font_map = GCharMap::new(font, DEFAULT_FONT_SIZE);
         WGContext {
             surface,
             device,
             queue,
-            font_map,
             sc_desc,
         }
     }
@@ -90,7 +81,7 @@ impl WGContext {
 
     /// 显示图形内容
     pub fn present<C, M>(&mut self,
-                         glob_pipeline: &PipelineState, container: &C)
+                         glob_pipeline: &PipelineState, container: &mut C)
         where C: Container<M> + 'static, M: 'static + Debug
     {
         match self.surface.get_current_texture() {

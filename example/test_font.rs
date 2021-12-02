@@ -12,7 +12,7 @@ fn text_to_image() {
     let scale = PxScale::from(font_size as f32);
     let scaled_font = font.as_scaled(scale);
     let mut characters = GCharMap::new(font, font_size as f32);
-    let text = "adada";
+    let text = "adadaon";
     let raw = single_text(&mut characters, text);
     let mut image = DynamicImage::new_rgba8(raw.width, raw.height).to_rgba8();
 

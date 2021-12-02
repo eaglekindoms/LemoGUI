@@ -1,7 +1,7 @@
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
 use crate::device::WGContext;
-use crate::graphic::base::{ImageRaw, Point, Rectangle, RGBA, ShapeGraph};
+use crate::graphic::base::{GCharMap, ImageRaw, Point, Rectangle, RGBA, ShapeGraph};
 use crate::graphic::render_middle::{GTexture, TextureVertex};
 use crate::graphic::render_middle::pipeline_state::PipelineState;
 
@@ -79,13 +79,26 @@ impl<'a> RenderUtil<'a> {
         let rect_buffer = rect.to_buffer(self.context, rect_color);
         rect_buffer.render(self, rect.get_type());
     }
-    pub fn draw_text(&mut self, text_rect: &Rectangle, text: &str, text_color: RGBA) {
-        let image_vertex_buffer =
-            TextureVertex::new(&self.context.device,
-                               self.context.get_surface_size(), text_rect, text_color);
-        let font_buffer = self.g_texture
-            .fill_text(self.context, text);
-        image_vertex_buffer.render_t(self, &font_buffer);
+
+    pub fn draw_text(&mut self, font_map: &mut GCharMap<'static>, text_rect: &Rectangle, text: &str, mut text_color: RGBA) {
+        let mut x = text_rect.position.x;
+        let scale = text_rect.width as f32 / (text.len() as f32 * font_map.scale / 2.5);
+        for c in text.chars() {
+            let c_font = font_map.character_texture(c, &mut self.g_texture,
+                                                    &self.context.device, &self.context.queue);
+            let c_buffer = c_font.texture.as_ref().unwrap();
+            let c_x = x;
+            let c_y = text_rect.position.y;
+            let scale_width = c_buffer.width as f32 * scale;
+            let c_rect =
+                Rectangle::new(c_x, c_y, scale_width as u32, c_buffer.height);
+            x = x + scale_width;
+            let c_vertex =
+                TextureVertex::new(&self.context.device,
+                                   &self.context.get_surface_size(), &c_rect, text_color);
+
+            c_vertex.render_t(self, &c_buffer);
+        }
     }
 
     pub fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {}

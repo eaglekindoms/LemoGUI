@@ -16,7 +16,7 @@ impl<M: Copy + PartialEq + 'static> From<ShapeBoard> for Component<M> {
 }
 
 impl<M> ComponentModel<M> for ShapeBoard {
-    fn draw(&self, render_utils: &mut RenderUtil) {
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>) {
         let mut style = self.style;
         for shape in &self.shape_arr {
             shape.to_buffer(render_utils.context, style.get_back_color())

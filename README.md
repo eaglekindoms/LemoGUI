@@ -1,12 +1,15 @@
 # LemoGUI
 
 ## Features
+
 ### Implement a GUI library dependent on wgpu
+
 #### Plan
-   1. Provide basic 2D graphics drawing API.
-   2. Define basic widgets.
-   3. Provide renderer to widgets through the drawing API.
-   4. Provide event listeners to widgets.
+
+1. Provide basic 2D graphics drawing API.
+2. Define basic widgets.
+3. Provide renderer to widgets through the drawing API.
+4. Provide event listeners to widgets.
 
 ### the third party library dependencies
 

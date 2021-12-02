@@ -8,7 +8,7 @@ pub trait Container<M>: Sized {
     /// 键鼠输入事件响应
     fn update(&mut self, el_context: &mut ELContext<'_, M>) -> bool;
     /// 容器渲染
-    fn render(&self, utils: &mut RenderUtil);
+    fn render(&mut self, utils: &mut RenderUtil);
 }
 
 

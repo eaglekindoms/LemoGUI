@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use ab_glyph::{Font, FontRef, PxScale, PxScaleFont, ScaleFont};
 
-use crate::graphic::base::{BLACK, ImageRaw, Point, RGBA};
-use crate::graphic::render_middle::{RenderUtil, TextureBufferData};
+use crate::graphic::base::{BLACK, ImageRaw, RGBA};
+use crate::graphic::render_middle::{GTexture, TextureBufferData};
 
 pub const DEFAULT_FONT_SIZE: f32 = 40.0;
 pub const DEFAULT_FONT_COLOR: RGBA = BLACK;
@@ -11,7 +11,7 @@ pub const DEFAULT_FONT_COLOR: RGBA = BLACK;
 #[derive(Debug)]
 pub struct Character {
     // /// 字符
-    // character:char,
+    pub character: char,
     /// 字符范围
     scale: u32,
     ///    位图宽度（像素）
@@ -25,7 +25,7 @@ pub struct Character {
     ///    水平预留值，即原点到下一个字形原点的水平距离（单位：1/64像素）
     pub advance: u32,
     pub bitmap: Vec<u8>,
-    texture: Option<TextureBufferData>,
+    pub texture: Option<TextureBufferData>,
 }
 
 impl Character {
@@ -48,6 +48,7 @@ impl Character {
         // println!("bounds:{:?}", bounds);
         // println!("bitmap size: w: {},h: {}, by: {}", width, height, bounds.max.y);
         Character {
+            character,
             scale: scaled_font.scale().y as u32,
             width,
             height,
@@ -93,19 +94,37 @@ impl Character {
         }
     }
 
-    pub fn texture(&mut self, render_utils: &mut RenderUtil) -> &TextureBufferData {
+    pub fn set_texture(&mut self,
+                       g_texture: &mut GTexture,
+                       device: &wgpu::Device,
+                       queue: &wgpu::Queue) -> &TextureBufferData {
         if self.texture.is_none() {
-            self.texture = Some(render_utils
-                .g_texture.fill_char(render_utils.context, &self));
+            let raw_data = self.to_raw();
+            self.texture = Some(g_texture.create_bind_group(device, queue, raw_data));
         }
         return self.texture.as_ref().unwrap();
+    }
+}
+
+fn blank_character(scale: u32) -> Character {
+    Character {
+        character: ' ',
+        scale,
+        width: scale / 2,
+        height: scale,
+        bearingX: 0,
+        bearingY: 0,
+        advance: scale / 2,
+        bitmap: vec![0; (scale * scale / 2) as usize],
+        texture: None,
     }
 }
 
 /// save characters glyph map
 #[derive(Debug)]
 pub struct GCharMap<'font> {
-    scaled_font: PxScaleFont<FontRef<'font>>,
+    pub scale: f32,
+    pub scaled_font: PxScaleFont<FontRef<'font>>,
     pub map: HashMap<char, Character>,
 }
 
@@ -124,6 +143,7 @@ impl<'font> GCharMap<'font> {
             characters.insert(c as char, ch);
         }
         GCharMap {
+            scale: font_size,
             scaled_font,
             map: characters,
         }
@@ -134,16 +154,7 @@ impl<'font> GCharMap<'font> {
         if ch.is_none() {
             if c.is_whitespace() {
                 let scale = self.scaled_font.scale().y as u32;
-                self.map.insert(c, Character {
-                    scale,
-                    width: scale / 2,
-                    height: scale,
-                    bearingX: 0,
-                    bearingY: 0,
-                    advance: scale / 2,
-                    bitmap: vec![0; (scale * scale / 2) as usize],
-                    texture: None,
-                });
+                self.map.insert(c, blank_character(scale));
             } else {
                 let new_ch = Character::witch_scaled_font(&self.scaled_font, c);
                 self.map.insert(c, new_ch);
@@ -152,6 +163,24 @@ impl<'font> GCharMap<'font> {
         return self.map.get(&c).unwrap();
     }
 
+    pub fn character_texture(&mut self, c: char,
+                             g_texture: &mut GTexture,
+                             device: &wgpu::Device,
+                             queue: &wgpu::Queue) -> &Character {
+        let ch = self.map.get(&c);
+        if ch.is_none() || ch.unwrap().texture.is_none() {
+            let mut new_ch;
+            if c.is_whitespace() {
+                let scale = self.scaled_font.scale().y as u32;
+                new_ch = blank_character(scale);
+            } else {
+                new_ch = Character::witch_scaled_font(&self.scaled_font, c);
+            }
+            new_ch.set_texture(g_texture, device, queue);
+            self.map.insert(c, new_ch);
+        }
+        return self.map.get(&c).unwrap();
+    }
     pub fn text_to_image(&mut self, text: &str) -> ImageRaw {
         let mut width = 0;
         let mut height = 0;

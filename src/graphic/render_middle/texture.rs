@@ -2,10 +2,14 @@ use std::num::NonZeroU32;
 
 use wgpu::TextureFormat;
 
-use crate::device::WGContext;
 use crate::graphic::base::*;
 
-pub type TextureBufferData = wgpu::BindGroup;
+#[derive(Debug)]
+pub struct TextureBufferData {
+    pub width: u32,
+    pub height: u32,
+    pub uniform: wgpu::BindGroup,
+}
 
 #[derive(Debug)]
 pub struct GTexture {
@@ -67,21 +71,17 @@ impl GTexture {
 
     pub fn create_bind_group(&mut self, device: &wgpu::Device,
                              queue: &wgpu::Queue, raw_data: ImageRaw) -> TextureBufferData {
-        if raw_data.height != self.size.height || raw_data.width != self.size.width {
-            self.update_size(device, Point::new(raw_data.width, raw_data.height));
-        }
+        self.update_size(device, Point::new(raw_data.width, raw_data.height));
+        let width = raw_data.width;
+        let height = raw_data.height;
         let view = writer_data_to_texture(queue,
                                           &self.texture, self.image_layout, self.size, raw_data);
-        bind_group(device, &self.bind_group_layout, &view, &self.sampler)
-    }
-    pub fn fill_char(&mut self, wg_context: &WGContext, ch: &Character) -> TextureBufferData {
-        let raw_data = ch.to_raw();
-        self.create_bind_group(&wg_context.device, &wg_context.queue, raw_data)
-    }
-
-    pub fn fill_text(&mut self, wg_context: &mut WGContext, text: &str) -> TextureBufferData {
-        let raw_data = wg_context.font_map.text_to_image(text);
-        self.create_bind_group(&wg_context.device, &wg_context.queue, raw_data)
+        let uniform = bind_group(device, &self.bind_group_layout, &view, &self.sampler);
+        TextureBufferData {
+            width,
+            height,
+            uniform,
+        }
     }
 }
 

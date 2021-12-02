@@ -1,5 +1,8 @@
+use ab_glyph::FontRef;
+
 use crate::device::Container;
 use crate::device::ELContext;
+use crate::graphic::base::{DEFAULT_FONT_SIZE, GCharMap};
 use crate::graphic::render_middle::RenderUtil;
 use crate::widget::{Instance, Panel};
 use crate::widget::component::ComponentModel;
@@ -8,12 +11,21 @@ use crate::widget::component::ComponentModel;
 /// 作用：用作gui控件的容器
 pub struct Frame<M: PartialEq + Copy, I: Instance<M=M>> {
     pub display_panel: Vec<(I, Panel<M>)>,
+    /// 字体缓冲
+    pub font_map: GCharMap<'static>,
+
 }
 
 impl<M: Copy + PartialEq, I: Instance<M=M>> Frame<M, I> {
     pub fn new() -> Self {
+        let font =
+            FontRef::try_from_slice(
+                include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+                "/res/SourceHanSansCN-Regular.otf"))).expect("import font failed");
+        let font_map = GCharMap::new(font, DEFAULT_FONT_SIZE);
         Self {
             display_panel: Vec::new(),
+            font_map,
         }
     }
 
@@ -49,9 +61,9 @@ impl<M: Copy + PartialEq, I: Instance<M=M>> Container<M> for Frame<M, I> {
         is_update
     }
 
-    fn render(&self, utils: &mut RenderUtil) {
+    fn render(&mut self, utils: &mut RenderUtil) {
         for (_, panel) in &self.display_panel {
-            panel.draw(utils)
+            panel.draw(utils, &mut self.font_map)
         }
     }
 }

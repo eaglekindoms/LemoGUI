@@ -1,6 +1,7 @@
 use std::fmt::Formatter;
 
 use crate::device::ELContext;
+use crate::graphic::base::GCharMap;
 use crate::graphic::render_middle::RenderUtil;
 use crate::widget::{KeyCode, Mouse};
 
@@ -8,7 +9,7 @@ use crate::widget::{KeyCode, Mouse};
 /// 作用：定义组件必须的公共方法接口
 pub trait ComponentModel<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil);
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>);
     /// 键盘事件监听器
     fn key_listener(&mut self,
                     _el_context: &ELContext<'_, M>,
