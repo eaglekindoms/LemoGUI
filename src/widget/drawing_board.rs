@@ -9,14 +9,14 @@ pub struct ShapeBoard {
     pub style: Style,
 }
 
-impl<M: Copy + PartialEq + 'static> From<ShapeBoard> for Component<M> {
+impl<M: Clone + PartialEq + 'static> From<ShapeBoard> for Component<M> {
     fn from(shape_board: ShapeBoard) -> Self {
         Component::new(shape_board)
     }
 }
 
 impl<M> ComponentModel<M> for ShapeBoard {
-    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>) {
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap) {
         let mut style = self.style;
         for shape in &self.shape_arr {
             shape.to_buffer(render_utils.context, style.get_back_color())

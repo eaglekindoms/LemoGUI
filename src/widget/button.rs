@@ -9,7 +9,7 @@ use crate::widget::{BindEvent, Component, ComponentModel, KeyCode, Mouse};
 
 /// 按钮控件结构体
 #[derive(Debug)]
-pub struct Button<M: Copy> {
+pub struct Button<M: Clone> {
     /// 组件尺寸
     pub size: Rectangle,
     /// 组件样式
@@ -21,7 +21,7 @@ pub struct Button<M: Copy> {
 }
 
 
-impl<'a, M: Copy + PartialEq> Button<M> {
+impl<'a, M: Clone + PartialEq> Button<M> {
     pub fn new_with_style<S: Into<String>>(mut rect: Rectangle, style: Style, text: S) -> Self {
         log::info!("create the Button obj use new");
         Self {
@@ -51,15 +51,15 @@ impl<'a, M: Copy + PartialEq> Button<M> {
     }
 }
 
-impl<M: Copy + PartialEq + 'static> From<Button<M>> for Component<M> {
+impl<M: Clone + PartialEq + 'static> From<Button<M>> for Component<M> {
     fn from(button: Button<M>) -> Self {
         Component::new(button)
     }
 }
 
-impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
+impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>) {
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap) {
         render_utils.draw_rect(&self.size, self.style.get_display_color());
         render_utils.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
@@ -78,7 +78,7 @@ impl<'a, M: Copy + PartialEq> ComponentModel<M> for Button<M> {
                        mouse: Mouse) -> bool
     {
         if mouse == self.bind_event.mouse {
-            return el_context.action_animation(&mut self.style, &self.size, self.bind_event.message);
+            return el_context.action_animation(&mut self.style, &self.size, self.bind_event.message.clone());
         }
         false
     }

@@ -80,7 +80,7 @@ impl<'a> RenderUtil<'a> {
         rect_buffer.render(self, rect.get_type());
     }
 
-    pub fn draw_text(&mut self, font_map: &mut GCharMap<'static>, text_rect: &Rectangle, text: &str, mut text_color: RGBA) {
+    pub fn draw_text(&mut self, font_map: &mut GCharMap, text_rect: &Rectangle, text: &str, mut text_color: RGBA) {
         let mut x = text_rect.position.x;
         let scale = text_rect.width as f32 / (text.len() as f32 * font_map.scale / 2.5);
         for c in text.chars() {

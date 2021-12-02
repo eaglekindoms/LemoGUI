@@ -5,7 +5,7 @@ use simple_logger::SimpleLogger;
 use LemoGUI::device::*;
 use LemoGUI::graphic::base::*;
 use LemoGUI::graphic::style::*;
-use LemoGUI::widget::{Instance, Panel};
+use LemoGUI::widget::{Instance, Panel, Setting};
 use LemoGUI::widget::ShapeBoard;
 
 fn main() {
@@ -61,16 +61,10 @@ impl Instance for Board {
     }
 
 
-    fn setting() -> winit::window::WindowBuilder {
+    fn setting() -> Setting {
         log::info!("build window");
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/res/icon.png");
-
-        let icon = load_icon(Path::new(path));
-
-        let mut builder = winit::window::WindowBuilder::new();
-        builder = builder.with_title("hello")
-            .with_inner_size(winit::dpi::LogicalSize::new(428.0, 633.0))
-            .with_window_icon(Some(icon));
-        builder
+        let mut setting = Setting::default();
+        setting.size = Point::new(428., 633.);
+        setting
     }
 }

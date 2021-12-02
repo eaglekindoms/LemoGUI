@@ -9,7 +9,7 @@ use crate::widget::{KeyCode, Mouse};
 /// 作用：定义组件必须的公共方法接口
 pub trait ComponentModel<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>);
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap);
     /// 键盘事件监听器
     fn key_listener(&mut self,
                     _el_context: &ELContext<'_, M>,
@@ -34,7 +34,7 @@ pub struct Component<M> {
     pub(crate) widget: Box<dyn ComponentModel<M>>,
 }
 
-impl<M: Copy + PartialEq> Component<M> {
+impl<M: Clone + PartialEq> Component<M> {
     pub fn new(widget: impl ComponentModel<M> + 'static) -> Component<M> {
         Component {
             widget: Box::new(widget)

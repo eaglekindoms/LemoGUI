@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::path::Path;
 
-use ab_glyph::{Font, FontRef, PxScale, PxScaleFont, ScaleFont};
+use ab_glyph::{Font, FontVec, PxScale, PxScaleFont, ScaleFont};
 
 use crate::graphic::base::{BLACK, ImageRaw, RGBA};
 use crate::graphic::render_middle::{GTexture, TextureBufferData};
@@ -97,7 +98,8 @@ impl Character {
     pub fn set_texture(&mut self,
                        g_texture: &mut GTexture,
                        device: &wgpu::Device,
-                       queue: &wgpu::Queue) -> &TextureBufferData {
+                       queue: &wgpu::Queue) -> &TextureBufferData
+    {
         if self.texture.is_none() {
             let raw_data = self.to_raw();
             self.texture = Some(g_texture.create_bind_group(device, queue, raw_data));
@@ -122,18 +124,23 @@ fn blank_character(scale: u32) -> Character {
 
 /// save characters glyph map
 #[derive(Debug)]
-pub struct GCharMap<'font> {
+pub struct GCharMap {
     pub scale: f32,
-    pub scaled_font: PxScaleFont<FontRef<'font>>,
+    pub scaled_font: PxScaleFont<FontVec>,
     pub map: HashMap<char, Character>,
 }
 
 /// max glyph map count
 pub const MAX_GLYPH_MAP_COUNT: usize = 400;
 
-impl<'font> GCharMap<'font> {
+impl GCharMap {
     /// save ascii char map
-    pub fn new(font: FontRef<'font>, font_size: f32) -> GCharMap<'font> {
+    pub fn new(font_path: String, font_size: f32) -> GCharMap {
+        let path = Path::new(font_path.as_str());
+        let font_bits = std::fs::read(path).unwrap();
+        let font =
+            FontVec::try_from_vec(font_bits)
+                .expect("import font failed");
         let mut characters = HashMap::<char, Character>::with_capacity(MAX_GLYPH_MAP_COUNT);
         let scale = PxScale::from(font_size);
         let scaled_font = font.into_scaled(scale);
@@ -166,7 +173,8 @@ impl<'font> GCharMap<'font> {
     pub fn character_texture(&mut self, c: char,
                              g_texture: &mut GTexture,
                              device: &wgpu::Device,
-                             queue: &wgpu::Queue) -> &Character {
+                             queue: &wgpu::Queue) -> &Character
+    {
         let ch = self.map.get(&c);
         if ch.is_none() || ch.unwrap().texture.is_none() {
             let mut new_ch;
@@ -181,6 +189,7 @@ impl<'font> GCharMap<'font> {
         }
         return self.map.get(&c).unwrap();
     }
+
     pub fn text_to_image(&mut self, text: &str) -> ImageRaw {
         let mut width = 0;
         let mut height = 0;

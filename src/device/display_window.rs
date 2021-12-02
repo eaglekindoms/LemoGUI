@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 use std::future::Future;
-use std::path::Path;
 
 use futures::{StreamExt, task};
 use futures::channel::mpsc;
@@ -151,17 +150,4 @@ async fn event_listener<C, M>(mut wgcontext: WGContext,
             _ => {}
         }
     };
-}
-
-/// 加载icon
-pub fn load_icon(path: &Path) -> Icon {
-    let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open(path)
-            .expect("Failed to open icon path")
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        (rgba, width, height)
-    };
-    Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }

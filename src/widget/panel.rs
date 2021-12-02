@@ -4,11 +4,11 @@ use crate::graphic::render_middle::RenderUtil;
 use crate::widget::{Component, ComponentModel};
 
 #[derive(Debug)]
-pub struct Panel<M> where M: PartialEq, M: std::marker::Copy {
+pub struct Panel<M> where M: PartialEq, M: std::clone::Clone {
     pub widgets: Vec<Component<M>>,
 }
 
-impl<M: Copy + PartialEq> Panel<M> {
+impl<M: Clone + PartialEq> Panel<M> {
     pub fn new() -> Panel<M> {
         Panel {
             widgets: Vec::with_capacity(4)
@@ -35,8 +35,8 @@ impl<M: Copy + PartialEq> Panel<M> {
 }
 
 
-impl<'a, M: Copy + PartialEq> ComponentModel<M> for Panel<M> {
-    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap<'static>) {
+impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
+    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap) {
         for widget in &self.widgets {
             widget.widget.draw(render_utils, font_map);
         }

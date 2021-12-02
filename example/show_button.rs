@@ -1,9 +1,7 @@
 use std::fmt::Debug;
-use std::path::Path;
 
 use simple_logger::SimpleLogger;
 
-use LemoGUI::device::*;
 use LemoGUI::graphic::base::*;
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::*;
@@ -13,14 +11,16 @@ fn main() {
     Counter::run();
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 enum Ms {
     Add,
     Sub,
+    Text(String),
 }
 
 struct Counter {
     value: i32,
+    text: String,
 }
 
 impl Instance for Counter {
@@ -29,6 +29,7 @@ impl Instance for Counter {
     fn new() -> Self {
         Counter {
             value: 0,
+            text: "文本测试".to_string(),
         }
     }
 
@@ -45,7 +46,7 @@ impl Instance for Counter {
             .action(Ms::Add);
         Panel::new()
             .push(Button::new(Point::new(100.0, 200.0), "sub button 减").action(Ms::Sub))
-            .push(TextInput::new(Point::new(100.0, 300.0), "sub button 减"))
+            .push(TextInput::new(Point::new(100.0, 300.0), self.text.as_str(), Ms::Text))
             .push(b1)
             .push(Button::new(Point::new(120., 20.), self.value.to_string()))
     }
@@ -54,18 +55,16 @@ impl Instance for Counter {
         match broadcast {
             Ms::Add => { self.value += 1 }
             Ms::Sub => { self.value -= 1 }
+            Ms::Text(str) => { self.text = str.to_string() }
         }
     }
 
-    fn setting() -> winit::window::WindowBuilder {
+    fn setting() -> Setting {
         log::info!("build window");
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/res/icon.png");
 
-        let icon = load_icon(Path::new(path));
-        let mut builder = winit::window::WindowBuilder::new();
-        builder = builder.with_title("Counter")
-            .with_inner_size(winit::dpi::LogicalSize::new(428.0, 433.0))
-            .with_window_icon(Some(icon));
-        builder
+        let mut setting = Setting::default();
+        setting.size = Point::new(428., 433.);
+        setting.icon_path = Some(concat!(env!("CARGO_MANIFEST_DIR"), "/res/icon.png").into());
+        setting
     }
 }
