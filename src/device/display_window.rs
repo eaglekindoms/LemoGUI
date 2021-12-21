@@ -8,21 +8,21 @@ use winit::event_loop::*;
 use winit::window::*;
 
 use crate::device::container::Container;
-use crate::device::event_context::ELContext;
-use crate::device::wgpu_context::WGContext;
+use crate::device::event_context::EventContext;
+use crate::device::wgpu_context::GPUContext;
 use crate::graphic::render_middle::PipelineState;
 
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文
 pub struct DisplayWindow<'a, M: 'static> {
     /// 图形上下文
-    pub wgcontext: WGContext,
+    pub gpu_context: GPUContext,
     /// 渲染管道
     pub glob_pipeline: PipelineState,
     /// 时间监听器
     event_loop: EventLoop<M>,
     /// 事件上下文
-    event_context: ELContext<'a, M>,
+    event_context: EventContext<'a, M>,
 }
 
 impl<M: 'static + Debug> DisplayWindow<'static, M> {
@@ -41,15 +41,15 @@ impl<M: 'static + Debug> DisplayWindow<'static, M> {
         log::info!("Initializing the window...");
         let event_loop = EventLoop::<M>::with_user_event();
         let window = builder.build(&event_loop).unwrap();
-        let wgcontext = WGContext::new(&window).await;
+        let gpu_context = GPUContext::new(&window).await;
 
-        let el_context = ELContext::new(window, &event_loop);
-        let glob_pipeline = PipelineState::default(&wgcontext.device);
+        let event_context = EventContext::new(window, &event_loop);
+        let glob_pipeline = PipelineState::default(&gpu_context.device);
         let display_window = DisplayWindow {
-            wgcontext,
+            gpu_context,
             glob_pipeline,
             event_loop,
-            event_context: el_context,
+            event_context,
         };
         return display_window;
     }
@@ -61,7 +61,7 @@ fn run_instance<C, M>(window: DisplayWindow<'static, M>, container: C)
     let (mut sender, receiver)
         = mpsc::unbounded();
     let mut instance_listener
-        = Box::pin(event_listener(window.wgcontext,
+        = Box::pin(event_listener(window.gpu_context,
                                   window.glob_pipeline,
                                   window.event_context,
                                   container,
@@ -105,9 +105,9 @@ fn run_instance<C, M>(window: DisplayWindow<'static, M>, container: C)
 }
 
 /// 事件监听方法
-async fn event_listener<C, M>(mut wgcontext: WGContext,
+async fn event_listener<C, M>(mut gpu_context: GPUContext,
                               glob_pipeline: PipelineState,
-                              mut el_context: ELContext<'_, M>,
+                              mut event_context: EventContext<'_, M>,
                               mut container: C,
                               mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>)
     where C: Container<M> + 'static, M: 'static + Debug
@@ -117,7 +117,7 @@ async fn event_listener<C, M>(mut wgcontext: WGContext,
             Event::WindowEvent {
                 event,
                 window_id,
-            } if window_id == el_context.window.id() => {
+            } if window_id == event_context.window.id() => {
                 // 捕获窗口关闭请求
                 if event == WindowEvent::CloseRequested {
                     break;
@@ -125,27 +125,27 @@ async fn event_listener<C, M>(mut wgcontext: WGContext,
                 match event {
                     WindowEvent::Resized(new_size) => {
                         // 更新swapChain交换缓冲区
-                        wgcontext.update_surface_configure(new_size);
+                        gpu_context.update_surface_configure(new_size);
                     }
                     // 储存鼠标位置坐标
                     WindowEvent::CursorMoved { position, .. }
                     => {
-                        el_context.update_cursor(position);
+                        event_context.update_cursor(position);
                     }
                     _ => {}
                 }
                 // 监听到组件关注事件，决定是否重绘
-                el_context.window_event = Some(event);
-                if container.update(&mut el_context) {
-                    wgcontext.present(&glob_pipeline, &mut container)
+                event_context.window_event = Some(event);
+                if container.update(&mut event_context) {
+                    gpu_context.present(&glob_pipeline, &mut container)
                 }
             }
             Event::RedrawRequested(window_id)
-            if window_id == el_context.window.id() => {
-                wgcontext.present(&glob_pipeline, &mut container)
+            if window_id == event_context.window.id() => {
+                gpu_context.present(&glob_pipeline, &mut container)
             }
             Event::UserEvent(event) => {
-                el_context.message = Some(event);
+                event_context.message = Some(event);
             }
             _ => {}
         }

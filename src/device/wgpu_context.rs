@@ -9,7 +9,7 @@ use crate::graphic::render_middle::{PipelineState, RenderUtil};
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体
 #[derive(Debug)]
-pub struct WGContext {
+pub struct GPUContext {
     /// 渲染面板
     pub surface: wgpu::Surface,
     /// 图形设备
@@ -20,8 +20,8 @@ pub struct WGContext {
     sc_desc: wgpu::SurfaceConfiguration,
 }
 
-impl WGContext {
-    pub async fn new(window: &Window) -> WGContext {
+impl GPUContext {
+    pub async fn new(window: &Window) -> GPUContext {
         log::info!("Initializing the surface...");
         let instance = wgpu::Instance::new(wgpu::Backends::all());
         let size = window.inner_size();
@@ -60,7 +60,7 @@ impl WGContext {
             present_mode: wgpu::PresentMode::Fifo,
         };
         surface.configure(&device, &sc_desc);
-        WGContext {
+        GPUContext {
             surface,
             device,
             queue,

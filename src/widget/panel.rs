@@ -1,4 +1,4 @@
-use crate::device::ELContext;
+use crate::device::EventContext;
 use crate::graphic::base::GCharMap;
 use crate::graphic::render_middle::RenderUtil;
 use crate::widget::{Component, ComponentModel};
@@ -23,10 +23,10 @@ impl<M: Clone + PartialEq> Panel<M> {
         self
     }
 
-    pub fn listener(&mut self, el_context: &ELContext<'_, M>) -> bool {
+    pub fn listener(&mut self, event_context: &EventContext<'_, M>) -> bool {
         let mut is_listener = false;
         for comp in &mut self.widgets {
-            if el_context.component_listener(comp) {
+            if event_context.component_listener(comp) {
                 is_listener = true;
             }
         }

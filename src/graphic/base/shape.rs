@@ -1,4 +1,4 @@
-use crate::device::WGContext;
+use crate::device::GPUContext;
 use crate::graphic::base::color::*;
 use crate::graphic::render_middle::{RECT_INDEX, VertexBuffer};
 use crate::graphic::render_middle::CircleVertex;
@@ -153,16 +153,16 @@ impl RegularPolygon {
 /// 图形缓冲转换接口
 pub trait ShapeGraph {
     /// 转换为顶点缓冲数据
-    fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer;
+    fn to_buffer(&self, gpu_context: &GPUContext, color: RGBA) -> VertexBuffer;
     /// 获取图形类型
     fn get_type(&self) -> ShapeType;
 }
 
 impl ShapeGraph for Rectangle {
-    fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
-        let rect_vertex = RectVertex::new(&self, wgcontext.get_surface_size(), color);
+    fn to_buffer(&self, gpu_context: &GPUContext, color: RGBA) -> VertexBuffer {
+        let rect_vertex = RectVertex::new(&self, gpu_context.get_surface_size(), color);
         let rect_vertex = VertexBuffer::create_vertex_buf::<RectVertex>
-            (&wgcontext.device, vec![rect_vertex], RECT_INDEX);
+            (&gpu_context.device, vec![rect_vertex], RECT_INDEX);
         rect_vertex
     }
 
@@ -172,11 +172,11 @@ impl ShapeGraph for Rectangle {
 }
 
 impl ShapeGraph for Circle {
-    fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
+    fn to_buffer(&self, gpu_context: &GPUContext, color: RGBA) -> VertexBuffer {
         let circle_vertex
             = CircleVertex::new(&self, 0, color);
         let cricle_buffer = VertexBuffer::create_vertex_buf::<CircleVertex>
-            (&wgcontext.device, vec![circle_vertex], RECT_INDEX);
+            (&gpu_context.device, vec![circle_vertex], RECT_INDEX);
         cricle_buffer
     }
 
@@ -186,11 +186,11 @@ impl ShapeGraph for Circle {
 }
 
 impl ShapeGraph for RegularPolygon {
-    fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
+    fn to_buffer(&self, gpu_context: &GPUContext, color: RGBA) -> VertexBuffer {
         let circle_vertex
             = CircleVertex::new(&self.point, self.edge, color);
         let cricle_buffer = VertexBuffer::create_vertex_buf::<CircleVertex>
-            (&wgcontext.device, vec![circle_vertex], RECT_INDEX);
+            (&gpu_context.device, vec![circle_vertex], RECT_INDEX);
         cricle_buffer
     }
 
@@ -200,8 +200,8 @@ impl ShapeGraph for RegularPolygon {
 }
 
 impl ShapeGraph for Polygon {
-    fn to_buffer(&self, wgcontext: &WGContext, color: RGBA) -> VertexBuffer {
-        PointVertex::from_shape_to_vector(wgcontext, &self.points, color)
+    fn to_buffer(&self, gpu_context: &GPUContext, color: RGBA) -> VertexBuffer {
+        PointVertex::from_shape_to_vector(gpu_context, &self.points, color)
     }
 
     fn get_type(&self) -> ShapeType {

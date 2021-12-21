@@ -7,7 +7,7 @@ use crate::graphic::style::Style;
 use crate::widget::{Component, EventType, GEvent, State};
 
 /// 事件上下文
-pub struct ELContext<'a, M: 'static> {
+pub struct EventContext<'a, M: 'static> {
     /// 窗口id
     pub window: Window,
     /// 鼠标位置
@@ -20,9 +20,9 @@ pub struct ELContext<'a, M: 'static> {
     message_channel: EventLoopProxy<M>,
 }
 
-impl<'a, M: 'static> ELContext<'a, M> {
-    pub fn new(window: Window, event_loop: &EventLoop<M>) -> ELContext<'a, M> {
-        ELContext {
+impl<'a, M: 'static> EventContext<'a, M> {
+    pub fn new(window: Window, event_loop: &EventLoop<M>) -> EventContext<'a, M> {
+        EventContext {
             window,
             cursor_pos: Point::new(-1.0, -1.0),
             window_event: None,
@@ -64,7 +64,7 @@ impl<'a, M: 'static> ELContext<'a, M> {
     }
 }
 
-impl<'a, M: 'static> ELContext<'a, M> {
+impl<'a, M: 'static> EventContext<'a, M> {
     /// 事件监听器
     /// 作用：监听用户交互事件
     pub fn component_listener(&self, listener: &mut Component<M>) -> bool

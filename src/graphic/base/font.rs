@@ -131,7 +131,7 @@ pub struct GCharMap {
 }
 
 /// max glyph map count
-pub const MAX_GLYPH_MAP_COUNT: usize = 400;
+pub const DEFAULT_GLYPH_MAP_COUNT: usize = 400;
 
 impl GCharMap {
     /// save ascii char map
@@ -141,7 +141,7 @@ impl GCharMap {
         let font =
             FontVec::try_from_vec(font_bits)
                 .expect("import font failed");
-        let mut characters = HashMap::<char, Character>::with_capacity(MAX_GLYPH_MAP_COUNT);
+        let mut characters = HashMap::<char, Character>::with_capacity(DEFAULT_GLYPH_MAP_COUNT);
         let scale = PxScale::from(font_size);
         let scaled_font = font.into_scaled(scale);
         for c in 0u8..128 {

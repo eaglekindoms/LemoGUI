@@ -1,6 +1,6 @@
 use std::fmt::Formatter;
 
-use crate::device::ELContext;
+use crate::device::EventContext;
 use crate::graphic::base::GCharMap;
 use crate::graphic::render_middle::RenderUtil;
 use crate::widget::{KeyCode, Mouse};
@@ -12,21 +12,21 @@ pub trait ComponentModel<M> {
     fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap);
     /// 键盘事件监听器
     fn key_listener(&mut self,
-                    _el_context: &ELContext<'_, M>,
+                    _event_context: &EventContext<'_, M>,
                     _virtual_keycode: Option<KeyCode>) -> bool {
         false
     }
     /// 鼠标点击事件监听器
     fn action_listener(&mut self,
-                       _el_context: &ELContext<'_, M>,
+                       _event_context: &EventContext<'_, M>,
                        _mouse: Mouse) -> bool
     { false }
     /// 鼠标悬停事件监听器
     fn hover_listener(&mut self,
-                      _el_context: &ELContext<'_, M>) -> bool
+                      _event_context: &EventContext<'_, M>) -> bool
     { false }
     fn received_character(&mut self,
-                          _el_context: &ELContext<'_, M>, c: char) -> bool
+                          _event_context: &EventContext<'_, M>, c: char) -> bool
     { false }
 }
 

@@ -1,6 +1,6 @@
 use winit::window::CursorIcon;
 
-use crate::device::ELContext;
+use crate::device::EventContext;
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::*;
@@ -66,26 +66,26 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
         render_utils.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
 
-    fn hover_listener(&mut self, el_context: &ELContext<'_, M>) -> bool
+    fn hover_listener(&mut self, event_context: &EventContext<'_, M>) -> bool
     {
         let input = self.size
-            .contain_coord(el_context.cursor_pos);
+            .contain_coord(event_context.cursor_pos);
         if input {
-            el_context.window.set_cursor_icon(CursorIcon::Text);
+            event_context.window.set_cursor_icon(CursorIcon::Text);
         } else {
-            el_context.window.set_cursor_icon(CursorIcon::Default);
+            event_context.window.set_cursor_icon(CursorIcon::Default);
         }
         input
     }
-    fn received_character(&mut self, _el_context: &ELContext<'_, M>, c: char) -> bool {
-        if self.hover_listener(_el_context) {
+    fn received_character(&mut self, event_context: &EventContext<'_, M>, c: char) -> bool {
+        if self.hover_listener(event_context) {
             println!("ime: {:?}", c);
             if c == '\u{8}' {
                 self.text.pop();
             } else {
                 self.text.push(c);
             }
-            _el_context.send_message((self.text_receive)(self.text.clone()));
+            event_context.send_message((self.text_receive)(self.text.clone()));
         }
         true
     }

@@ -1,6 +1,6 @@
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
-use crate::device::WGContext;
+use crate::device::GPUContext;
 use crate::graphic::base::{GCharMap, ImageRaw, Point, Rectangle, RGBA, ShapeGraph};
 use crate::graphic::render_middle::{GTexture, TextureVertex};
 use crate::graphic::render_middle::pipeline_state::PipelineState;
@@ -11,28 +11,28 @@ use crate::graphic::render_middle::pipeline_state::PipelineState;
 pub struct RenderUtil<'a> {
     pub encoder: CommandEncoder,
     pub view: TextureView,
-    pub context: &'a mut WGContext,
+    pub context: &'a mut GPUContext,
     pub pipeline: &'a PipelineState,
     pub g_texture: GTexture,
 }
 
 impl<'a> RenderUtil<'a> {
     pub fn new(target_view: &SurfaceTexture,
-               wgcontext: &'a mut WGContext,
+               gpu_context: &'a mut GPUContext,
                glob_pipeline: &'a PipelineState) -> Self {
         let view = target_view
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let encoder = wgcontext.device
+        let encoder = gpu_context.device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
-        let g_texture = GTexture::new(&wgcontext.device,
+        let g_texture = GTexture::new(&gpu_context.device,
                                       Point::new(40, 40), wgpu::TextureFormat::R8Unorm);
         RenderUtil {
             encoder,
             view,
-            context: wgcontext,
+            context: gpu_context,
             pipeline: glob_pipeline,
             g_texture,
         }

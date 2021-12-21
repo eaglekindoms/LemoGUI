@@ -1,6 +1,6 @@
 use wgpu::*;
 
-use crate::device::WGContext;
+use crate::device::GPUContext;
 use crate::graphic::base::*;
 use crate::graphic::render_middle::vertex_buffer::VertexBuffer;
 use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
@@ -54,7 +54,7 @@ impl VertexLayout for PointVertex {
 }
 
 impl PointVertex {
-    pub fn from_shape_to_vector(wgcontext: &WGContext, points: &Vec<Point<f32>>, color: RGBA) -> VertexBuffer {
+    pub fn from_shape_to_vector(gpu_context: &GPUContext, points: &Vec<Point<f32>>, color: RGBA) -> VertexBuffer {
         let vertex_nums = (points.len() - 3) * 2 + points.len();
         let mut vect = Vec::with_capacity(points.len());
         let mut indices = Vec::with_capacity(vertex_nums);
@@ -69,7 +69,7 @@ impl PointVertex {
             indices.push(i);
         }
         let point_buffer = VertexBuffer::create_vertex_buf::<PointVertex>
-            (&wgcontext.device, vect, indices.as_slice());
+            (&gpu_context.device, vect, indices.as_slice());
         point_buffer
     }
 }

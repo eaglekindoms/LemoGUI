@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::option::Option::Some;
 
-use crate::device::ELContext;
+use crate::device::EventContext;
 use crate::graphic::base::*;
 use crate::graphic::render_middle::RenderUtil;
 use crate::graphic::style::*;
@@ -64,21 +64,21 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
         render_utils.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
     fn key_listener(&mut self,
-                    _el_context: &ELContext<'_, M>,
-                    _key_code: Option<KeyCode>) -> bool {
+                    _event_context: &EventContext<'_, M>,
+                    _virtual_keycode: Option<KeyCode>) -> bool {
         if let Some(key_codes) = &self.bind_event.shortcuts {
-            if let Some(key) = _key_code {
+            if let Some(key) = _virtual_keycode {
                 return key_codes.contains(&key);
             }
         }
         false
     }
     fn action_listener(&mut self,
-                       el_context: &ELContext<'_, M>,
+                       event_context: &EventContext<'_, M>,
                        mouse: Mouse) -> bool
     {
         if mouse == self.bind_event.mouse {
-            return el_context.action_animation(&mut self.style, &self.size, self.bind_event.message.clone());
+            return event_context.action_animation(&mut self.style, &self.size, self.bind_event.message.clone());
         }
         false
     }
