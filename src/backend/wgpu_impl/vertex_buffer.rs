@@ -4,9 +4,8 @@ use bytemuck::Pod;
 use wgpu::{Device, RenderPipeline};
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
+use crate::backend::wgpu_impl::*;
 use crate::graphic::base::ShapeType;
-use crate::graphic::render_middle::render_function::RenderUtil;
-use crate::graphic::render_middle::TextureBufferData;
 
 /// 渲染顶点缓冲结构体
 #[derive(Debug)]
@@ -50,15 +49,17 @@ impl<'a> VertexBuffer {
     }
 
     pub fn render(&'a self, render_utils: &mut RenderUtil, shape_type: ShapeType) {
-        let pipeline = render_utils.pipeline.get_pipeline(shape_type).unwrap();
-        let mut render_pass = render_utils.create_render_pass();
+        let pipeline = render_utils.context.glob_pipeline.get_pipeline(shape_type).unwrap();
+        let mut render_pass =
+            create_render_pass(&mut render_utils.encoder, &render_utils.view);
         self.render_shape(render_pass.borrow_mut(), pipeline)
     }
 
     pub fn render_t(&'a self, render_utils: &mut RenderUtil,
                     texture_state: &'a TextureBufferData) {
-        let pipeline = render_utils.pipeline.get_pipeline(ShapeType::TEXTURE).unwrap();
-        let mut render_pass = render_utils.create_render_pass();
+        let pipeline = render_utils.context.glob_pipeline.get_pipeline(ShapeType::TEXTURE).unwrap();
+        let mut render_pass =
+            create_render_pass(&mut render_utils.encoder, &render_utils.view);
         self.render_texture(render_pass.borrow_mut(), texture_state, pipeline)
     }
 
@@ -92,4 +93,21 @@ impl<'a> VertexBuffer {
         render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
         render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
     }
+}
+
+/// 创建渲染中间变量
+fn create_render_pass<'a>(encoder: &'a mut wgpu::CommandEncoder, target: &'a wgpu::TextureView) -> wgpu::RenderPass<'a> {
+    let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        label: None,
+        color_attachments: &[wgpu::RenderPassColorAttachment {
+            view: target,
+            resolve_target: None,
+            ops: wgpu::Operations {
+                load: wgpu::LoadOp::Load,
+                store: true,
+            },
+        }],
+        depth_stencil_attachment: None,
+    });
+    render_pass
 }

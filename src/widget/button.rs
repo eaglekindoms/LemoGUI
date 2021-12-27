@@ -3,7 +3,7 @@ use std::option::Option::Some;
 
 use crate::device::EventContext;
 use crate::graphic::base::*;
-use crate::graphic::render_middle::RenderUtil;
+use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::*;
 use crate::widget::{BindEvent, Component, ComponentModel, KeyCode, Mouse};
 
@@ -59,9 +59,10 @@ impl<M: Clone + PartialEq + 'static> From<Button<M>> for Component<M> {
 
 impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap) {
-        render_utils.draw_rect(&self.size, self.style.get_display_color());
-        render_utils.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
+    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
+        let shape: Box<dyn ShapeGraph> = Box::new(self.size);
+        paint_brush.draw_shape(&shape, self.style.get_display_color());
+        paint_brush.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
     fn key_listener(&mut self,
                     _event_context: &EventContext<'_, M>,

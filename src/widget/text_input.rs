@@ -2,7 +2,7 @@ use winit::window::CursorIcon;
 
 use crate::device::EventContext;
 use crate::graphic::base::*;
-use crate::graphic::render_middle::RenderUtil;
+use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::*;
 use crate::widget::{Component, ComponentModel};
 
@@ -61,9 +61,10 @@ impl<M: Clone + PartialEq + 'static> From<TextInput<M>> for Component<M> {
 
 impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap) {
-        render_utils.draw_rect(&self.size, WHITE);
-        render_utils.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
+    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
+        let shape: Box<dyn ShapeGraph> = Box::new(self.size);
+        paint_brush.draw_shape(&shape, WHITE);
+        paint_brush.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
 
     fn hover_listener(&mut self, event_context: &EventContext<'_, M>) -> bool

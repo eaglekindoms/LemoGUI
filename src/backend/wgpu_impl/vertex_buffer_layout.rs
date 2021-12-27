@@ -47,6 +47,7 @@ pub trait VertexLayout: Sized {
                         blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     }],
                 }),
+                multiview: None,
             });
         return render_pipeline;
     }

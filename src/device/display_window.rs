@@ -10,7 +10,6 @@ use winit::window::*;
 use crate::device::container::Container;
 use crate::device::event_context::EventContext;
 use crate::device::wgpu_context::GPUContext;
-use crate::graphic::render_middle::PipelineState;
 
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文
@@ -18,7 +17,7 @@ pub struct DisplayWindow<'a, M: 'static> {
     /// 图形上下文
     pub gpu_context: GPUContext,
     /// 渲染管道
-    pub glob_pipeline: PipelineState,
+    // pub glob_pipeline: PipelineState,
     /// 时间监听器
     event_loop: EventLoop<M>,
     /// 事件上下文
@@ -26,7 +25,7 @@ pub struct DisplayWindow<'a, M: 'static> {
 }
 
 impl<M: 'static + Debug> DisplayWindow<'static, M> {
-    pub fn start<C>(self, mut container: C)
+    pub fn start<C>(self, container: C)
         where C: Container<M> + 'static {
         run_instance(self, container);
     }
@@ -44,10 +43,10 @@ impl<M: 'static + Debug> DisplayWindow<'static, M> {
         let gpu_context = GPUContext::new(&window).await;
 
         let event_context = EventContext::new(window, &event_loop);
-        let glob_pipeline = PipelineState::default(&gpu_context.device);
+        // let glob_pipeline = PipelineState::default(&gpu_context.device);
         let display_window = DisplayWindow {
             gpu_context,
-            glob_pipeline,
+            // glob_pipeline,
             event_loop,
             event_context,
         };
@@ -62,7 +61,7 @@ fn run_instance<C, M>(window: DisplayWindow<'static, M>, container: C)
         = mpsc::unbounded();
     let mut instance_listener
         = Box::pin(event_listener(window.gpu_context,
-                                  window.glob_pipeline,
+                                  // window.glob_pipeline,
                                   window.event_context,
                                   container,
                                   receiver));
@@ -106,7 +105,7 @@ fn run_instance<C, M>(window: DisplayWindow<'static, M>, container: C)
 
 /// 事件监听方法
 async fn event_listener<C, M>(mut gpu_context: GPUContext,
-                              glob_pipeline: PipelineState,
+                              // glob_pipeline: PipelineState,
                               mut event_context: EventContext<'_, M>,
                               mut container: C,
                               mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>)
@@ -137,12 +136,12 @@ async fn event_listener<C, M>(mut gpu_context: GPUContext,
                 // 监听到组件关注事件，决定是否重绘
                 event_context.window_event = Some(event);
                 if container.update(&mut event_context) {
-                    gpu_context.present(&glob_pipeline, &mut container)
+                    gpu_context.present(&mut container)
                 }
             }
             Event::RedrawRequested(window_id)
             if window_id == event_context.window.id() => {
-                gpu_context.present(&glob_pipeline, &mut container)
+                gpu_context.present(&mut container)
             }
             Event::UserEvent(event) => {
                 event_context.message = Some(event);

@@ -26,9 +26,9 @@ name = "test_graph_algo"
 path = "example/proto/test_algo.rs"
 
 [dependencies]
-wgpu = { version = "0.11", features = ["spirv"] }
+wgpu = { version = "0.12", features = ["spirv"] }
 async-trait = "0.1.51"
-winit = "0.25.0"
+winit = "0.26.0"
 futures = "0.3.10"
 cgmath = "0.18"
 log = "0.4.14"
@@ -37,15 +37,6 @@ rand = "0.8.2"
 bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
 ab_glyph = "0.2.11"
-anyhow = "1.0"
-pollster = "0.2"
-
-#[dependencies.wgpu]
-#git = "https://github.com/gfx-rs/wgpu"
-##path = "../wgpu-master/wgpu"
-#features = ["spirv"]
-
-#[patch.crates-io]
 
 
 [build-dependencies]

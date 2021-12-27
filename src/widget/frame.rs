@@ -1,9 +1,8 @@
 use crate::device::Container;
 use crate::device::EventContext;
 use crate::graphic::base::{DEFAULT_FONT_SIZE, GCharMap};
-use crate::graphic::render_middle::RenderUtil;
-use crate::widget::{Instance, Panel};
-use crate::widget::component::ComponentModel;
+use crate::graphic::render_api::PaintBrush;
+use crate::widget::*;
 
 /// 窗口帧结构体
 /// 作用：用作gui控件的容器
@@ -57,9 +56,9 @@ impl<M: Clone + PartialEq, I: Instance<M=M>> Container<M> for Frame<M, I> {
         is_update
     }
 
-    fn render(&mut self, utils: &mut RenderUtil) {
+    fn render(&mut self, paint_brush: &mut dyn PaintBrush) {
         for (_, panel) in &self.display_panel {
-            panel.draw(utils, &mut self.font_map)
+            panel.draw(paint_brush, &mut self.font_map)
         }
     }
 }

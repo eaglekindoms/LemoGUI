@@ -1,9 +1,9 @@
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
+use crate::backend::wgpu_impl::*;
 use crate::device::GPUContext;
-use crate::graphic::base::{GCharMap, ImageRaw, Point, Rectangle, RGBA, ShapeGraph};
-use crate::graphic::render_middle::{GTexture, TextureVertex};
-use crate::graphic::render_middle::pipeline_state::PipelineState;
+use crate::graphic::base::*;
+use crate::graphic::render_api::PaintBrush;
 
 /// 渲染工具封装结构体
 /// 作用：省事
@@ -12,14 +12,12 @@ pub struct RenderUtil<'a> {
     pub encoder: CommandEncoder,
     pub view: TextureView,
     pub context: &'a mut GPUContext,
-    pub pipeline: &'a PipelineState,
     pub g_texture: GTexture,
 }
 
 impl<'a> RenderUtil<'a> {
     pub fn new(target_view: &SurfaceTexture,
-               gpu_context: &'a mut GPUContext,
-               glob_pipeline: &'a PipelineState) -> Self {
+               gpu_context: &'a mut GPUContext) -> Self {
         let view = target_view
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -33,29 +31,13 @@ impl<'a> RenderUtil<'a> {
             encoder,
             view,
             context: gpu_context,
-            pipeline: glob_pipeline,
             g_texture,
         }
     }
+}
 
-    /// 创建渲染中间变量
-    pub fn create_render_pass(&mut self) -> wgpu::RenderPass {
-        let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
-            color_attachments: &[wgpu::RenderPassColorAttachment {
-                view: &self.view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
-                    store: true,
-                },
-            }],
-            depth_stencil_attachment: None,
-        });
-        render_pass
-    }
-
-    pub fn clear_frame(&mut self, color: RGBA) {
+impl PaintBrush for RenderUtil<'_> {
+    fn clear_frame(&mut self, color: RGBA) {
         self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[wgpu::RenderPassColorAttachment {
@@ -75,12 +57,12 @@ impl<'a> RenderUtil<'a> {
         });
     }
 
-    pub fn draw_rect(&mut self, rect: &Rectangle, rect_color: RGBA) {
-        let rect_buffer = rect.to_buffer(self.context, rect_color);
-        rect_buffer.render(self, rect.get_type());
+    fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_color: RGBA) {
+        let shape_buffer = shape.to_buffer(self.context, shape_color);
+        shape_buffer.render(self, shape.get_type());
     }
 
-    pub fn draw_text(&mut self, font_map: &mut GCharMap, text_rect: &Rectangle, text: &str, mut text_color: RGBA) {
+    fn draw_text(&mut self, font_map: &mut GCharMap, text_rect: &Rectangle, text: &str, text_color: RGBA) {
         let mut x = text_rect.position.x;
         let scale = text_rect.width as f32 / (text.len() as f32 * font_map.scale / 2.5);
         for c in text.chars() {
@@ -101,5 +83,5 @@ impl<'a> RenderUtil<'a> {
         }
     }
 
-    pub fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {}
+    fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {}
 }

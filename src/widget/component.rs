@@ -2,14 +2,14 @@ use std::fmt::Formatter;
 
 use crate::device::EventContext;
 use crate::graphic::base::GCharMap;
-use crate::graphic::render_middle::RenderUtil;
+use crate::graphic::render_api::PaintBrush;
 use crate::widget::{KeyCode, Mouse};
 
 /// 组件模型trait
 /// 作用：定义组件必须的公共方法接口
 pub trait ComponentModel<M> {
     /// 组件绘制方法实现
-    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap);
+    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap);
     /// 键盘事件监听器
     fn key_listener(&mut self,
                     _event_context: &EventContext<'_, M>,

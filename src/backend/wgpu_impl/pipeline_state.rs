@@ -3,12 +3,8 @@ use std::collections::HashMap;
 use wgpu::*;
 use wgpu::PrimitiveTopology::*;
 
+use crate::backend::wgpu_impl::*;
 use crate::graphic::base::ShapeType;
-use crate::graphic::render_middle::circle_vertex::CircleVertex;
-use crate::graphic::render_middle::image_vertex::TextureVertex;
-use crate::graphic::render_middle::rect_vertex::RectVertex;
-use crate::graphic::render_middle::triangle_vertex::PointVertex;
-use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
 /// 渲染管道状态元结构体
 #[derive(Debug)]

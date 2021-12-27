@@ -1,9 +1,7 @@
 use wgpu::*;
 
+use crate::backend::wgpu_impl::*;
 use crate::graphic::base::{Point, Rectangle, RGBA};
-use crate::graphic::render_middle::DEFAULT_BIND_GROUP_LAYOUT;
-use crate::graphic::render_middle::vertex_buffer::{RECT_INDEX, VertexBuffer};
-use crate::graphic::render_middle::vertex_buffer_layout::VertexLayout;
 
 /// 2D纹理顶点数据布局结构体
 #[repr(C)]
@@ -14,28 +12,17 @@ pub struct TextureVertex {
     pub color: [f32; 4],
 }
 
+const TEXTURE_ATTRS: [VertexAttribute; 3] = wgpu::vertex_attr_array![
+                0 => Float32x2,
+                1 => Float32x2,
+                2 => Float32x4 ];
+
 impl VertexLayout for TextureVertex {
     fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<TextureVertex>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &[
-                wgpu::VertexAttribute {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float32x2,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x2,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
-                    shader_location: 2,
-                    format: wgpu::VertexFormat::Float32x4,
-                },
-            ],
+            attributes: &TEXTURE_ATTRS,
         }
     }
 

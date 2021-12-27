@@ -79,7 +79,7 @@ fn test_font_to_image(font: FontRef, font_size: i32, font_color: RGBA) {
     let mut y: i32 = 0;
     let mut column = 0;
     for (c, ch) in characters.map.iter() {
-        print!(" {:?},bx:{:?},w:{:?},ad:{:?}##", c, ch.bearingX, ch.width, ch.advance);
+        print!(" {:?},bx:{:?},w:{:?},ad:{:?}##", c, ch.bearing_x, ch.width, ch.advance);
         let raw = ch.to_raw();
         for i in 0..raw.height {
             for j in 0..raw.width {
@@ -88,8 +88,8 @@ fn test_font_to_image(font: FontRef, font_size: i32, font_color: RGBA) {
                 *px = Rgba([0, 0, 0, raw.data[index]]);
             }
         }
-        let xpos = (x + 260 + ch.bearingX) as u32;
-        let ypos = (y + font_size - ch.bearingY) as u32;
+        let xpos = (x + 260 + ch.bearing_x) as u32;
+        let ypos = (y + font_size - ch.bearing_y) as u32;
         for i in 0..ch.height {
             for j in 0..ch.width {
                 let px = image.get_pixel_mut(xpos + j, ypos + i);

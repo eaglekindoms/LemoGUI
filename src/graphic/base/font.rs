@@ -3,8 +3,8 @@ use std::path::Path;
 
 use ab_glyph::{Font, FontVec, PxScale, PxScaleFont, ScaleFont};
 
+use crate::backend::wgpu_impl::*;
 use crate::graphic::base::{BLACK, ImageRaw, RGBA};
-use crate::graphic::render_middle::{GTexture, TextureBufferData};
 
 pub const DEFAULT_FONT_SIZE: f32 = 40.0;
 pub const DEFAULT_FONT_COLOR: RGBA = BLACK;
@@ -20,9 +20,9 @@ pub struct Character {
     ///    位图高度（像素）
     pub height: u32,
     ///    水平距离，即位图相对于原点的水平位置（像素）
-    pub bearingX: i32,
+    pub bearing_x: i32,
     ///    垂直距离，即位图相对于基准线的垂直位置（像素）
-    pub bearingY: i32,
+    pub bearing_y: i32,
     ///    水平预留值，即原点到下一个字形原点的水平距离（单位：1/64像素）
     pub advance: u32,
     pub bitmap: Vec<u8>,
@@ -53,8 +53,8 @@ impl Character {
             scale: scaled_font.scale().y as u32,
             width,
             height,
-            bearingX: bounds.min.x as i32,
-            bearingY: height as i32 - bounds.max.y as i32,
+            bearing_x: bounds.min.x as i32,
+            bearing_y: height as i32 - bounds.max.y as i32,
             advance,
             bitmap,
             texture: None,
@@ -63,8 +63,8 @@ impl Character {
 
     pub fn to_raw(&self) -> ImageRaw {
         let mut advance = self.advance;
-        let mut bearing_x = self.bearingX;
-        let bearing_y = self.bearingY;
+        let mut bearing_x = self.bearing_x;
+        let bearing_y = self.bearing_y;
         if bearing_x < 0 {
             advance = (advance as i32 - bearing_x) as u32;
             bearing_x = 0;
@@ -114,8 +114,8 @@ fn blank_character(scale: u32) -> Character {
         scale,
         width: scale / 2,
         height: scale,
-        bearingX: 0,
-        bearingY: 0,
+        bearing_x: 0,
+        bearing_y: 0,
         advance: scale / 2,
         bitmap: vec![0; (scale * scale / 2) as usize],
         texture: None,

@@ -1,6 +1,6 @@
 use crate::device::EventContext;
 use crate::graphic::base::GCharMap;
-use crate::graphic::render_middle::RenderUtil;
+use crate::graphic::render_api::PaintBrush;
 use crate::widget::{Component, ComponentModel};
 
 #[derive(Debug)]
@@ -36,9 +36,9 @@ impl<M: Clone + PartialEq> Panel<M> {
 
 
 impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
-    fn draw(&self, render_utils: &mut RenderUtil, font_map: &mut GCharMap) {
+    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         for widget in &self.widgets {
-            widget.widget.draw(render_utils, font_map);
+            widget.widget.draw(paint_brush, font_map);
         }
     }
 }

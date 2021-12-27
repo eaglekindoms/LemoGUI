@@ -2,9 +2,10 @@ use std::fmt::Debug;
 
 use winit::window::Window;
 
+use crate::backend::wgpu_impl::*;
 use crate::device::Container;
 use crate::graphic::base::*;
-use crate::graphic::render_middle::{PipelineState, RenderUtil};
+use crate::graphic::render_api::PaintBrush;
 
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体
@@ -18,6 +19,7 @@ pub struct GPUContext {
     pub queue: wgpu::Queue,
     /// 交换缓冲区描述符
     sc_desc: wgpu::SurfaceConfiguration,
+    pub glob_pipeline: PipelineState,
 }
 
 impl GPUContext {
@@ -59,12 +61,15 @@ impl GPUContext {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
+        let glob_pipeline = PipelineState::default(&device);
+
         surface.configure(&device, &sc_desc);
         GPUContext {
             surface,
             device,
             queue,
             sc_desc,
+            glob_pipeline,
         }
     }
     // 更新交换缓冲区
@@ -81,7 +86,7 @@ impl GPUContext {
 
     /// 显示图形内容
     pub fn present<C, M>(&mut self,
-                         glob_pipeline: &PipelineState, container: &mut C)
+                         container: &mut C)
         where C: Container<M> + 'static, M: 'static + Debug
     {
         match self.surface.get_current_texture() {
@@ -90,7 +95,7 @@ impl GPUContext {
             }
             Ok(target_view) => {
                 let mut utils
-                    = RenderUtil::new(&target_view, self, glob_pipeline);
+                    = RenderUtil::new(&target_view, self);
                 utils.clear_frame(BACKGROUND_COLOR);
                 container.render(&mut utils);
                 utils.context.queue.submit(Some(utils.encoder.finish()));
