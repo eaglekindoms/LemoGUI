@@ -1,4 +1,5 @@
 use crate::graphic::base::*;
+use crate::graphic::style::Style;
 
 /// 定义绘图接口，实现解耦
 pub trait PaintBrush {
@@ -6,7 +7,7 @@ pub trait PaintBrush {
     fn clear_frame(&mut self, color: RGBA);
 
     /// 绘制图形
-    fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_color: RGBA);
+    fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style);
 
     /// 绘制文本
     fn draw_text(&mut self, font_map: &mut GCharMap,

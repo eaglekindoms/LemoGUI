@@ -16,8 +16,6 @@ use crate::device::wgpu_context::GPUContext;
 pub struct DisplayWindow<'a, M: 'static> {
     /// 图形上下文
     pub gpu_context: GPUContext,
-    /// 渲染管道
-    // pub glob_pipeline: PipelineState,
     /// 时间监听器
     event_loop: EventLoop<M>,
     /// 事件上下文
@@ -41,9 +39,7 @@ impl<M: 'static + Debug> DisplayWindow<'static, M> {
         let event_loop = EventLoop::<M>::with_user_event();
         let window = builder.build(&event_loop).unwrap();
         let gpu_context = GPUContext::new(&window).await;
-
         let event_context = EventContext::new(window, &event_loop);
-        // let glob_pipeline = PipelineState::default(&gpu_context.device);
         let display_window = DisplayWindow {
             gpu_context,
             // glob_pipeline,
@@ -61,7 +57,6 @@ fn run_instance<C, M>(window: DisplayWindow<'static, M>, container: C)
         = mpsc::unbounded();
     let mut instance_listener
         = Box::pin(event_listener(window.gpu_context,
-                                  // window.glob_pipeline,
                                   window.event_context,
                                   container,
                                   receiver));

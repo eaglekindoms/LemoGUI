@@ -26,9 +26,8 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
     pub fn new_with_style<S: Into<String>, MT>(mut rect: Rectangle,
                                                style: Style, text: S, rec: MT) -> Self
         where MT: 'static + Fn(String) -> M {
-        log::info!("create the Button obj use new");
         Self {
-            size: rect.set_style(style),
+            size: rect,
             text: text.into(),
             state: None,
             style,
@@ -40,11 +39,10 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
     pub fn new<S: Into<String>, MT>(pos: Point<f32>, text: S, rec: MT) -> Self
         where MT: 'static + Fn(String) -> M {
         let text = text.into();
-        let rect = Rectangle::new(pos.x, pos.y, (text.len() * 10) as u32, 40);
-        log::info!("create the Button obj use default");
+        let rect = Rectangle::new(pos.x, pos.y, (text.len() * 10) as u32 + 10, 40);
         Self {
             size: rect,
-            style: Style::default(),
+            style: Style::default().back_color(WHITE),
             text,
             state: None,
             text_receive: Box::new(rec),
@@ -63,7 +61,7 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
     /// 组件绘制方法实现
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         let shape: Box<dyn ShapeGraph> = Box::new(self.size);
-        paint_brush.draw_shape(&shape, WHITE);
+        paint_brush.draw_shape(&shape, self.style);
         paint_brush.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
 

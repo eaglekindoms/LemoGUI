@@ -19,7 +19,7 @@ impl<M> ComponentModel<M> for ShapeBoard {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         let mut style = self.style;
         for shape in &self.shape_arr {
-            paint_brush.draw_shape(shape, style.get_back_color());
+            paint_brush.draw_shape(shape, style);
             style = Style::default().back_color(LIGHT_BLUE).round();
         }
     }

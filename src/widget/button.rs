@@ -22,10 +22,10 @@ pub struct Button<M: Clone> {
 
 
 impl<'a, M: Clone + PartialEq> Button<M> {
-    pub fn new_with_style<S: Into<String>>(mut rect: Rectangle, style: Style, text: S) -> Self {
+    pub fn new_with_style<S: Into<String>>(rect: Rectangle, style: Style, text: S) -> Self {
         log::info!("create the Button obj use new");
         Self {
-            size: rect.set_style(style),
+            size: rect,
             text: text.into(),
             bind_event: BindEvent::default(),
             style,
@@ -34,7 +34,7 @@ impl<'a, M: Clone + PartialEq> Button<M> {
 
     pub fn new<S: Into<String>>(pos: Point<f32>, text: S) -> Self {
         let text = text.into();
-        let rect = Rectangle::new(pos.x, pos.y, (text.len() * 10) as u32, 40);
+        let rect = Rectangle::new(pos.x, pos.y, (text.len() * 10) as u32 + 10, 40);
         log::info!("create the Button obj use default");
         Self {
             size: rect,
@@ -61,7 +61,7 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
     /// 组件绘制方法实现
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         let shape: Box<dyn ShapeGraph> = Box::new(self.size);
-        paint_brush.draw_shape(&shape, self.style.get_display_color());
+        paint_brush.draw_shape(&shape, self.style);
         paint_brush.draw_text(font_map, &self.size, self.text.as_str(), self.style.get_font_color());
     }
     fn key_listener(&mut self,

@@ -19,6 +19,7 @@ pub struct GPUContext {
     pub queue: wgpu::Queue,
     /// 交换缓冲区描述符
     sc_desc: wgpu::SurfaceConfiguration,
+    /// 渲染管道
     pub glob_pipeline: PipelineState,
 }
 

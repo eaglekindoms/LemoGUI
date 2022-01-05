@@ -3,6 +3,7 @@ use wgpu::*;
 use crate::backend::wgpu_impl::*;
 use crate::device::GPUContext;
 use crate::graphic::base::*;
+use crate::graphic::style::{Bordering, Rounding, Style};
 
 /// 圆形顶点数据布局结构体
 /// 顶点顺序为左下开始逆时针排序
@@ -60,7 +61,7 @@ pub struct RectVertex {
     pub size: [f32; 2],
     pub position: [f32; 2],
     pub border_color: [f32; 4],
-    pub frame_color: [f32; 4],
+    pub rect_color: [f32; 4],
     pub is_round_or_border: [u32; 2],
 }
 
@@ -91,24 +92,27 @@ impl VertexLayout for RectVertex {
 }
 
 impl RectVertex {
-    pub fn new(rect: &Rectangle, sc_desc: Point<u32>, color: RGBA) -> RectVertex {
-        let (t_x, t_y, t_w, t_h) =
-            rect.get_coord(sc_desc.x, sc_desc.y);
+    pub fn new(rect: &Rectangle, style: Style) -> RectVertex {
         let mut border_color = [0.0, 0.0, 0.0, 0.0];
-        let frame_color = color.to_vec();
-        let is_round = rect.round;
-        let is_border = rect.border;
-        if is_border == 1 {
-            border_color = BLACK.to_vec();
+        let rect_color = style.get_display_color().to_vec();
+        let is_round;
+        let is_border;
+        match style.get_round() {
+            Rounding::Round => { is_round = 1 }
+            Rounding::NoRound => { is_round = 0 }
         }
-        // let projection: cgmath::Matrix4<f32> = shape::orthographic_projection(sc_desc.x as f32, sc_desc.y as f32).into();
-        // let position: cgmath::Vector4<f32> = cgmath::Vector4::new(rect.position.x, rect.position.y, 0.0, 0.0);
-        // let view: cgmath::Vector4<f32> = projection * position;
+        match style.get_border() {
+            Bordering::Border(color) => {
+                is_border = 1;
+                border_color = color.to_vec()
+            }
+            Bordering::NoBorder => { is_border = 0 }
+        }
         RectVertex {
-            size: [t_w, t_h],
-            position: [t_w / 2.0 + t_x, t_y - t_h / 2.0],
+            size: [rect.width as f32, rect.height as f32],
+            position: [rect.position.x, rect.position.y],
             border_color,
-            frame_color,
+            rect_color,
             is_round_or_border: [is_round, is_border],
         }
     }

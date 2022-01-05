@@ -14,10 +14,6 @@ name = "show_button"
 path = "example/show_button.rs"
 
 [[example]]
-name = "test_font"
-path = "example/test_font.rs"
-
-[[example]]
 name = "show_shap"
 path = "example/show_shape.rs"
 

@@ -1,8 +1,5 @@
-use std::path::Path;
-
 use simple_logger::SimpleLogger;
 
-use LemoGUI::device::*;
 use LemoGUI::graphic::base::*;
 use LemoGUI::graphic::style::*;
 use LemoGUI::widget::{Instance, Panel, Setting};

@@ -37,7 +37,7 @@ impl Instance for Counter {
         // 自定义设置
         let rect = Rectangle::new(100.0, 100.0, 170, 40);
         let style = Style::default()
-            .no_border()
+            .border(RGBA(0.2, 0.2, 0.2, 0.5))
             .hover_color(RGBA(0.0, 0.75, 1.0, 0.5))
             .back_color(RGBA(1.0, 0.5, 0.5, 1.0))
             .font_color(RGBA(0.1, 0.3, 0.8, 1.0))

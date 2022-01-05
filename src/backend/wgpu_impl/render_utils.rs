@@ -4,6 +4,7 @@ use crate::backend::wgpu_impl::*;
 use crate::device::GPUContext;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
+use crate::graphic::style::Style;
 
 /// 渲染工具封装结构体
 /// 作用：省事
@@ -57,14 +58,14 @@ impl PaintBrush for RenderUtil<'_> {
         });
     }
 
-    fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_color: RGBA) {
-        let shape_buffer = shape.to_buffer(self.context, shape_color);
+    fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {
+        let shape_buffer = shape.to_buffer(self.context, shape_style);
         shape_buffer.render(self, shape.get_type());
     }
 
     fn draw_text(&mut self, font_map: &mut GCharMap, text_rect: &Rectangle, text: &str, text_color: RGBA) {
-        let mut x = text_rect.position.x;
-        let scale = text_rect.width as f32 / (text.len() as f32 * font_map.scale / 2.5);
+        let mut x = text_rect.position.x + 8.;
+        let scale = 10. / (font_map.scale / 2.5);
         for c in text.chars() {
             let c_font = font_map.character_texture(c, &mut self.g_texture,
                                                     &self.context.device, &self.context.queue);

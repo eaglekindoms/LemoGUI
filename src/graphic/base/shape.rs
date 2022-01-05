@@ -28,10 +28,6 @@ pub struct Rectangle {
     pub position: Point<f32>,
     pub width: u32,
     pub height: u32,
-    /// 是否有边界
-    pub border: u32,
-    /// 是否圆角
-    pub round: u32,
 }
 
 /// 圆形结构体
@@ -76,32 +72,10 @@ impl Rectangle {
             position: Point { x, y },
             width: w,
             height: h,
-            border: 0,
-            round: 0,
         }
     }
 
-    pub fn set_style(&mut self, style: Style) -> Self {
-        let mut is_round = 0;
-        let mut is_border = 0;
-        match style.get_border() {
-            Bordering::Border(color) => {
-                is_border = 1;
-            }
-            Bordering::NoBorder => {
-                is_border = 0;
-            }
-        }
-        match style.get_round() {
-            Rounding::Round => is_round = 1,
-            Rounding::NoRound => is_round = 0,
-        }
-        self.border = is_border;
-        self.round = is_round;
-        *self
-    }
 
-    #[deprecated]
     pub fn get_coord(&self, w_width: u32, w_height: u32) -> (f32, f32, f32, f32) {
         (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
          1.0 - 2.0 * self.position.y as f32 / w_height as f32,
@@ -118,15 +92,6 @@ impl Rectangle {
             (rel_x > 0.) &&
             (rel_y > 0.)
     }
-}
-
-pub fn orthographic_projection(w: f32, h: f32) -> [[f32; 4]; 4] {
-    [
-        [2.0 / w, 0.0, 0.0, 0.0],
-        [0.0, 2.0 / h, 0.0, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [-1.0, -1.0, 0.0, 1.0],
-    ]
 }
 
 impl Circle {
@@ -150,7 +115,7 @@ impl RegularPolygon {
 /// 图形缓冲转换接口
 pub trait ShapeGraph {
     /// 转换为顶点缓冲数据
-    fn to_buffer(&self, gpu_context: &GPUContext, color: RGBA) -> VertexBuffer;
+    fn to_buffer(&self, gpu_context: &GPUContext, style: Style) -> VertexBuffer;
     /// 获取图形类型
     fn get_type(&self) -> ShapeType;
 }
