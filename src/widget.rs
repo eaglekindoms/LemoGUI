@@ -4,6 +4,7 @@ pub use drawing_board::*;
 pub use event::*;
 pub use frame::*;
 pub use instance::*;
+pub use label::*;
 pub use panel::*;
 pub use text_input::*;
 
@@ -15,3 +16,4 @@ mod event;
 mod text_input;
 mod panel;
 mod instance;
+mod label;

@@ -3,6 +3,7 @@ use crate::graphic::base::GCharMap;
 use crate::graphic::render_api::PaintBrush;
 use crate::widget::{Component, ComponentModel};
 
+/// 容器面板结构体
 #[derive(Debug)]
 pub struct Panel<M> where M: PartialEq, M: std::clone::Clone {
     pub widgets: Vec<Component<M>>,
