@@ -60,7 +60,7 @@ impl PaintBrush for RenderUtil<'_> {
 
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {
         let shape_buffer = shape.to_buffer(self.context, shape_style);
-        shape_buffer.render(self, shape.get_type());
+        shape_buffer.render(self, None);
     }
 
     fn draw_text(&mut self, font_map: &mut GCharMap, text_rect: &Rectangle, text: &str, text_color: RGBA) {
@@ -77,12 +77,16 @@ impl PaintBrush for RenderUtil<'_> {
                 Rectangle::new(c_x, c_y, scale_width as u32, c_buffer.height);
             x = x + scale_width;
             let c_vertex =
-                TextureVertex::new(&self.context.device,
-                                   &self.context.get_surface_size(), &c_rect, text_color);
+                TextureVertex::new(&self.context, &c_rect, text_color);
 
-            c_vertex.render_t(self, &c_buffer);
+            c_vertex.render(self, Some(&c_buffer));
         }
     }
 
-    fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {}
+    fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {
+        let image_buffer =
+            self.g_texture.create_bind_group(&self.context.device, &self.context.queue, image);
+        let image_vertex = TextureVertex::new(&self.context, &image_rect, ALPHA);
+        image_vertex.render(self, Some(&image_buffer))
+    }
 }

@@ -116,6 +116,4 @@ impl RegularPolygon {
 pub trait ShapeGraph {
     /// 转换为顶点缓冲数据
     fn to_buffer(&self, gpu_context: &GPUContext, style: Style) -> VertexBuffer;
-    /// 获取图形类型
-    fn get_type(&self) -> ShapeType;
 }

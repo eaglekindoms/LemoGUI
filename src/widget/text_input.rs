@@ -23,7 +23,7 @@ pub struct TextInput<M: Clone> {
 }
 
 impl<'a, M: Clone + PartialEq> TextInput<M> {
-    pub fn new_with_style<S: Into<String>, MT>(mut rect: Rectangle,
+    pub fn new_with_style<S: Into<String>, MT>(rect: Rectangle,
                                                style: Style, text: S, rec: MT) -> Self
         where MT: 'static + Fn(String) -> M {
         Self {

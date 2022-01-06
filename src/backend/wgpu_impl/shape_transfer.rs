@@ -10,10 +10,6 @@ impl ShapeGraph for Rectangle {
             (&gpu_context.device, vec![rect_vertex], RECT_INDEX);
         rect_vertex
     }
-
-    fn get_type(&self) -> ShapeType {
-        ShapeType::ROUND
-    }
 }
 
 impl ShapeGraph for Circle {
@@ -23,10 +19,6 @@ impl ShapeGraph for Circle {
         let cricle_buffer = VertexBuffer::create_vertex_buf::<CircleVertex>
             (&gpu_context.device, vec![circle_vertex], RECT_INDEX);
         cricle_buffer
-    }
-
-    fn get_type(&self) -> ShapeType {
-        ShapeType::Circle
     }
 }
 
@@ -38,18 +30,10 @@ impl ShapeGraph for RegularPolygon {
             (&gpu_context.device, vec![circle_vertex], RECT_INDEX);
         cricle_buffer
     }
-
-    fn get_type(&self) -> ShapeType {
-        ShapeType::Circle
-    }
 }
 
 impl ShapeGraph for Polygon {
     fn to_buffer(&self, gpu_context: &GPUContext, style: Style) -> VertexBuffer {
         PointVertex::from_shape_to_vector(gpu_context, &self.points, style.get_display_color())
-    }
-
-    fn get_type(&self) -> ShapeType {
-        ShapeType::POINT
     }
 }

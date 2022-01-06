@@ -1,10 +1,15 @@
 use wgpu::*;
+use wgpu::PrimitiveTopology::*;
+
+use crate::graphic::base::ShapeType;
 
 /// wgpu图形顶点布局trait
 /// 作用：定义顶点布局接口
 pub trait VertexLayout: Sized {
     /// 设置图形顶点缓存布局
     fn set_vertex_desc<'a>() -> wgpu::VertexBufferLayout<'a>;
+    /// 获取顶点布局类型
+    fn get_shape_type() -> ShapeType;
     /// 设置图元渲染器
     fn get_shader(device: &Device) -> ShaderModule;
     /// 设置渲染管线布局
@@ -17,10 +22,9 @@ pub trait VertexLayout: Sized {
         return render_pipeline_layout;
     }
     /// 创建渲染管线
-    fn create_render_pipeline(device: &Device,
-                              fill_topology: PrimitiveTopology,
-    ) -> RenderPipeline {
+    fn create_render_pipeline(device: &Device) -> RenderPipeline {
         let shader = Self::get_shader(device);
+        let fill_topology = get_fill_topology_by_type(Self::get_shape_type());
         let render_pipeline = device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some("Render Pipeline"),
@@ -50,5 +54,15 @@ pub trait VertexLayout: Sized {
                 multiview: None,
             });
         return render_pipeline;
+    }
+}
+
+fn get_fill_topology_by_type(shape_type: ShapeType) -> PrimitiveTopology {
+    match shape_type {
+        ShapeType::TEXTURE => { TriangleStrip }
+        ShapeType::ROUND => { TriangleStrip }
+        ShapeType::BORDER => { LineStrip }
+        ShapeType::POINT => { TriangleList }
+        ShapeType::Circle => { TriangleStrip }
     }
 }

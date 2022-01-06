@@ -1,7 +1,8 @@
 use wgpu::*;
 
 use crate::backend::wgpu_impl::*;
-use crate::graphic::base::{Point, Rectangle, RGBA};
+use crate::device::GPUContext;
+use crate::graphic::base::{Point, Rectangle, RGBA, ShapeType};
 
 /// 2D纹理顶点数据布局结构体
 #[repr(C)]
@@ -24,6 +25,10 @@ impl VertexLayout for TextureVertex {
             step_mode: wgpu::VertexStepMode::Instance,
             attributes: &TEXTURE_ATTRS,
         }
+    }
+
+    fn get_shape_type() -> ShapeType {
+        ShapeType::TEXTURE
     }
 
     fn get_shader(device: &Device) -> ShaderModule {
@@ -49,7 +54,8 @@ impl VertexLayout for TextureVertex {
 }
 
 impl TextureVertex {
-    pub fn new(device: &Device, sc_desc: &Point<u32>, rect: &Rectangle, font_color: RGBA) -> VertexBuffer {
+    pub fn new(gpu_context: &GPUContext, rect: &Rectangle, font_color: RGBA) -> VertexBuffer {
+        let sc_desc = gpu_context.get_surface_size();
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.x, sc_desc.y);
         let color: [f32; 4] = font_color.to_vec();
@@ -57,7 +63,7 @@ impl TextureVertex {
             TextureVertex { position: [t_x, t_y], tex_coords: [t_w, t_h], color }
         ];
         let vertex_buffer = VertexBuffer::create_vertex_buf::<TextureVertex>
-            (device, vect, RECT_INDEX);
+            (&gpu_context.device, vect, RECT_INDEX);
         vertex_buffer
     }
 }

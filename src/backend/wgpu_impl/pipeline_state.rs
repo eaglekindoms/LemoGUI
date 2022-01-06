@@ -28,19 +28,18 @@ impl PipelineState {
         let mut glob_pipeline = Self {
             context,
         };
-        glob_pipeline.set_pipeline::<RectVertex>(device, TriangleStrip, ShapeType::ROUND);
-        glob_pipeline.set_pipeline::<CircleVertex>(device, TriangleStrip, ShapeType::Circle);
-        glob_pipeline.set_pipeline::<PointVertex>(device, TriangleList, ShapeType::POINT);
-        glob_pipeline.set_pipeline::<PointVertex>(device, LineStrip, ShapeType::BORDER);
-        glob_pipeline.set_pipeline::<TextureVertex>(device, TriangleStrip, ShapeType::TEXTURE);
+        glob_pipeline.set_pipeline::<RectVertex>(device);
+        glob_pipeline.set_pipeline::<CircleVertex>(device);
+        glob_pipeline.set_pipeline::<PointVertex>(device);
+        glob_pipeline.set_pipeline::<TextureVertex>(device);
         glob_pipeline
     }
     /// 创建渲染管道
     /// 参数：全局状态，着色器，渲染类型
-    pub fn set_pipeline<V>(&mut self, device: &Device, fill_topology: PrimitiveTopology, shape_type: ShapeType)
-        where V: VertexLayout {
+    pub fn set_pipeline<V>(&mut self, device: &Device) where V: VertexLayout {
         // 作用：绑定着色器，图形填充
-        let render_pipeline = V::create_render_pipeline(device, fill_topology);
+        let render_pipeline = V::create_render_pipeline(device);
+        let shape_type = V::get_shape_type();
         if self.context.get(&shape_type).is_none() {
             self.context.insert(shape_type, render_pipeline);
         }

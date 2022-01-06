@@ -43,6 +43,10 @@ impl VertexLayout for CircleVertex {
         }
     }
 
+    fn get_shape_type() -> ShapeType {
+        ShapeType::Circle
+    }
+
     fn get_shader(device: &Device) -> ShaderModule {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("circle shader"),
@@ -79,6 +83,10 @@ impl VertexLayout for RectVertex {
             step_mode: wgpu::VertexStepMode::Instance,
             attributes: &RECT_ATTRS,
         }
+    }
+
+    fn get_shape_type() -> ShapeType {
+        ShapeType::ROUND
     }
 
     fn get_shader(device: &Device) -> ShaderModule {
@@ -148,6 +156,10 @@ impl VertexLayout for PointVertex {
             step_mode: wgpu::VertexStepMode::Vertex,
             attributes: &POINT_ATTRS,
         }
+    }
+
+    fn get_shape_type() -> ShapeType {
+        ShapeType::POINT
     }
 
     fn get_shader(device: &Device) -> ShaderModule {
