@@ -4,6 +4,7 @@ use wgpu::TextureFormat;
 
 use crate::graphic::base::*;
 
+/// 纹理缓冲结构体
 #[derive(Debug)]
 pub struct TextureBufferData {
     pub width: u32,
@@ -11,6 +12,7 @@ pub struct TextureBufferData {
     pub uniform: wgpu::BindGroup,
 }
 
+/// 纹理配置上下文结构体
 #[derive(Debug)]
 pub struct GTexture {
     pub texture: wgpu::Texture,
@@ -22,6 +24,11 @@ pub struct GTexture {
 }
 
 impl GTexture {
+    /// 新建纹理配置
+    ///
+    /// data_size：纹理数据来源的尺寸，用于指定纹理数据的布局，指定行数，列数
+    ///
+    /// texture_format：指定纹理色位通道数，即是单通道还是rgba四通道
     pub fn new(device: &wgpu::Device, data_size: Point<u32>,
                texture_format: wgpu::TextureFormat) -> Self {
         let size = wgpu::Extent3d {
@@ -29,9 +36,6 @@ impl GTexture {
             height: data_size.y,
             depth_or_array_layers: 1,
         };
-        // 参数：纹理数据来源的尺寸
-        // 用途：指定纹理数据的布局
-        // 具体含义：偏移量，行数宽度，列数宽度
         // 注：图像纹理导入后会被转化为包含每个像素点rgba颜色值的一维数组
         // 因此行数宽度为图像宽度*4，列数宽度不变
         let image_width: u32;
@@ -58,6 +62,7 @@ impl GTexture {
         }
     }
 
+    /// 更新纹理配置的尺寸
     pub fn update_size(&mut self, device: &wgpu::Device, size: Point<u32>) {
         self.size.width = size.x;
         self.size.height = size.y;
@@ -69,6 +74,7 @@ impl GTexture {
         self.image_layout.rows_per_image = NonZeroU32::new(size.y);
     }
 
+    /// 创建图像的纹理缓冲
     pub fn create_bind_group(&mut self, device: &wgpu::Device,
                              queue: &wgpu::Queue, raw_data: ImageRaw) -> TextureBufferData {
         self.update_size(device, Point::new(raw_data.width, raw_data.height));
@@ -101,6 +107,7 @@ pub fn create_2d_texture(device: &wgpu::Device, texture_size: wgpu::Extent3d,
     })
 }
 
+/// 将图像原始数据写入到纹理缓冲空间中
 pub fn writer_data_to_texture(queue: &wgpu::Queue,
                               texture: &wgpu::Texture,
                               image_layout: wgpu::ImageDataLayout,

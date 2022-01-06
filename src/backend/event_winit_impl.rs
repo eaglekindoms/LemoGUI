@@ -29,6 +29,7 @@ impl From<winit::dpi::PhysicalSize<u32>> for Point<u32> {
     }
 }
 
+/// winit鼠标事件转换
 impl From<winit::event::MouseButton> for Mouse {
     fn from(winit_mouse: MouseButton) -> Self {
         match winit_mouse {
@@ -40,6 +41,7 @@ impl From<winit::event::MouseButton> for Mouse {
     }
 }
 
+/// winit事件状态转换
 impl From<winit::event::ElementState> for State {
     fn from(winit_state: ElementState) -> Self {
         match winit_state {
@@ -49,6 +51,7 @@ impl From<winit::event::ElementState> for State {
     }
 }
 
+/// winit事件转换
 impl From<&winit::event::WindowEvent<'_>> for GEvent {
     fn from(winit_event: &WindowEvent) -> Self {
         match winit_event {

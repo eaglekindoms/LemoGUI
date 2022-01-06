@@ -1,11 +1,8 @@
-use std::borrow::BorrowMut;
-
 use bytemuck::Pod;
-use wgpu::{Device, RenderPipeline};
+use wgpu::Device;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 
 use crate::backend::wgpu_impl::*;
-use crate::graphic::base::ShapeType;
 
 /// 渲染顶点缓冲结构体
 #[derive(Debug)]
@@ -47,16 +44,21 @@ impl<'a> VertexBuffer {
         }
     }
 
+    /// 由顶点缓冲和纹理缓冲渲染图形
     pub fn render(&'a self, render_utils: &mut RenderUtil,
                   texture_state: Option<&'a TextureBufferData>) {
+        // 获取顶点缓冲对应的渲染管道
         let pipeline =
             render_utils.context.glob_pipeline.get_pipeline(self.shape_type).unwrap();
+        // 创建临时渲染变量，并设置渲染管道
         let mut render_pass =
             create_render_pass(&mut render_utils.encoder, &render_utils.view);
         render_pass.set_pipeline(&pipeline);
+        // 绑定纹理缓冲
         if let Some(texture_buffer) = texture_state {
             render_pass.set_bind_group(0, &texture_buffer.uniform, &[]);
         }
+        // 设置顶点缓冲及其索引缓冲，并调用渲染方法
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
         render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
         render_pass.draw_indexed(0..self.num_indices, 0, 0..1);

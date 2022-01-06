@@ -2,7 +2,7 @@ use wgpu::*;
 
 use crate::backend::wgpu_impl::*;
 use crate::device::GPUContext;
-use crate::graphic::base::{Point, Rectangle, RGBA, ShapeType};
+use crate::graphic::base::{Rectangle, RGBA};
 
 /// 2D纹理顶点数据布局结构体
 #[repr(C)]

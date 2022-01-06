@@ -31,18 +31,21 @@ impl<'a, M: 'static> EventContext<'a, M> {
         }
     }
 
-    // 更新鼠标坐标
+    /// 更新鼠标坐标
     pub fn update_cursor<P: Into<Point<f32>>>(&mut self, pos: P) {
         self.cursor_pos = pos.into();
     }
 
+    /// 获取当前事件
     pub fn get_event(&self) -> GEvent {
         self.window_event.as_ref().unwrap().into()
     }
 
+    /// 发送自定义事件消息
     pub fn send_message(&self, message: M) {
         self.message_channel.send_event(message).ok();
     }
+
     /// 键鼠单击动画效果
     pub fn action_animation(&self, style: &mut Style, position: &Rectangle,
                             message: Option<M>) -> bool {

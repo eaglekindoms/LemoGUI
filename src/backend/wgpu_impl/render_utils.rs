@@ -7,16 +7,22 @@ use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::Style;
 
 /// 渲染工具封装结构体
-/// 作用：省事
+/// 基于wgpu实现渲染API定义的基本渲染方法
 #[derive(Debug)]
 pub struct RenderUtil<'a> {
+    /// wgpu提供的gpu命令编码器，用于发送渲染命令
     pub encoder: CommandEncoder,
+    /// 目标渲染区域
     pub view: TextureView,
+    /// 图形渲染上下文
     pub context: &'a mut GPUContext,
+    /// 纹理配置上下文
     pub g_texture: GTexture,
 }
 
 impl<'a> RenderUtil<'a> {
+    /// 创建渲染工具
+    /// 参数：目标渲染区域，图形渲染上下文
     pub fn new(target_view: &SurfaceTexture,
                gpu_context: &'a mut GPUContext) -> Self {
         let view = target_view
@@ -26,6 +32,7 @@ impl<'a> RenderUtil<'a> {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
+        // 默认创建40x40纹理的配置，用于文字渲染
         let g_texture = GTexture::new(&gpu_context.device,
                                       Point::new(40, 40), wgpu::TextureFormat::R8Unorm);
         RenderUtil {

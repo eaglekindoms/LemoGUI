@@ -43,7 +43,7 @@ pub struct ShapeStyle {
 }
 
 /// 样式结构体
-/// 作用：设置图形样式
+/// 作用：设置组件样式
 #[derive(Debug, Clone, Copy)]
 pub struct Style {
     /// 文字样式
@@ -65,41 +65,43 @@ impl Style {
             },
         }
     }
+    /// 组件样式设为有边框，并设置边框颜色
     pub fn border(&mut self, color: RGBA) -> Self {
         self.shape_style.border = Bordering::Border(color);
         *self
     }
-
+    /// 组件样式设为无边框
     pub fn no_border(&mut self) -> Self {
         self.shape_style.border = Bordering::NoBorder;
         *self
     }
-
+    /// 组件样式设为圆角
     pub fn round(&mut self) -> Self {
         self.shape_style.round = Rounding::Round;
         *self
     }
+    /// 组件样式设为无圆角
     pub fn no_round(&mut self) -> Self {
         self.shape_style.round = Rounding::NoRound;
         *self
     }
-
+    /// 指定组件文字颜色
     pub fn font_color(&mut self, color: RGBA) -> Self {
         self.font_style = FontStyle::Font(color);
         *self
     }
-
+    /// 指定组件背景色
     pub fn back_color(&mut self, color: RGBA) -> Self {
         self.shape_style.back_color = color;
         self.shape_style.display_color = color;
         *self
     }
-
+    /// 指定组件悬停色
     pub fn hover_color(&mut self, color: RGBA) -> Self {
         self.shape_style.hover_color = color;
         *self
     }
-
+    /// 设置组件前景色
     pub fn display_color(&mut self, color: RGBA) -> Self {
         self.shape_style.display_color = color;
         *self

@@ -1,7 +1,7 @@
 use wgpu::*;
 use wgpu::PrimitiveTopology::*;
 
-use crate::graphic::base::ShapeType;
+use crate::backend::wgpu_impl::ShapeType;
 
 /// wgpu图形顶点布局trait
 /// 作用：定义顶点布局接口
@@ -57,6 +57,7 @@ pub trait VertexLayout: Sized {
     }
 }
 
+/// 由形状类型获取指定的索引模式
 fn get_fill_topology_by_type(shape_type: ShapeType) -> PrimitiveTopology {
     match shape_type {
         ShapeType::TEXTURE => { TriangleStrip }

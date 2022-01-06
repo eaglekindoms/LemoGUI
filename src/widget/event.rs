@@ -2,6 +2,7 @@ use std::fmt::*;
 
 pub type KeyCode = winit::event::VirtualKeyCode;
 
+/// 控件点击状态结构体
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum State {
     Pressed,
@@ -9,6 +10,7 @@ pub enum State {
     None,
 }
 
+/// 鼠标事件结构体
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum Mouse {
     Left,
@@ -26,7 +28,7 @@ pub enum EventType {
     Other,
 }
 
-
+/// 事件描述结构体
 #[derive(Debug)]
 pub struct BindEvent<M> {
     pub message: Option<M>,

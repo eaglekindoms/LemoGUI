@@ -1,7 +1,7 @@
 use crate::graphic::base::*;
 use crate::graphic::style::Style;
 
-/// 定义绘图接口，实现解耦
+/// 定义绘图接口，描述基本绘图方法
 pub trait PaintBrush {
     /// 由指定颜色清空屏幕
     fn clear_frame(&mut self, color: RGBA);

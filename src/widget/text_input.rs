@@ -58,7 +58,6 @@ impl<M: Clone + PartialEq + 'static> From<TextInput<M>> for Component<M> {
 }
 
 impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
-    /// 组件绘制方法实现
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         let shape: Box<dyn ShapeGraph> = Box::new(self.size);
         paint_brush.draw_shape(&shape, self.style);

@@ -1,17 +1,6 @@
 use crate::backend::wgpu_impl::VertexBuffer;
 use crate::device::GPUContext;
-use crate::graphic::base::RGBA;
-use crate::graphic::style::{Bordering, Rounding, Style};
-
-/// 图形类型枚举
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-pub enum ShapeType {
-    TEXTURE = 0,
-    ROUND = 1,
-    BORDER = 2,
-    POINT = 3,
-    Circle = 4,
-}
+use crate::graphic::style::Style;
 
 /// 点结构体
 #[repr(C)]
@@ -25,22 +14,31 @@ pub struct Point<T> {
 /// 矩形结构体
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Rectangle {
+    /// 左上顶点坐标
     pub position: Point<f32>,
+    /// 宽度
     pub width: u32,
+    /// 长度
     pub height: u32,
 }
 
 /// 圆形结构体
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Circle {
+    /// 圆心坐标
     pub position: Point<f32>,
+    /// 半径
     pub radius: f32,
 }
 
-/// 多边形结构体
+/// 正多边形结构体
+///
+/// 根据给定圆和边数作的圆内切正多边形
 #[derive(Debug)]
 pub struct RegularPolygon {
+    /// 外接圆
     pub point: Circle,
+    /// 边数
     pub edge: u32,
 }
 
@@ -53,6 +51,10 @@ impl<T> Point<T> {
     }
 }
 
+/// 多边形结构体
+///
+/// 根据给定顶点坐标绘制任意多边形
+/// 顶点顺序为多边形的逆时针排列
 #[derive(Debug)]
 pub struct Polygon {
     pub points: Vec<Point<f32>>,
@@ -76,6 +78,7 @@ impl Rectangle {
     }
 
 
+    /// 将矩形映射到给定宽高的区域中，坐标范围变为-1.0~1.0
     pub fn get_coord(&self, w_width: u32, w_height: u32) -> (f32, f32, f32, f32) {
         (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
          1.0 - 2.0 * self.position.y as f32 / w_height as f32,

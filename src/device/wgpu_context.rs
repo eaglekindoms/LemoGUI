@@ -81,6 +81,7 @@ impl GPUContext {
         self.surface.configure(&self.device, &self.sc_desc);
     }
 
+    /// 获取当前帧尺寸
     pub fn get_surface_size(&self) -> Point<u32> {
         Point::new(self.sc_desc.width, self.sc_desc.height)
     }

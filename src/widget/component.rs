@@ -30,6 +30,7 @@ pub trait ComponentModel<M> {
     { false }
 }
 
+/// 封装组件接口
 pub struct Component<M> {
     pub(crate) widget: Box<dyn ComponentModel<M>>,
 }

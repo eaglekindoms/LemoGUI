@@ -9,6 +9,7 @@ use crate::graphic::base::{BLACK, ImageRaw, RGBA};
 pub const DEFAULT_FONT_SIZE: f32 = 40.0;
 pub const DEFAULT_FONT_COLOR: RGBA = BLACK;
 
+/// 字形结构体
 #[derive(Debug)]
 pub struct Character {
     // /// 字符
@@ -25,7 +26,9 @@ pub struct Character {
     pub bearing_y: i32,
     ///    水平预留值，即原点到下一个字形原点的水平距离（单位：1/64像素）
     pub advance: u32,
+    /// 字形位图
     pub bitmap: Vec<u8>,
+    /// 纹理缓冲数据
     pub texture: Option<TextureBufferData>,
 }
 
@@ -61,6 +64,7 @@ impl Character {
         }
     }
 
+    /// 将字形转为单通道二维图像(只有alpha值)
     pub fn to_raw(&self) -> ImageRaw {
         let mut advance = self.advance;
         let mut bearing_x = self.bearing_x;
@@ -95,6 +99,7 @@ impl Character {
         }
     }
 
+    /// 给字形生成纹理缓冲数据
     pub fn set_texture(&mut self,
                        g_texture: &mut GTexture,
                        device: &wgpu::Device,
@@ -108,6 +113,7 @@ impl Character {
     }
 }
 
+/// 空白字符
 fn blank_character(scale: u32) -> Character {
     Character {
         character: ' ',
@@ -122,7 +128,7 @@ fn blank_character(scale: u32) -> Character {
     }
 }
 
-/// save characters glyph map
+/// 字形容器，保存生成的字形数据
 #[derive(Debug)]
 pub struct GCharMap {
     pub scale: f32,
@@ -170,6 +176,7 @@ impl GCharMap {
         return self.map.get(&c).unwrap();
     }
 
+    /// 给容器中的每个字符生成相应纹理缓冲
     pub fn character_texture(&mut self, c: char,
                              g_texture: &mut GTexture,
                              device: &wgpu::Device,
@@ -190,6 +197,7 @@ impl GCharMap {
         return self.map.get(&c).unwrap();
     }
 
+    /// 把字符串文本转换成单通道图像数据
     pub fn text_to_image(&mut self, text: &str) -> ImageRaw {
         let mut width = 0;
         let mut height = 0;
