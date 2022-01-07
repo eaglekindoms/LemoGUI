@@ -6,7 +6,10 @@ pub use texture::*;
 pub use texture_vertex_layout::*;
 pub use vertex_buffer::*;
 pub use vertex_buffer_layout::*;
+pub(crate) use wgpu_context::WGPUContext;
 
+/// 定义wgpu图形上下文
+mod wgpu_context;
 /// 定义图形顶点缓冲布局
 mod shape_vertex_layout;
 /// 图形转换为wgpu顶点缓冲

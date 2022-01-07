@@ -1,7 +1,6 @@
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
 use crate::backend::wgpu_impl::*;
-use crate::device::GPUContext;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::Style;
@@ -15,7 +14,7 @@ pub struct RenderUtil<'a> {
     /// 目标渲染区域
     pub view: TextureView,
     /// 图形渲染上下文
-    pub context: &'a mut GPUContext,
+    pub context: &'a mut WGPUContext,
     /// 纹理配置上下文
     pub g_texture: GTexture,
 }
@@ -24,7 +23,7 @@ impl<'a> RenderUtil<'a> {
     /// 创建渲染工具
     /// 参数：目标渲染区域，图形渲染上下文
     pub fn new(target_view: &SurfaceTexture,
-               gpu_context: &'a mut GPUContext) -> Self {
+               gpu_context: &'a mut WGPUContext) -> Self {
         let view = target_view
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());

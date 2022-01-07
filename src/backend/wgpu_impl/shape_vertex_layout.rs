@@ -1,7 +1,6 @@
 use wgpu::*;
 
 use crate::backend::wgpu_impl::*;
-use crate::device::GPUContext;
 use crate::graphic::base::*;
 use crate::graphic::style::{Bordering, Rounding, Style};
 
@@ -173,7 +172,7 @@ impl VertexLayout for PointVertex {
 }
 
 impl PointVertex {
-    pub fn from_shape_to_vector(gpu_context: &GPUContext, points: &Vec<Point<f32>>, color: RGBA) -> VertexBuffer {
+    pub fn from_shape_to_vector(gpu_context: &WGPUContext, points: &Vec<Point<f32>>, color: RGBA) -> VertexBuffer {
         let vertex_nums = (points.len() - 3) * 2 + points.len();
         let mut vect = Vec::with_capacity(points.len());
         let mut indices = Vec::with_capacity(vertex_nums);

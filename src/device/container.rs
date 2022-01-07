@@ -1,4 +1,4 @@
-use crate::device::event_context::EventContext;
+use crate::device::EventContext;
 use crate::graphic::render_api::PaintBrush;
 
 /// 渲染容器trait

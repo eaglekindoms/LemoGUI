@@ -1,7 +1,5 @@
 use std::fmt::Debug;
 
-use winit::window::Window;
-
 use crate::backend::wgpu_impl::*;
 use crate::device::Container;
 use crate::graphic::base::*;
@@ -10,7 +8,7 @@ use crate::graphic::render_api::PaintBrush;
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体
 #[derive(Debug)]
-pub struct GPUContext {
+pub struct WGPUContext {
     /// 渲染面板
     pub surface: wgpu::Surface,
     /// 图形设备
@@ -23,11 +21,10 @@ pub struct GPUContext {
     pub glob_pipeline: PipelineState,
 }
 
-impl GPUContext {
-    pub async fn new(window: &Window) -> GPUContext {
+impl WGPUContext {
+    pub async fn new<W: raw_window_handle::HasRawWindowHandle>(window: &W, window_size: Point<u32>) -> WGPUContext {
         log::info!("Initializing the surface...");
         let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let size = window.inner_size();
 
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
@@ -54,18 +51,17 @@ impl GPUContext {
             )
             .await
             .unwrap();
-        //  : wgpu::TextureFormat::Bgra8UnormSrgb
         let sc_desc = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format,
-            width: size.width,
-            height: size.height,
+            width: window_size.x,
+            height: window_size.y,
             present_mode: wgpu::PresentMode::Fifo,
         };
         let glob_pipeline = PipelineState::default(&device);
 
         surface.configure(&device, &sc_desc);
-        GPUContext {
+        WGPUContext {
             surface,
             device,
             queue,

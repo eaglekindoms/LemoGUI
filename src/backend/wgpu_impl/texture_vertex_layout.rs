@@ -1,7 +1,6 @@
 use wgpu::*;
 
 use crate::backend::wgpu_impl::*;
-use crate::device::GPUContext;
 use crate::graphic::base::{Rectangle, RGBA};
 
 /// 2D纹理顶点数据布局结构体
@@ -54,7 +53,7 @@ impl VertexLayout for TextureVertex {
 }
 
 impl TextureVertex {
-    pub fn new(gpu_context: &GPUContext, rect: &Rectangle, font_color: RGBA) -> VertexBuffer {
+    pub fn new(gpu_context: &WGPUContext, rect: &Rectangle, font_color: RGBA) -> VertexBuffer {
         let sc_desc = gpu_context.get_surface_size();
         let (t_x, t_y, t_w, t_h) =
             rect.get_coord(sc_desc.x, sc_desc.y);

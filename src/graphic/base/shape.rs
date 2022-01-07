@@ -1,5 +1,4 @@
-use crate::backend::wgpu_impl::VertexBuffer;
-use crate::device::GPUContext;
+use crate::device::{GPUContext, VBuffer};
 use crate::graphic::style::Style;
 
 /// 点结构体
@@ -118,5 +117,5 @@ impl RegularPolygon {
 /// 图形缓冲转换接口
 pub trait ShapeGraph {
     /// 转换为顶点缓冲数据
-    fn to_buffer(&self, gpu_context: &GPUContext, style: Style) -> VertexBuffer;
+    fn to_buffer(&self, gpu_context: &GPUContext, style: Style) -> VBuffer;
 }
