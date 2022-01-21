@@ -9,7 +9,6 @@ pub struct Point<T> {
     pub y: T,
 }
 
-
 /// 矩形结构体
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Rectangle {
@@ -43,10 +42,7 @@ pub struct RegularPolygon {
 
 impl<T> Point<T> {
     pub fn new(x: T, y: T) -> Point<T> {
-        Point {
-            x,
-            y,
-        }
+        Point { x, y }
     }
 }
 
@@ -61,9 +57,7 @@ pub struct Polygon {
 
 impl Polygon {
     pub fn new(points: Vec<Point<f32>>) -> Polygon {
-        Polygon {
-            points
-        }
+        Polygon { points }
     }
 }
 
@@ -76,23 +70,24 @@ impl Rectangle {
         }
     }
 
-
     /// 将矩形映射到给定宽高的区域中，坐标范围变为-1.0~1.0
     pub fn get_coord(&self, w_width: u32, w_height: u32) -> (f32, f32, f32, f32) {
-        (2.0 * self.position.x as f32 / w_width as f32 - 1.0,
-         1.0 - 2.0 * self.position.y as f32 / w_height as f32,
-         2.0 * self.width as f32 / w_width as f32,
-         2.0 * self.height as f32 / w_height as f32)
+        (
+            2.0 * self.position.x as f32 / w_width as f32 - 1.0,
+            1.0 - 2.0 * self.position.y as f32 / w_height as f32,
+            2.0 * self.width as f32 / w_width as f32,
+            2.0 * self.height as f32 / w_height as f32,
+        )
     }
 
     /// 判断点是否在矩形内
     pub fn contain_coord(&self, position: Point<f32>) -> bool {
         let rel_x = position.x - self.position.x;
         let rel_y = position.y - self.position.y;
-        (rel_x < (self.width as f32)) &&
-            (rel_y < (self.height as f32)) &&
-            (rel_x > 0.) &&
-            (rel_y > 0.)
+        (rel_x < (self.width as f32))
+            && (rel_y < (self.height as f32))
+            && (rel_x > 0.)
+            && (rel_y > 0.)
     }
 }
 
@@ -107,10 +102,7 @@ impl Circle {
 
 impl RegularPolygon {
     pub fn new(point: Circle, edge: u32) -> RegularPolygon {
-        RegularPolygon {
-            point,
-            edge,
-        }
+        RegularPolygon { point, edge }
     }
 }
 

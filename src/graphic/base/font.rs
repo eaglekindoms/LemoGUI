@@ -4,7 +4,7 @@ use std::path::Path;
 use ab_glyph::{Font, FontVec, PxScale, PxScaleFont, ScaleFont};
 
 use crate::backend::wgpu_impl::*;
-use crate::graphic::base::{BLACK, ImageRaw, RGBA};
+use crate::graphic::base::{ImageRaw, BLACK, RGBA};
 
 pub const DEFAULT_FONT_SIZE: f32 = 40.0;
 pub const DEFAULT_FONT_COLOR: RGBA = BLACK;
@@ -35,11 +35,15 @@ pub struct Character {
 impl Character {
     /// 通过提供的字体和字符生成字形
     pub fn witch_scaled_font<F, SF>(scaled_font: &SF, character: char) -> Character
-        where F: Font, SF: ScaleFont<F>
+    where
+        F: Font,
+        SF: ScaleFont<F>,
     {
         let glyph = scaled_font.scaled_glyph(character);
         let advance = scaled_font.h_advance(glyph.id) as u32;
-        let outlined = scaled_font.outline_glyph(glyph).expect("Failed to load Glyph! ");
+        let outlined = scaled_font
+            .outline_glyph(glyph)
+            .expect("Failed to load Glyph! ");
         let bounds = outlined.px_bounds();
         let width = (bounds.max.x - bounds.min.x) as u32;
         let height = (bounds.max.y - bounds.min.y) as u32;
@@ -100,11 +104,12 @@ impl Character {
     }
 
     /// 给字形生成纹理缓冲数据
-    pub fn set_texture(&mut self,
-                       g_texture: &mut GTexture,
-                       device: &wgpu::Device,
-                       queue: &wgpu::Queue) -> &TextureBufferData
-    {
+    pub fn set_texture(
+        &mut self,
+        g_texture: &mut GTexture,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+    ) -> &TextureBufferData {
         if self.texture.is_none() {
             let raw_data = self.to_raw();
             self.texture = Some(g_texture.create_bind_group(device, queue, raw_data));
@@ -144,14 +149,14 @@ impl GCharMap {
     pub fn new(font_path: String, font_size: f32) -> GCharMap {
         let path = Path::new(font_path.as_str());
         let font_bits = std::fs::read(path).unwrap();
-        let font =
-            FontVec::try_from_vec(font_bits)
-                .expect("import font failed");
+        let font = FontVec::try_from_vec(font_bits).expect("import font failed");
         let mut characters = HashMap::<char, Character>::with_capacity(DEFAULT_GLYPH_MAP_COUNT);
         let scale = PxScale::from(font_size);
         let scaled_font = font.into_scaled(scale);
         for c in 0u8..128 {
-            if (c as char).is_control() || (c as char).is_whitespace() { continue; }
+            if (c as char).is_control() || (c as char).is_whitespace() {
+                continue;
+            }
             let ch = Character::witch_scaled_font(&scaled_font, c as char);
             characters.insert(c as char, ch);
         }
@@ -177,11 +182,13 @@ impl GCharMap {
     }
 
     /// 给容器中的每个字符生成相应纹理缓冲
-    pub fn character_texture(&mut self, c: char,
-                             g_texture: &mut GTexture,
-                             device: &wgpu::Device,
-                             queue: &wgpu::Queue) -> &Character
-    {
+    pub fn character_texture(
+        &mut self,
+        c: char,
+        g_texture: &mut GTexture,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+    ) -> &Character {
         let ch = self.map.get(&c);
         if ch.is_none() || ch.unwrap().texture.is_none() {
             let mut new_ch;
@@ -201,13 +208,15 @@ impl GCharMap {
     pub fn text_to_image(&mut self, text: &str) -> ImageRaw {
         let mut width = 0;
         let mut height = 0;
-        let chars: Vec<ImageRaw> = text.chars()
+        let chars: Vec<ImageRaw> = text
+            .chars()
             .map(|c| {
                 let raw = self.character(c).to_raw();
                 width += raw.width;
                 height = raw.height;
                 raw
-            }).collect();
+            })
+            .collect();
 
         let mut buffer = vec![0u8; (width * height) as usize];
 

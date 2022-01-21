@@ -18,7 +18,6 @@ pub struct Label {
     pub image_path: Option<String>,
 }
 
-
 impl Label {
     /// 创建文本面板
     pub fn new_text_label(rect: Rectangle, style: Style, text: String) -> Self {
@@ -46,9 +45,12 @@ impl Label {
         paint_brush.draw_shape(&shape, self.style);
         if let Some(text) = &self.text {
             log::info!("draw label's text");
-            paint_brush.draw_text(font_map, &self.size,
-                                  text.as_str(),
-                                  self.style.get_font_color());
+            paint_brush.draw_text(
+                font_map,
+                &self.size,
+                text.as_str(),
+                self.style.get_font_color(),
+            );
         }
         if let Some(image_path) = &self.image_path {
             log::info!("draw label's image");

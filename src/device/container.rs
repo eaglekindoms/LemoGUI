@@ -10,5 +10,3 @@ pub trait Container<M>: Sized {
     /// 容器渲染
     fn render(&mut self, paint_brush: &mut dyn PaintBrush);
 }
-
-

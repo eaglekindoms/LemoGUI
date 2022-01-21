@@ -22,7 +22,10 @@ pub struct WGPUContext {
 }
 
 impl WGPUContext {
-    pub async fn new<W: raw_window_handle::HasRawWindowHandle>(window: &W, window_size: Point<u32>) -> WGPUContext {
+    pub async fn new<W: raw_window_handle::HasRawWindowHandle>(
+        window: &W,
+        window_size: Point<u32>,
+    ) -> WGPUContext {
         log::info!("Initializing the surface...");
         let instance = wgpu::Instance::new(wgpu::Backends::all());
 
@@ -83,17 +86,17 @@ impl WGPUContext {
     }
 
     /// 显示图形内容
-    pub fn present<C, M>(&mut self,
-                         container: &mut C)
-        where C: Container<M> + 'static, M: 'static + Debug
+    pub fn present<C, M>(&mut self, container: &mut C)
+    where
+        C: Container<M> + 'static,
+        M: 'static + Debug,
     {
         match self.surface.get_current_texture() {
             Err(error) => {
                 log::error!("{}", error);
             }
             Ok(target_view) => {
-                let mut utils
-                    = RenderUtil::new(&target_view, self);
+                let mut utils = RenderUtil::new(&target_view, self);
                 utils.clear_frame(BACKGROUND_COLOR);
                 container.render(&mut utils);
                 utils.context.queue.submit(Some(utils.encoder.finish()));

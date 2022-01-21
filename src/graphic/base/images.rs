@@ -15,8 +15,7 @@ pub struct ImageRaw {
 
 impl ImageRaw {
     pub fn new(image_path: &str) -> Self {
-        let image_file = image::open(Path::new(image_path))
-            .expect("cannot open image file");
+        let image_file = image::open(Path::new(image_path)).expect("cannot open image file");
         let raw_data = image_file.as_bytes();
         let (width, height) = image_file.dimensions();
         ImageRaw {

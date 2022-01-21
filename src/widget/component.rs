@@ -11,23 +11,24 @@ pub trait ComponentModel<M> {
     /// 组件绘制方法实现
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap);
     /// 键盘事件监听器
-    fn key_listener(&mut self,
-                    _event_context: &EventContext<'_, M>,
-                    _virtual_keycode: Option<KeyCode>) -> bool {
+    fn key_listener(
+        &mut self,
+        _event_context: &EventContext<'_, M>,
+        _virtual_keycode: Option<KeyCode>,
+    ) -> bool {
         false
     }
     /// 鼠标点击事件监听器
-    fn action_listener(&mut self,
-                       _event_context: &EventContext<'_, M>,
-                       _mouse: Mouse) -> bool
-    { false }
+    fn action_listener(&mut self, _event_context: &EventContext<'_, M>, _mouse: Mouse) -> bool {
+        false
+    }
     /// 鼠标悬停事件监听器
-    fn hover_listener(&mut self,
-                      _event_context: &EventContext<'_, M>) -> bool
-    { false }
-    fn received_character(&mut self,
-                          _event_context: &EventContext<'_, M>, c: char) -> bool
-    { false }
+    fn hover_listener(&mut self, _event_context: &EventContext<'_, M>) -> bool {
+        false
+    }
+    fn received_character(&mut self, _event_context: &EventContext<'_, M>, c: char) -> bool {
+        false
+    }
 }
 
 /// 封装组件接口
@@ -38,7 +39,7 @@ pub struct Component<M> {
 impl<M: Clone + PartialEq> Component<M> {
     pub fn new(widget: impl ComponentModel<M> + 'static) -> Component<M> {
         Component {
-            widget: Box::new(widget)
+            widget: Box::new(widget),
         }
     }
 }

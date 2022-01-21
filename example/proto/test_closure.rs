@@ -14,14 +14,17 @@ pub fn indices() {
 }
 
 pub fn num<T>(x: T) -> T
-    where T: Debug
+where
+    T: Debug,
 {
     println!("{:?}", x);
     x
 }
 
 pub fn closure<F>(num: F)
-    where F: Fn(i32) -> i32 {
+where
+    F: Fn(i32) -> i32,
+{
     let x = num(12);
     println!("{:?}", x);
 }
@@ -30,13 +33,11 @@ pub fn closure1<T>(x: T, num: &dyn Fn(T) -> T) {
     num(x);
 }
 
-pub fn closure2<T>(x: T, num: Box<dyn Fn(T) -> T>)
-{
+pub fn closure2<T>(x: T, num: Box<dyn Fn(T) -> T>) {
     num(x);
 }
 
-pub fn closure3() -> Box<dyn Fn(i32) -> i32>
-{
+pub fn closure3() -> Box<dyn Fn(i32) -> i32> {
     let num = 12;
     Box::new(move |x| x + num)
 }

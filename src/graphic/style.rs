@@ -122,7 +122,7 @@ impl Style {
     pub fn get_font_color(&self) -> RGBA {
         match self.font_style {
             FontStyle::NoFont => DEFAULT_FONT_COLOR,
-            FontStyle::Font(color) => color
+            FontStyle::Font(color) => color,
         }
     }
 

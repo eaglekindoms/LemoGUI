@@ -17,7 +17,10 @@ pub trait Instance {
     /// 窗体设置
     fn setting() -> Setting;
     /// 运行实例
-    fn run() where Self: 'static + Sized {
+    fn run()
+    where
+        Self: 'static + Sized,
+    {
         let setting = Self::setting();
         let font_path = setting.clone().font_path;
         let window = DisplayWindow::new(setting);
@@ -42,7 +45,11 @@ impl Default for Setting {
         Setting {
             title: "untitled".to_string(),
             icon_path: None,
-            font_path: concat!(env!("CARGO_MANIFEST_DIR"), "/res/SourceHanSansCN-Regular.otf").into(),
+            font_path: concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/res/SourceHanSansCN-Regular.otf"
+            )
+            .into(),
             size: Point::new(40., 40.),
         }
     }

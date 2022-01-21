@@ -2,8 +2,8 @@ use cgmath::{Matrix4, Vector4};
 
 use crate::test_closure::*;
 
-mod test_closure;
 mod test_alter_message;
+mod test_closure;
 
 fn main() {
     closure(|x| x + 2);

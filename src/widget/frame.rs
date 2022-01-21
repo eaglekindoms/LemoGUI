@@ -1,19 +1,18 @@
 use crate::device::Container;
 use crate::device::EventContext;
-use crate::graphic::base::{DEFAULT_FONT_SIZE, GCharMap};
+use crate::graphic::base::{GCharMap, DEFAULT_FONT_SIZE};
 use crate::graphic::render_api::PaintBrush;
 use crate::widget::*;
 
 /// 窗口帧结构体
 /// 作用：用作gui控件的容器
-pub struct Frame<M: PartialEq + Clone, I: Instance<M=M>> {
+pub struct Frame<M: PartialEq + Clone, I: Instance<M = M>> {
     pub display_panel: Vec<(I, Panel<M>)>,
     /// 字体缓冲
     pub font_map: GCharMap,
-
 }
 
-impl<M: Clone + PartialEq, I: Instance<M=M>> Frame<M, I> {
+impl<M: Clone + PartialEq, I: Instance<M = M>> Frame<M, I> {
     pub fn new(font_path: String) -> Self {
         let font_map = GCharMap::new(font_path, DEFAULT_FONT_SIZE);
         Self {
@@ -28,9 +27,8 @@ impl<M: Clone + PartialEq, I: Instance<M=M>> Frame<M, I> {
     }
 }
 
-impl<M: Clone + PartialEq, I: Instance<M=M>> Container<M> for Frame<M, I> {
-    fn update(&mut self, event_context: &mut EventContext<'_, M>) -> bool
-    {
+impl<M: Clone + PartialEq, I: Instance<M = M>> Container<M> for Frame<M, I> {
+    fn update(&mut self, event_context: &mut EventContext<'_, M>) -> bool {
         let mut is_update = false;
         let mut updated_instance: Vec<(I, Panel<M>)> = Vec::with_capacity(self.display_panel.len());
         let mut updated_index = Vec::with_capacity(self.display_panel.len());
@@ -62,4 +60,3 @@ impl<M: Clone + PartialEq, I: Instance<M=M>> Container<M> for Frame<M, I> {
         }
     }
 }
-

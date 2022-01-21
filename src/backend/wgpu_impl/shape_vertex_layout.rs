@@ -49,13 +49,13 @@ impl VertexLayout for CircleVertex {
     fn get_shader(device: &Device) -> ShaderModule {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("circle shader"),
-            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
-                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/circle.wgsl")),
-            )),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader_c/circle.wgsl"
+            )))),
         })
     }
 }
-
 
 /// 矩形顶点数据布局结构体
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -91,9 +91,10 @@ impl VertexLayout for RectVertex {
     fn get_shader(device: &Device) -> ShaderModule {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("round_rect shader"),
-            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
-                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/round_rect.wgsl")),
-            )),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader_c/round_rect.wgsl"
+            )))),
         })
     }
 }
@@ -105,15 +106,15 @@ impl RectVertex {
         let is_round;
         let is_border;
         match style.get_round() {
-            Rounding::Round => { is_round = 1 }
-            Rounding::NoRound => { is_round = 0 }
+            Rounding::Round => is_round = 1,
+            Rounding::NoRound => is_round = 0,
         }
         match style.get_border() {
             Bordering::Border(color) => {
                 is_border = 1;
                 border_color = color.to_vec()
             }
-            Bordering::NoBorder => { is_border = 0 }
+            Bordering::NoBorder => is_border = 0,
         }
         RectVertex {
             size: [rect.width as f32, rect.height as f32],
@@ -124,7 +125,6 @@ impl RectVertex {
         }
     }
 }
-
 
 /// 多边形顶点数据布局结构体
 #[repr(C)]
@@ -164,15 +164,20 @@ impl VertexLayout for PointVertex {
     fn get_shader(device: &Device) -> ShaderModule {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("triangle shader"),
-            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(
-                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shader_c/triangle.wgsl")),
-            )),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader_c/triangle.wgsl"
+            )))),
         })
     }
 }
 
 impl PointVertex {
-    pub fn from_shape_to_vector(gpu_context: &WGPUContext, points: &Vec<Point<f32>>, color: RGBA) -> VertexBuffer {
+    pub fn from_shape_to_vector(
+        gpu_context: &WGPUContext,
+        points: &Vec<Point<f32>>,
+        color: RGBA,
+    ) -> VertexBuffer {
         let vertex_nums = (points.len() - 3) * 2 + points.len();
         let mut vect = Vec::with_capacity(points.len());
         let mut indices = Vec::with_capacity(vertex_nums);
@@ -186,8 +191,11 @@ impl PointVertex {
             i = i + 1;
             indices.push(i);
         }
-        let point_buffer = VertexBuffer::create_vertex_buf::<PointVertex>
-            (&gpu_context.device, vect, indices.as_slice());
+        let point_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(
+            &gpu_context.device,
+            vect,
+            indices.as_slice(),
+        );
         point_buffer
     }
 }

@@ -26,9 +26,7 @@ impl PipelineState {
         // 全局设置
         log::info!("create the PipelineState obj");
         let context = HashMap::with_capacity(4);
-        let mut glob_pipeline = Self {
-            context,
-        };
+        let mut glob_pipeline = Self { context };
         glob_pipeline.set_pipeline::<RectVertex>(device);
         glob_pipeline.set_pipeline::<CircleVertex>(device);
         glob_pipeline.set_pipeline::<PointVertex>(device);
@@ -36,7 +34,10 @@ impl PipelineState {
         glob_pipeline
     }
     /// 创建渲染管道
-    pub fn set_pipeline<V>(&mut self, device: &Device) where V: VertexLayout {
+    pub fn set_pipeline<V>(&mut self, device: &Device)
+    where
+        V: VertexLayout,
+    {
         // 作用：绑定着色器，图形填充
         let render_pipeline = V::create_render_pipeline(device);
         let shape_type = V::get_shape_type();
@@ -49,4 +50,3 @@ impl PipelineState {
         self.context.get(&shape_type)
     }
 }
-

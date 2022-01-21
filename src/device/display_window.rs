@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
-use crate::device::{EventContext, EventListener};
 use crate::device::container::Container;
 use crate::device::GPUContext;
+use crate::device::{EventContext, EventListener};
 use crate::widget::Setting;
 
 /// 窗口结构体
@@ -18,7 +18,9 @@ pub struct DisplayWindow<'a, M: 'static> {
 
 impl<M: 'static + Debug> DisplayWindow<'static, M> {
     pub fn start<C>(self, container: C)
-        where C: Container<M> + 'static {
+    where
+        C: Container<M> + 'static,
+    {
         crate::device::run_instance(self, container);
     }
 

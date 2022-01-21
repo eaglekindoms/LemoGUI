@@ -10,8 +10,13 @@ pub trait PaintBrush {
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style);
 
     /// 绘制文本
-    fn draw_text(&mut self, font_map: &mut GCharMap,
-                 text_rect: &Rectangle, text: &str, text_color: RGBA);
+    fn draw_text(
+        &mut self,
+        font_map: &mut GCharMap,
+        text_rect: &Rectangle,
+        text: &str,
+        text_color: RGBA,
+    );
 
     /// 绘制图像
     fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw);

@@ -14,16 +14,15 @@ pub const BACKGROUND_COLOR: RGBA = RGBA(0.9, 0.9, 0.9, 1.0);
 
 impl RGBA {
     /// 转化为u8元组
-    pub fn to_u8(&self) -> (u8, u8, u8, u8) {
+    pub fn to_u8(&self) -> [u8; 4] {
         let r = (self.0 * 255.0) as u8;
         let g = (self.1 * 255.0) as u8;
         let b = (self.2 * 255.0) as u8;
         let a = (self.3 * 255.0) as u8;
-        (r, g, b, a)
+        [r, g, b, a]
     }
     /// 转化为浮点数组
     pub fn to_vec(&self) -> [f32; 4] {
         [self.0, self.1, self.2, self.3]
     }
 }
-

@@ -19,9 +19,15 @@ pub struct TextInput<M: Clone> {
 }
 
 impl<'a, M: Clone + PartialEq> TextInput<M> {
-    pub fn new_with_style<S: Into<String>, MT>(rect: Rectangle,
-                                               style: Style, text: S, rec: MT) -> Self
-        where MT: 'static + Fn(String) -> M {
+    pub fn new_with_style<S: Into<String>, MT>(
+        rect: Rectangle,
+        style: Style,
+        text: S,
+        rec: MT,
+    ) -> Self
+    where
+        MT: 'static + Fn(String) -> M,
+    {
         Self {
             text_label: Label::new_text_label(rect, style, text.into()),
             state: None,
@@ -31,7 +37,9 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
     }
 
     pub fn new<S: Into<String>, MT>(pos: Point<f32>, text: S, rec: MT) -> Self
-        where MT: 'static + Fn(String) -> M {
+    where
+        MT: 'static + Fn(String) -> M,
+    {
         let text = text.into();
         let rect = Rectangle::new(pos.x, pos.y, (text.len() * 10) as u32 + 10, 40);
         let style = Style::default().back_color(WHITE);
@@ -55,10 +63,8 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
         self.text_label.draw(paint_brush, font_map)
     }
 
-    fn hover_listener(&mut self, event_context: &EventContext<'_, M>) -> bool
-    {
-        let input = self.text_label.size
-            .contain_coord(event_context.cursor_pos);
+    fn hover_listener(&mut self, event_context: &EventContext<'_, M>) -> bool {
+        let input = self.text_label.size.contain_coord(event_context.cursor_pos);
         if input {
             event_context.window.set_cursor_icon(CursorIcon::Text);
         } else {

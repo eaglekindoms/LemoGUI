@@ -39,10 +39,7 @@ impl ShaderData {
 
 fn main() -> Result<()> {
     // Collect all shaders recursively within /src/
-    let mut shader_paths = [
-        glob("./shader_c/*.vert")?,
-        glob("./shader_c/*.frag")?,
-    ];
+    let mut shader_paths = [glob("./shader_c/*.vert")?, glob("./shader_c/*.frag")?];
 
     // This could be parallelized
     let shaders = shader_paths

@@ -5,20 +5,24 @@ use crate::widget::{Component, ComponentModel};
 
 /// 容器面板结构体
 #[derive(Debug)]
-pub struct Panel<M> where M: PartialEq, M: std::clone::Clone {
+pub struct Panel<M>
+where
+    M: PartialEq,
+    M: std::clone::Clone,
+{
     pub widgets: Vec<Component<M>>,
 }
 
 impl<M: Clone + PartialEq> Panel<M> {
     pub fn new() -> Panel<M> {
         Panel {
-            widgets: Vec::with_capacity(4)
+            widgets: Vec::with_capacity(4),
         }
     }
 
     pub fn push<E>(mut self, child: E) -> Self
-        where
-            E: Into<Component<M>>,
+    where
+        E: Into<Component<M>>,
     {
         self.widgets.push(child.into());
         self
@@ -34,7 +38,6 @@ impl<M: Clone + PartialEq> Panel<M> {
         return is_listener;
     }
 }
-
 
 impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {

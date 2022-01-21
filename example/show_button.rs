@@ -42,20 +42,23 @@ impl Instance for Counter {
             .back_color(RGBA(1.0, 0.5, 0.5, 1.0))
             .font_color(RGBA(0.1, 0.3, 0.8, 1.0))
             .round();
-        let b1 = Button::new_with_style(rect, style, "add button 加")
-            .action(Ms::Add);
+        let b1 = Button::new_with_style(rect, style, "add button 加").action(Ms::Add);
         Panel::new()
             .push(Button::new(Point::new(100.0, 200.0), "sub button 减").action(Ms::Sub))
-            .push(TextInput::new(Point::new(100.0, 300.0), self.text.as_str(), Ms::Text))
+            .push(TextInput::new(
+                Point::new(100.0, 300.0),
+                self.text.as_str(),
+                Ms::Text,
+            ))
             .push(b1)
             .push(Button::new(Point::new(120., 20.), self.value.to_string()))
     }
 
     fn update(&mut self, broadcast: &Ms) {
         match broadcast {
-            Ms::Add => { self.value += 1 }
-            Ms::Sub => { self.value -= 1 }
-            Ms::Text(str) => { self.text = str.to_string() }
+            Ms::Add => self.value += 1,
+            Ms::Sub => self.value -= 1,
+            Ms::Text(str) => self.text = str.to_string(),
         }
     }
 

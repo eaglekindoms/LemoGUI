@@ -29,8 +29,11 @@ impl GTexture {
     /// data_size：纹理数据来源的尺寸，用于指定纹理数据的布局，指定行数，列数
     ///
     /// texture_format：指定纹理色位通道数，即是单通道还是rgba四通道
-    pub fn new(device: &wgpu::Device, data_size: Point<u32>,
-               texture_format: wgpu::TextureFormat) -> Self {
+    pub fn new(
+        device: &wgpu::Device,
+        data_size: Point<u32>,
+        texture_format: wgpu::TextureFormat,
+    ) -> Self {
         let size = wgpu::Extent3d {
             width: data_size.x,
             height: data_size.y,
@@ -41,7 +44,7 @@ impl GTexture {
         let image_width: u32;
         match texture_format {
             TextureFormat::R8Unorm => image_width = data_size.x,
-            _ => image_width = data_size.x * 4
+            _ => image_width = data_size.x * 4,
         }
         let image_layout = wgpu::ImageDataLayout {
             offset: 0,
@@ -75,13 +78,17 @@ impl GTexture {
     }
 
     /// 创建图像的纹理缓冲
-    pub fn create_bind_group(&mut self, device: &wgpu::Device,
-                             queue: &wgpu::Queue, raw_data: ImageRaw) -> TextureBufferData {
+    pub fn create_bind_group(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        raw_data: ImageRaw,
+    ) -> TextureBufferData {
         self.update_size(device, Point::new(raw_data.width, raw_data.height));
         let width = raw_data.width;
         let height = raw_data.height;
-        let view = writer_data_to_texture(queue,
-                                          &self.texture, self.image_layout, self.size, raw_data);
+        let view =
+            writer_data_to_texture(queue, &self.texture, self.image_layout, self.size, raw_data);
         let uniform = bind_group(device, &self.bind_group_layout, &view, &self.sampler);
         TextureBufferData {
             width,
@@ -94,8 +101,11 @@ impl GTexture {
 /// 定义纹理描述符
 /// 参数：纹理尺寸
 /// 输出配置：定义纹理尺寸，维度：2d，颜色格式：rgba，纹理来源：sampled,copy_dst
-pub fn create_2d_texture(device: &wgpu::Device, texture_size: wgpu::Extent3d,
-                         texture_format: wgpu::TextureFormat) -> wgpu::Texture {
+pub fn create_2d_texture(
+    device: &wgpu::Device,
+    texture_size: wgpu::Extent3d,
+    texture_format: wgpu::TextureFormat,
+) -> wgpu::Texture {
     device.create_texture(&wgpu::TextureDescriptor {
         label: None,
         size: texture_size,
@@ -108,12 +118,13 @@ pub fn create_2d_texture(device: &wgpu::Device, texture_size: wgpu::Extent3d,
 }
 
 /// 将图像原始数据写入到纹理缓冲空间中
-pub fn writer_data_to_texture(queue: &wgpu::Queue,
-                              texture: &wgpu::Texture,
-                              image_layout: wgpu::ImageDataLayout,
-                              size: wgpu::Extent3d,
-                              raw_data: ImageRaw) -> wgpu::TextureView
-{
+pub fn writer_data_to_texture(
+    queue: &wgpu::Queue,
+    texture: &wgpu::Texture,
+    image_layout: wgpu::ImageDataLayout,
+    size: wgpu::Extent3d,
+    raw_data: ImageRaw,
+) -> wgpu::TextureView {
     queue.write_texture(
         texture.as_image_copy(),
         raw_data.data.as_slice(),
@@ -124,27 +135,26 @@ pub fn writer_data_to_texture(queue: &wgpu::Queue,
 }
 
 /// 描述纹理顶点数据布局,用于着色器识别数据
-pub fn bind_group(device: &wgpu::Device,
-                  bind_group_layout: &wgpu::BindGroupLayout,
-                  target: &wgpu::TextureView,
-                  sampler: &wgpu::Sampler) -> wgpu::BindGroup
-{
-    device.create_bind_group(
-        &wgpu::BindGroupDescriptor {
-            layout: &bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(target),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(sampler),
-                }
-            ],
-            label: None,
-        }
-    )
+pub fn bind_group(
+    device: &wgpu::Device,
+    bind_group_layout: &wgpu::BindGroupLayout,
+    target: &wgpu::TextureView,
+    sampler: &wgpu::Sampler,
+) -> wgpu::BindGroup {
+    device.create_bind_group(&wgpu::BindGroupDescriptor {
+        layout: &bind_group_layout,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(target),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: wgpu::BindingResource::Sampler(sampler),
+            },
+        ],
+        label: None,
+    })
 }
 
 /// 默认采样器描述符

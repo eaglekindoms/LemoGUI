@@ -1,6 +1,6 @@
 use bytemuck::Pod;
-use wgpu::Device;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
+use wgpu::Device;
 
 use crate::backend::wgpu_impl::*;
 
@@ -17,24 +17,22 @@ pub const RECT_INDEX: &[u16; 4] = &[0, 2, 1, 3];
 pub const RECT_LINE_INDEX: &[u16; 5] = &[0, 1, 3, 2, 0];
 
 impl<'a> VertexBuffer {
-    pub fn create_vertex_buf<V>(device: &Device, vect: Vec<V>
-                                , indices: &'a [u16]) -> Self
-        where V: Pod + VertexLayout
+    pub fn create_vertex_buf<V>(device: &Device, vect: Vec<V>, indices: &'a [u16]) -> Self
+    where
+        V: Pod + VertexLayout,
     {
         log::info!("----create wgpu buffer----");
         let shape_type = V::get_shape_type();
-        let vertex_buffer = device
-            .create_buffer_init(&BufferInitDescriptor {
-                label: None,
-                contents: bytemuck::cast_slice(vect.as_slice()),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-        let index_buffer = device.create_buffer_init(
-            &BufferInitDescriptor {
-                label: None,
-                contents: bytemuck::cast_slice(indices),
-                usage: wgpu::BufferUsages::INDEX,
-            });
+        let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(vect.as_slice()),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        let index_buffer = device.create_buffer_init(&BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
         let num_indices = indices.len() as u32;
         Self {
             vertex_buffer,
@@ -45,14 +43,19 @@ impl<'a> VertexBuffer {
     }
 
     /// 由顶点缓冲和纹理缓冲渲染图形
-    pub fn render(&'a self, render_utils: &mut RenderUtil,
-                  texture_state: Option<&'a TextureBufferData>) {
+    pub fn render(
+        &'a self,
+        render_utils: &mut RenderUtil,
+        texture_state: Option<&'a TextureBufferData>,
+    ) {
         // 获取顶点缓冲对应的渲染管道
-        let pipeline =
-            render_utils.context.glob_pipeline.get_pipeline(self.shape_type).unwrap();
+        let pipeline = render_utils
+            .context
+            .glob_pipeline
+            .get_pipeline(self.shape_type)
+            .unwrap();
         // 创建临时渲染变量，并设置渲染管道
-        let mut render_pass =
-            create_render_pass(&mut render_utils.encoder, &render_utils.view);
+        let mut render_pass = create_render_pass(&mut render_utils.encoder, &render_utils.view);
         render_pass.set_pipeline(&pipeline);
         // 绑定纹理缓冲
         if let Some(texture_buffer) = texture_state {
@@ -66,7 +69,10 @@ impl<'a> VertexBuffer {
 }
 
 /// 创建渲染中间变量
-fn create_render_pass<'a>(encoder: &'a mut wgpu::CommandEncoder, target: &'a wgpu::TextureView) -> wgpu::RenderPass<'a> {
+fn create_render_pass<'a>(
+    encoder: &'a mut wgpu::CommandEncoder,
+    target: &'a wgpu::TextureView,
+) -> wgpu::RenderPass<'a> {
     let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
         label: None,
         color_attachments: &[wgpu::RenderPassColorAttachment {

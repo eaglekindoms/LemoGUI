@@ -10,10 +10,10 @@ pub use text_input::*;
 
 mod button;
 mod component;
-mod frame;
 mod drawing_board;
 mod event;
-mod text_input;
-mod panel;
+mod frame;
 mod instance;
 mod label;
+mod panel;
+mod text_input;

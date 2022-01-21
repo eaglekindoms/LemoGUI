@@ -16,7 +16,6 @@ pub struct Button<M: Clone> {
     pub bind_event: BindEvent<M>,
 }
 
-
 impl<'a, M: Clone + PartialEq> Button<M> {
     pub fn new_with_style<S: Into<String>>(rect: Rectangle, style: Style, text: S) -> Self {
         Self {
@@ -52,9 +51,11 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         self.button_label.draw(paint_brush, font_map)
     }
-    fn key_listener(&mut self,
-                    _event_context: &EventContext<'_, M>,
-                    _virtual_keycode: Option<KeyCode>) -> bool {
+    fn key_listener(
+        &mut self,
+        _event_context: &EventContext<'_, M>,
+        _virtual_keycode: Option<KeyCode>,
+    ) -> bool {
         if let Some(key_codes) = &self.bind_event.shortcuts {
             if let Some(key) = _virtual_keycode {
                 return key_codes.contains(&key);
@@ -62,15 +63,13 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
         }
         false
     }
-    fn action_listener(&mut self,
-                       event_context: &EventContext<'_, M>,
-                       mouse: Mouse) -> bool
-    {
+    fn action_listener(&mut self, event_context: &EventContext<'_, M>, mouse: Mouse) -> bool {
         if mouse == self.bind_event.mouse {
-            return event_context
-                .action_animation(&mut self.button_label.style,
-                                  &self.button_label.size,
-                                  self.bind_event.message.clone());
+            return event_context.action_animation(
+                &mut self.button_label.style,
+                &self.button_label.size,
+                self.bind_event.message.clone(),
+            );
         }
         false
     }

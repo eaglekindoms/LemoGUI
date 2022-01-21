@@ -2,8 +2,8 @@ use std::fmt::Debug;
 use std::future::Future;
 use std::path::Path;
 
-use futures::{StreamExt, task};
 use futures::channel::mpsc;
+use futures::{task, StreamExt};
 use winit::event::*;
 use winit::event_loop::*;
 use winit::window::*;
@@ -54,10 +54,13 @@ impl<'a, M: 'static> WEventContext<'a, M> {
     }
 
     /// 键鼠单击动画效果
-    pub fn action_animation(&self, style: &mut Style, position: &Rectangle,
-                            message: Option<M>) -> bool {
-        let input = position
-            .contain_coord(self.cursor_pos);
+    pub fn action_animation(
+        &self,
+        style: &mut Style,
+        position: &Rectangle,
+        message: Option<M>,
+    ) -> bool {
+        let input = position.contain_coord(self.cursor_pos);
         if input && message.is_some() {
             let message = message.unwrap();
             let hover_color = style.get_hover_color();
@@ -77,8 +80,7 @@ impl<'a, M: 'static> WEventContext<'a, M> {
 impl<'a, M: 'static> WEventContext<'a, M> {
     /// 事件监听器
     /// 作用：监听用户交互事件
-    pub fn component_listener(&self, listener: &mut Component<M>) -> bool
-    {
+    pub fn component_listener(&self, listener: &mut Component<M>) -> bool {
         let mut key_listener = false;
         let mut mouse_listener = false;
         let hover_listener;
@@ -104,8 +106,7 @@ impl<'a, M: 'static> WEventContext<'a, M> {
 }
 
 /// 初始化窗口
-pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWindow<'a, M>
-{
+pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWindow<'a, M> {
     log::info!("Initializing the window...");
     let mut builder = WindowBuilder::new();
     let icon = if setting.icon_path.is_some() {
@@ -113,7 +114,8 @@ pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWin
     } else {
         None
     };
-    builder = builder.with_title(setting.title)
+    builder = builder
+        .with_title(setting.title)
         .with_inner_size(winit::dpi::LogicalSize::new(setting.size.x, setting.size.y))
         .with_window_icon(icon);
     let event_loop = EventLoop::<M>::with_user_event();
@@ -130,14 +132,17 @@ pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWin
 
 /// 运行窗口实例
 pub(crate) fn run<C, M>(window: DisplayWindow<'static, M>, container: C)
-    where C: Container<M> + 'static, M: 'static + Debug {
-    let (mut sender, receiver)
-        = mpsc::unbounded();
-    let mut instance_listener
-        = Box::pin(event_listener(window.gpu_context,
-                                  window.event_context,
-                                  container,
-                                  receiver));
+where
+    C: Container<M> + 'static,
+    M: 'static + Debug,
+{
+    let (mut sender, receiver) = mpsc::unbounded();
+    let mut instance_listener = Box::pin(event_listener(
+        window.gpu_context,
+        window.event_context,
+        container,
+        receiver,
+    ));
     let mut context = task::Context::from_waker(task::noop_waker_ref());
     window.event_loop.run(move |event, _, control_flow| {
         if let ControlFlow::Exit = control_flow {
@@ -146,11 +151,7 @@ pub(crate) fn run<C, M>(window: DisplayWindow<'static, M>, container: C)
         // 封装窗口尺寸变更事件
         let event = match event {
             Event::WindowEvent {
-                event:
-                WindowEvent::ScaleFactorChanged {
-                    new_inner_size,
-                    ..
-                },
+                event: WindowEvent::ScaleFactorChanged { new_inner_size, .. },
                 window_id,
             } => Some(Event::WindowEvent {
                 event: WindowEvent::Resized(*new_inner_size),
@@ -177,18 +178,18 @@ pub(crate) fn run<C, M>(window: DisplayWindow<'static, M>, container: C)
 }
 
 /// 事件监听方法
-async fn event_listener<C, M>(mut gpu_context: GPUContext,
-                              mut event_context: WEventContext<'_, M>,
-                              mut container: C,
-                              mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>)
-    where C: Container<M> + 'static, M: 'static + Debug
+async fn event_listener<C, M>(
+    mut gpu_context: GPUContext,
+    mut event_context: WEventContext<'_, M>,
+    mut container: C,
+    mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>,
+) where
+    C: Container<M> + 'static,
+    M: 'static + Debug,
 {
     while let Some(event) = receiver.next().await {
         match event {
-            Event::WindowEvent {
-                event,
-                window_id,
-            } if window_id == event_context.window.id() => {
+            Event::WindowEvent { event, window_id } if window_id == event_context.window.id() => {
                 // 捕获窗口关闭请求
                 if event == WindowEvent::CloseRequested {
                     break;
@@ -199,8 +200,7 @@ async fn event_listener<C, M>(mut gpu_context: GPUContext,
                         gpu_context.update_surface_configure(new_size);
                     }
                     // 储存鼠标位置坐标
-                    WindowEvent::CursorMoved { position, .. }
-                    => {
+                    WindowEvent::CursorMoved { position, .. } => {
                         event_context.update_cursor(position);
                     }
                     _ => {}
@@ -211,8 +211,7 @@ async fn event_listener<C, M>(mut gpu_context: GPUContext,
                     gpu_context.present(&mut container)
                 }
             }
-            Event::RedrawRequested(window_id)
-            if window_id == event_context.window.id() => {
+            Event::RedrawRequested(window_id) if window_id == event_context.window.id() => {
                 gpu_context.present(&mut container)
             }
             Event::UserEvent(event) => {
@@ -220,7 +219,7 @@ async fn event_listener<C, M>(mut gpu_context: GPUContext,
             }
             _ => {}
         }
-    };
+    }
 }
 
 /// 加载icon

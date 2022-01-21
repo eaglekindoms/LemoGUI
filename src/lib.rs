@@ -1,4 +1,4 @@
+pub mod backend;
+pub mod device;
 pub mod graphic;
 pub mod widget;
-pub mod device;
-pub mod backend;
