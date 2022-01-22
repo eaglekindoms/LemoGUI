@@ -1,4 +1,4 @@
-use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
+use wgpu::{CommandEncoder, ShaderModel, SurfaceTexture, TextureView};
 
 use crate::backend::wgpu_impl::*;
 use crate::graphic::base::*;
@@ -48,23 +48,7 @@ impl<'a> RenderUtil<'a> {
 
 impl PaintBrush for RenderUtil<'_> {
     fn clear_frame(&mut self, color: RGBA) {
-        self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
-            color_attachments: &[wgpu::RenderPassColorAttachment {
-                view: &self.view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: color.0 as f64,
-                        g: color.1 as f64,
-                        b: color.2 as f64,
-                        a: color.3 as f64,
-                    }),
-                    store: true,
-                },
-            }],
-            depth_stencil_attachment: None,
-        });
+        vertex_buffer::create_render_pass(&mut self.encoder, &self.view, RenderModel::clear(color));
     }
 
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {
