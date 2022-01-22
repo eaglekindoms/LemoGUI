@@ -22,9 +22,8 @@ pub trait Instance {
         Self: 'static + Sized,
     {
         let setting = Self::setting();
-        let font_path = setting.clone().font_path;
         let window = DisplayWindow::new(setting);
-        let mut frame = Frame::new(font_path);
+        let mut frame = Frame::new();
         let instance = Self::new();
         frame.add_instance(instance);
         window.start(frame)

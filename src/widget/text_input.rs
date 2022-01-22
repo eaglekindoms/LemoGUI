@@ -4,7 +4,7 @@ use crate::device::EventContext;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::*;
-use crate::widget::{Component, ComponentModel, Label};
+use crate::widget::*;
 
 /// 按钮控件结构体
 #[allow(missing_debug_implementations)]
@@ -50,19 +50,6 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
             is_focus: false,
         }
     }
-}
-
-impl<M: Clone + PartialEq + 'static> From<TextInput<M>> for Component<M> {
-    fn from(text_input: TextInput<M>) -> Self {
-        Component::new(text_input)
-    }
-}
-
-impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
-    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
-        self.text_label.draw(paint_brush, font_map)
-    }
-
     fn hover_listener(&mut self, event_context: &EventContext<'_, M>) -> bool {
         let input = self.text_label.size.contain_coord(event_context.cursor_pos);
         if input {
@@ -85,5 +72,29 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
             }
         }
         true
+    }
+}
+
+impl<M: Clone + PartialEq + 'static> From<TextInput<M>> for Component<M> {
+    fn from(text_input: TextInput<M>) -> Self {
+        Component::new(text_input)
+    }
+}
+
+impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
+    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
+        self.text_label.draw(paint_brush, font_map)
+    }
+    fn listener(&mut self, event_context: &mut EventContext<'_, M>) -> bool {
+        let mut key_listener = false;
+        let hover_listener = self.hover_listener(&event_context);
+        let g_event = event_context.get_event();
+        match g_event.event {
+            EventType::ReceivedCharacter(c) => {
+                self.received_character(&event_context, c);
+            }
+            _ => {}
+        }
+        key_listener || hover_listener
     }
 }

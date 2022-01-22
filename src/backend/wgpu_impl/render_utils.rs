@@ -1,4 +1,4 @@
-use wgpu::{CommandEncoder, ShaderModel, SurfaceTexture, TextureView};
+use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
 use crate::backend::wgpu_impl::*;
 use crate::graphic::base::*;
@@ -48,7 +48,7 @@ impl<'a> RenderUtil<'a> {
 
 impl PaintBrush for RenderUtil<'_> {
     fn clear_frame(&mut self, color: RGBA) {
-        vertex_buffer::create_render_pass(&mut self.encoder, &self.view, RenderModel::clear(color));
+        vertex_buffer::create_render_pass(&mut self.encoder, &self.view, RenderModel::Clear(color));
     }
 
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {

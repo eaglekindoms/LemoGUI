@@ -19,8 +19,8 @@ pub const RECT_LINE_INDEX: &[u16; 5] = &[0, 1, 3, 2, 0];
 
 /// 渲染模式
 pub enum RenderModel {
-    load,
-    clear(RGBA),
+    Load,
+    Clear(RGBA),
 }
 
 impl<'a> VertexBuffer {
@@ -65,7 +65,7 @@ impl<'a> VertexBuffer {
         let mut render_pass = create_render_pass(
             &mut render_utils.encoder,
             &render_utils.view,
-            RenderModel::load,
+            RenderModel::Load,
         );
         render_pass.set_pipeline(&pipeline);
         // 绑定纹理缓冲
@@ -86,11 +86,11 @@ pub fn create_render_pass<'a>(
     render_model: RenderModel,
 ) -> wgpu::RenderPass<'a> {
     let ops = match render_model {
-        RenderModel::load => wgpu::Operations {
+        RenderModel::Load => wgpu::Operations {
             load: wgpu::LoadOp::Load,
             store: true,
         },
-        RenderModel::clear(color) => wgpu::Operations {
+        RenderModel::Clear(color) => wgpu::Operations {
             load: wgpu::LoadOp::Clear(wgpu::Color {
                 r: color.0 as f64,
                 g: color.1 as f64,

@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
 use crate::backend::wgpu_impl::*;
-use crate::device::Container;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
+use crate::widget::ComponentModel;
 
 /// 图形渲染上下文结构体
 /// 作用：封装wgpu渲染所需的结构体
@@ -86,9 +86,9 @@ impl WGPUContext {
     }
 
     /// 显示图形内容
-    pub fn present<C, M>(&mut self, container: &mut C)
+    pub fn present<C, M>(&mut self, container: &mut C, font_map: &mut GCharMap)
     where
-        C: Container<M> + 'static,
+        C: ComponentModel<M> + 'static,
         M: 'static + Debug,
     {
         match self.surface.get_current_texture() {
@@ -98,7 +98,7 @@ impl WGPUContext {
             Ok(target_view) => {
                 let mut utils = RenderUtil::new(&target_view, self);
                 utils.clear_frame(BACKGROUND_COLOR);
-                container.render(&mut utils);
+                container.draw(&mut utils, font_map);
                 utils.context.queue.submit(Some(utils.encoder.finish()));
                 target_view.present();
             }

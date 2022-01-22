@@ -16,7 +16,7 @@ impl<M: Clone + PartialEq + 'static> From<ShapeBoard> for Component<M> {
 }
 
 impl<M> ComponentModel<M> for ShapeBoard {
-    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
+    fn draw(&self, paint_brush: &mut dyn PaintBrush, _font_map: &mut GCharMap) {
         let mut style = self.style;
         for shape in &self.shape_arr {
             paint_brush.draw_shape(shape, style);

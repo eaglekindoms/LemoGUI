@@ -8,10 +8,10 @@ use winit::event::*;
 use winit::event_loop::*;
 use winit::window::*;
 
-use crate::device::{Container, DisplayWindow, GPUContext};
+use crate::device::*;
 use crate::graphic::base::*;
 use crate::graphic::style::Style;
-use crate::widget::{Component, EventType, GEvent, Setting, State};
+use crate::widget::*;
 
 /// 事件上下文
 pub struct WEventContext<'a, M: 'static> {
@@ -77,34 +77,6 @@ impl<'a, M: 'static> WEventContext<'a, M> {
     }
 }
 
-impl<'a, M: 'static> WEventContext<'a, M> {
-    /// 事件监听器
-    /// 作用：监听用户交互事件
-    pub fn component_listener(&self, listener: &mut Component<M>) -> bool {
-        let mut key_listener = false;
-        let mut mouse_listener = false;
-        let hover_listener;
-        let g_event = self.get_event();
-        match g_event.event {
-            EventType::Mouse(mouse) => {
-                if g_event.state == State::Released {
-                    self.window.set_ime_position(self.cursor_pos);
-                }
-                mouse_listener = listener.widget.action_listener(&self, mouse);
-            }
-            EventType::KeyBoard(key_code) => {
-                key_listener = listener.widget.key_listener(&self, key_code);
-            }
-            EventType::ReceivedCharacter(c) => {
-                listener.widget.received_character(&self, c);
-            }
-            _ => {}
-        }
-        hover_listener = listener.widget.hover_listener(&self);
-        key_listener || mouse_listener || hover_listener
-    }
-}
-
 /// 初始化窗口
 pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWindow<'a, M> {
     log::info!("Initializing the window...");
@@ -122,10 +94,12 @@ pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWin
     let window = builder.build(&event_loop).unwrap();
     let gpu_context = GPUContext::new(&window, window.inner_size().into()).await;
     let event_context = WEventContext::new(window, &event_loop);
+    let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
     let display_window = DisplayWindow {
         gpu_context,
         event_loop,
         event_context,
+        font_map,
     };
     return display_window;
 }
@@ -133,13 +107,14 @@ pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWin
 /// 运行窗口实例
 pub(crate) fn run<C, M>(window: DisplayWindow<'static, M>, container: C)
 where
-    C: Container<M> + 'static,
+    C: ComponentModel<M> + 'static,
     M: 'static + Debug,
 {
     let (mut sender, receiver) = mpsc::unbounded();
     let mut instance_listener = Box::pin(event_listener(
         window.gpu_context,
         window.event_context,
+        window.font_map,
         container,
         receiver,
     ));
@@ -181,10 +156,11 @@ where
 async fn event_listener<C, M>(
     mut gpu_context: GPUContext,
     mut event_context: WEventContext<'_, M>,
+    mut font_map: GCharMap,
     mut container: C,
     mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>,
 ) where
-    C: Container<M> + 'static,
+    C: ComponentModel<M> + 'static,
     M: 'static + Debug,
 {
     while let Some(event) = receiver.next().await {
@@ -207,12 +183,12 @@ async fn event_listener<C, M>(
                 }
                 // 监听到组件关注事件，决定是否重绘
                 event_context.window_event = Some(event);
-                if container.update(&mut event_context) {
-                    gpu_context.present(&mut container)
+                if container.listener(&mut event_context) {
+                    gpu_context.present(&mut container, &mut font_map)
                 }
             }
             Event::RedrawRequested(window_id) if window_id == event_context.window.id() => {
-                gpu_context.present(&mut container)
+                gpu_context.present(&mut container, &mut font_map)
             }
             Event::UserEvent(event) => {
                 event_context.message = Some(event);

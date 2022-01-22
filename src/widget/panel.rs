@@ -27,16 +27,6 @@ impl<M: Clone + PartialEq> Panel<M> {
         self.widgets.push(child.into());
         self
     }
-
-    pub fn listener(&mut self, event_context: &EventContext<'_, M>) -> bool {
-        let mut is_listener = false;
-        for comp in &mut self.widgets {
-            if event_context.component_listener(comp) {
-                is_listener = true;
-            }
-        }
-        return is_listener;
-    }
 }
 
 impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
@@ -44,5 +34,14 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
         for widget in &self.widgets {
             widget.widget.draw(paint_brush, font_map);
         }
+    }
+    fn listener(&mut self, event_context: &mut EventContext<'_, M>) -> bool {
+        let mut is_listener = false;
+        for comp in &mut self.widgets {
+            if comp.widget.listener(event_context) {
+                is_listener = true;
+            }
+        }
+        return is_listener;
     }
 }

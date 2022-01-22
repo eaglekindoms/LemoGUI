@@ -5,7 +5,7 @@ use crate::device::EventContext;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::*;
-use crate::widget::{BindEvent, Component, ComponentModel, KeyCode, Label, Mouse};
+use crate::widget::*;
 
 /// 按钮控件结构体
 #[derive(Debug)]
@@ -39,25 +39,13 @@ impl<'a, M: Clone + PartialEq> Button<M> {
         self.bind_event.message = Some(message);
         self
     }
-}
-
-impl<M: Clone + PartialEq + 'static> From<Button<M>> for Component<M> {
-    fn from(button: Button<M>) -> Self {
-        Component::new(button)
-    }
-}
-
-impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
-    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
-        self.button_label.draw(paint_brush, font_map)
-    }
     fn key_listener(
         &mut self,
         _event_context: &EventContext<'_, M>,
-        _virtual_keycode: Option<KeyCode>,
+        virtual_keycode: Option<KeyCode>,
     ) -> bool {
         if let Some(key_codes) = &self.bind_event.shortcuts {
-            if let Some(key) = _virtual_keycode {
+            if let Some(key) = virtual_keycode {
                 return key_codes.contains(&key);
             }
         }
@@ -72,5 +60,37 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
             );
         }
         false
+    }
+}
+
+impl<M: Clone + PartialEq + 'static> From<Button<M>> for Component<M> {
+    fn from(button: Button<M>) -> Self {
+        Component::new(button)
+    }
+}
+
+impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
+    fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
+        self.button_label.draw(paint_brush, font_map)
+    }
+    fn listener(&mut self, _event_context: &mut EventContext<'_, M>) -> bool {
+        let mut key_listener = false;
+        let mut mouse_listener = false;
+        let g_event = _event_context.get_event();
+        match g_event.event {
+            EventType::Mouse(mouse) => {
+                if g_event.state == State::Released {
+                    _event_context
+                        .window
+                        .set_ime_position(_event_context.cursor_pos);
+                }
+                mouse_listener = self.action_listener(&_event_context, mouse);
+            }
+            EventType::KeyBoard(key_code) => {
+                key_listener = self.key_listener(&_event_context, key_code);
+            }
+            _ => {}
+        }
+        key_listener || mouse_listener
     }
 }
