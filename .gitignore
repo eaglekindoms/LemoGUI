@@ -2,3 +2,5 @@
 Cargo.lock
 /.idea
 *.spv
+test.png
+/.vscode

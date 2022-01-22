@@ -35,8 +35,8 @@ image = "0.23.12"
 ab_glyph = "0.2.11"
 raw-window-handle = "0.4.2"
 
-[build-dependencies]
-shaderc = "0.7.0"
-anyhow = "1.0"
-fs_extra = "1.1"
-glob = "0.3"
+#[build-dependencies]
+#shaderc = "0.7.0"
+#anyhow = "1.0"
+#fs_extra = "1.1"
+#glob = "0.3"
