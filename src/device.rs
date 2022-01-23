@@ -1,3 +1,8 @@
+#[cfg(feature = "sdl2_impl")]
+use crate::backend::sdl2_impl;
+#[cfg(feature = "winit_impl")]
+use crate::backend::winit_impl;
+
 /// 图形渲染采用wgpu实现
 #[cfg(feature = "wgpu_impl")]
 pub type GPUContext = crate::backend::wgpu_impl::WGPUContext;
@@ -5,9 +10,14 @@ pub type GPUContext = crate::backend::wgpu_impl::WGPUContext;
 pub type VBuffer = crate::backend::wgpu_impl::VertexBuffer;
 /// 窗口及事件监听器采用winit实现
 #[cfg(feature = "winit_impl")]
-pub type EventContext<'a, M> = crate::backend::winit_impl::WEventContext<'a, M>;
+pub type EventContext<'a, M> = winit_impl::WEventContext<'a, M>;
 #[cfg(feature = "winit_impl")]
 pub type EventListener<M> = winit::event_loop::EventLoop<M>;
+/// 窗口及事件监听器采用sdl2实现
+#[cfg(feature = "sdl2_impl")]
+pub type EventContext<'a, M> = sdl2_impl::WEventContext<M>;
+#[cfg(feature = "sdl2_impl")]
+pub type EventListener<M> = sdl2::EventPump;
 
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文

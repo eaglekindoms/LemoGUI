@@ -33,8 +33,11 @@ rand = "0.8.2"
 bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
 ab_glyph = "0.2.11"
-sdl2 = "0.35.1"
 raw-window-handle = "0.4.2"
+
+[dependencies.sdl2]
+version = "0.35"
+features = ["raw-window-handle", "bundled"]
 
 [features]
 wgpu_impl = []

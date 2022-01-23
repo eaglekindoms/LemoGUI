@@ -1,5 +1,13 @@
 use std::fmt::Debug;
 
+/// 默认的HasRawWindowHandle接口
+#[cfg(feature = "winit_impl")]
+use raw_window_handle;
+/// sdl2的HasRawWindowHandle是内部另外封装的
+/// 需要特别引用
+#[cfg(feature = "sdl2_impl")]
+use sdl2::raw_window_handle;
+
 use crate::backend::wgpu_impl::*;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
