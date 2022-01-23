@@ -1,8 +1,12 @@
 /// 图形渲染采用wgpu实现
+#[cfg(feature = "wgpu_impl")]
 pub type GPUContext = crate::backend::wgpu_impl::WGPUContext;
+#[cfg(feature = "wgpu_impl")]
 pub type VBuffer = crate::backend::wgpu_impl::VertexBuffer;
 /// 窗口及事件监听器采用winit实现
+#[cfg(feature = "winit_impl")]
 pub type EventContext<'a, M> = crate::backend::winit_impl::WEventContext<'a, M>;
+#[cfg(feature = "winit_impl")]
 pub type EventListener<M> = winit::event_loop::EventLoop<M>;
 
 /// 窗口结构体
@@ -32,6 +36,7 @@ impl<M: 'static + std::fmt::Debug> DisplayWindow<'static, M> {
 }
 
 /// 基于winit的窗口启动方法
+#[cfg(feature = "winit_impl")]
 fn run_instance<C, M>(window: DisplayWindow<'static, M>, container: C)
 where
     C: crate::widget::ComponentModel<M> + 'static,
@@ -41,6 +46,7 @@ where
 }
 
 /// 基于winit的初始化窗口方法
+#[cfg(feature = "winit_impl")]
 fn init_window<'a, M: 'static + std::fmt::Debug>(
     setting: crate::widget::Setting,
 ) -> DisplayWindow<'a, M> {

@@ -38,11 +38,11 @@ impl<M: Clone + PartialEq, I: Instance<M = M>> ComponentModel<M> for Frame<M, I>
             if panel.listener(event_context) {
                 is_update = true;
             }
-            if event_context.message.is_some() {
-                instance.update(event_context.message.as_ref().unwrap());
+            if event_context.get_message().is_some() {
+                instance.update(event_context.get_message().unwrap());
                 updated_index.push(i);
                 // 清除消息，防止重复发送
-                event_context.message = None;
+                event_context.clear_message();
             }
             i += 1;
         }

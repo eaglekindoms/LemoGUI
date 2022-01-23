@@ -16,13 +16,13 @@ use crate::widget::*;
 /// 事件上下文
 pub struct WEventContext<'a, M: 'static> {
     /// 窗口id
-    pub window: Window,
+    window: Window,
     /// 鼠标位置
-    pub cursor_pos: Point<f32>,
+    cursor_pos: Point<f32>,
     /// 窗口事件
-    pub window_event: Option<WindowEvent<'a>>,
+    window_event: Option<WindowEvent<'a>>,
     /// 自定义事件
-    pub message: Option<M>,
+    message: Option<M>,
     /// 自定义事件广播器
     message_channel: EventLoopProxy<M>,
 }
@@ -39,15 +39,37 @@ impl<'a, M: 'static> WEventContext<'a, M> {
     }
 
     /// 更新鼠标坐标
-    pub fn update_cursor<P: Into<Point<f32>>>(&mut self, pos: P) {
+    pub fn set_cursor_pos<P: Into<Point<f32>>>(&mut self, pos: P) {
         self.cursor_pos = pos.into();
     }
 
+    pub fn get_cursor_pos(&self) -> Point<f32> {
+        self.cursor_pos
+    }
+
+    /// 设置鼠标图标
+    pub fn set_cursor_icon(&mut self, cursor: Cursor) {
+        match cursor {
+            Cursor::Default => self.window.set_cursor_icon(CursorIcon::Default),
+            Cursor::Text => self.window.set_cursor_icon(CursorIcon::Text),
+        }
+    }
+    /// 设置输入框位置
+    pub fn set_ime_position(&mut self) {
+        self.window.set_ime_position(self.cursor_pos);
+    }
     /// 获取当前事件
     pub fn get_event(&self) -> GEvent {
         self.window_event.as_ref().unwrap().into()
     }
 
+    pub fn get_message(&self) -> Option<&M> {
+        self.message.as_ref()
+    }
+
+    pub fn clear_message(&mut self) {
+        self.message = None;
+    }
     /// 发送自定义事件消息
     pub fn send_message(&self, message: M) {
         self.message_channel.send_event(message).ok();
@@ -177,7 +199,7 @@ async fn event_listener<C, M>(
                     }
                     // 储存鼠标位置坐标
                     WindowEvent::CursorMoved { position, .. } => {
-                        event_context.update_cursor(position);
+                        event_context.set_cursor_pos(position);
                     }
                     _ => {}
                 }

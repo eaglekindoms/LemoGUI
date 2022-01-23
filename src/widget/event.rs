@@ -17,6 +17,16 @@ pub enum Mouse {
     Other,
 }
 
+/// Describes the appearance of the mouse cursor.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Cursor {
+    /// The platform-dependent default cursor.
+    Default,
+    /// Indicates text that may be selected or edited.
+    Text,
+}
+
 /// 事件类型枚举
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum EventType {

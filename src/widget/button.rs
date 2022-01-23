@@ -80,9 +80,7 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
         match g_event.event {
             EventType::Mouse(mouse) => {
                 if g_event.state == State::Released {
-                    _event_context
-                        .window
-                        .set_ime_position(_event_context.cursor_pos);
+                    _event_context.set_ime_position();
                 }
                 mouse_listener = self.action_listener(&_event_context, mouse);
             }
