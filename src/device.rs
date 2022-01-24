@@ -1,8 +1,3 @@
-#[cfg(feature = "sdl2_impl")]
-use crate::backend::sdl2_impl;
-#[cfg(feature = "winit_impl")]
-use crate::backend::winit_impl;
-
 /// 图形渲染采用wgpu实现
 #[cfg(feature = "wgpu_impl")]
 pub type GPUContext = crate::backend::wgpu_impl::WGPUContext;

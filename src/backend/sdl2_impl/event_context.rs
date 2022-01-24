@@ -1,14 +1,13 @@
 use std::fmt::Debug;
 
 use futures::channel::mpsc;
-use futures::{task, StreamExt};
+use futures::{task, Future, StreamExt};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::video::Window;
 use sdl2::{EventPump, EventSubsystem};
 
 use crate::device::{DisplayWindow, GPUContext};
 use crate::graphic::base::*;
-use crate::graphic::style::Style;
 use crate::widget::*;
 
 /// 事件上下文
@@ -28,12 +27,12 @@ pub struct SEventContext<M: 'static> {
 
 pub struct SEventListener<M: 'static> {
     pub event_pump: EventPump,
-    message: Option<M>,
+    _message: Option<M>,
 }
 
 impl<M: 'static> SEventContext<M> {
     pub fn new(window: Window, event_channel: EventSubsystem) -> SEventContext<M> {
-        event_channel.register_custom_event::<M>();
+        event_channel.register_custom_event::<M>().unwrap();
         SEventContext {
             window,
             cursor_pos: Point::new(-1.0, -1.0),
@@ -53,12 +52,19 @@ impl<M: 'static> SEventContext<M> {
     }
 
     /// 设置鼠标图标
-    pub fn set_cursor_icon(&mut self, cursor: Cursor) {}
+    pub fn set_cursor_icon(&mut self, _cursor: Cursor) {}
     /// 设置输入框位置
     pub fn set_ime_position(&mut self) {}
     /// 获取当前事件
     pub fn get_event(&self) -> GEvent {
-        self.window_event.clone().unwrap().into()
+        return if let Some(event) = &self.window_event {
+            event.into()
+        } else {
+            GEvent {
+                event: EventType::Other,
+                state: State::None,
+            }
+        };
     }
 
     pub fn get_message(&self) -> Option<&M> {
@@ -70,17 +76,7 @@ impl<M: 'static> SEventContext<M> {
     }
     /// 发送自定义事件消息
     pub fn send_message(&self, message: M) {
-        // self.message_channel.send_event(message).ok();
-    }
-
-    /// 键鼠单击动画效果
-    pub fn action_animation(
-        &self,
-        style: &mut Style,
-        position: &Rectangle,
-        message: Option<M>,
-    ) -> bool {
-        false
+        self.message_channel.push_custom_event(message).unwrap();
     }
 }
 
@@ -99,7 +95,7 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
         .map_err(|e| e.to_string())
         .unwrap();
     let channel = sdl_context.event().unwrap();
-    let mut event_pump = sdl_context.event_pump().unwrap();
+    let event_pump = sdl_context.event_pump().unwrap();
     let gpu_context = GPUContext::new(&window, window_size).await;
     let event_context: SEventContext<M> = SEventContext::new(window, channel);
     let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
@@ -107,7 +103,7 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
         gpu_context,
         event_loop: SEventListener::<M> {
             event_pump,
-            message: None,
+            _message: None,
         },
         event_context,
         font_map,
@@ -121,9 +117,29 @@ where
     C: ComponentModel<M> + 'static,
     M: 'static + Debug,
 {
+    let (sender, receiver) = mpsc::unbounded();
+    let mut instance_listener = Box::pin(event_listener(
+        window.gpu_context,
+        window.event_context,
+        window.font_map,
+        container,
+        receiver,
+    ));
+    let mut context = task::Context::from_waker(task::noop_waker_ref());
     let mut event_pump: EventPump = window.event_loop.event_pump;
-    'running: loop {
-        for event in event_pump.poll_iter() {}
+    loop {
+        for event in event_pump.poll_iter() {
+            sender.unbounded_send(event).unwrap();
+            let poll = instance_listener.as_mut().poll(&mut context);
+            match poll {
+                task::Poll::Pending => {
+                    // println!("--------pending--------");
+                }
+                task::Poll::Ready(_) => {
+                    // println!("--------ready--------");
+                }
+            };
+        }
     }
 }
 
@@ -139,19 +155,42 @@ async fn event_listener<C, M>(
     M: 'static + Debug,
 {
     while let Some(event) = receiver.next().await {
-        match event {
-            Event::Window {
-                window_id,
-                win_event: WindowEvent::SizeChanged(width, height),
-                ..
-            } if window_id == event_context.window.id() => {
-                let new_size = Point::new(width as u32, height as u32);
-                gpu_context.update_surface_configure(new_size);
+        if event.is_user_event() {
+            event_context.message = event.as_user_event_type::<M>();
+            log::debug!("customer event: {:?}", event_context.message);
+        }
+        if event.get_window_id() == Some(event_context.window.id()) {
+            match event {
+                Event::Window { win_event, .. } => match win_event {
+                    WindowEvent::Resized(width, height)
+                    | WindowEvent::SizeChanged(width, height) => {
+                        let new_size = Point::new(width as u32, height as u32);
+                        gpu_context.update_surface_configure(new_size);
+                    }
+                    WindowEvent::Close => {
+                        println!("----- Close window -----");
+                        ::std::process::exit(0);
+                    }
+                    _ => gpu_context.present(&mut container, &mut font_map),
+                },
+                Event::Quit { .. } => {
+                    println!("----- Close window -----");
+                    ::std::process::exit(0);
+                }
+                Event::MouseMotion { x, y, .. } => {
+                    event_context.set_cursor_pos(Point::new(x as f32, y as f32))
+                }
+                Event::MouseButtonDown { .. }
+                | Event::MouseButtonUp { .. }
+                | Event::KeyUp { .. }
+                | Event::KeyDown { .. } => {
+                    event_context.window_event = Some(event);
+                    if container.listener(&mut event_context) {
+                        gpu_context.present(&mut container, &mut font_map)
+                    }
+                }
+                _ => {}
             }
-            Event::Quit { .. } => {
-                break;
-            }
-            _ => {}
         }
     }
 }

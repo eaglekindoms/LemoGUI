@@ -73,29 +73,6 @@ impl<M: 'static> WEventContext<M> {
     pub fn send_message(&self, message: M) {
         self.message_channel.send_event(message).ok();
     }
-
-    /// 键鼠单击动画效果
-    pub fn action_animation(
-        &self,
-        style: &mut Style,
-        position: &Rectangle,
-        message: Option<M>,
-    ) -> bool {
-        let input = position.contain_coord(self.cursor_pos);
-        if input && message.is_some() {
-            let message = message.unwrap();
-            let hover_color = style.get_hover_color();
-            let back_color = style.get_back_color();
-            if self.get_event().state == State::Pressed {
-                style.display_color(hover_color);
-                self.send_message(message);
-            } else if self.get_event().state == State::Released {
-                style.display_color(back_color);
-            }
-            return true;
-        }
-        return false;
-    }
 }
 
 /// 初始化窗口
