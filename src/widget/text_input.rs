@@ -1,4 +1,3 @@
-use crate::device::EventContext;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::*;
@@ -48,7 +47,7 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
             is_focus: false,
         }
     }
-    fn hover_listener(&mut self, event_context: &mut EventContext<M>) -> bool {
+    fn hover_listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
         let input = self
             .text_label
             .size
@@ -60,7 +59,7 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
         }
         input
     }
-    fn received_character(&mut self, event_context: &mut EventContext<M>, c: char) -> bool {
+    fn received_character(&mut self, event_context: &mut dyn EventContext<M>, c: char) -> bool {
         if self.hover_listener(event_context) {
             log::debug!("ime: {:?}", c);
             if let Some(text) = &mut self.text_label.text {
@@ -86,12 +85,12 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         self.text_label.draw(paint_brush, font_map)
     }
-    fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
-        let hover_listener = self.hover_listener(event_context);
-        let g_event = event_context.get_event();
+    fn listener(&mut self, _event_context: &mut dyn EventContext<M>) -> bool {
+        let hover_listener = self.hover_listener(_event_context);
+        let g_event = _event_context.get_event();
         match g_event.event {
             EventType::ReceivedCharacter(c) => {
-                self.received_character(event_context, c);
+                self.received_character(_event_context, c);
             }
             _ => {}
         }

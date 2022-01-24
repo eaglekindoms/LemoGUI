@@ -50,12 +50,12 @@ impl From<winit::event::ElementState> for State {
 }
 
 /// winit事件转换
-impl From<&winit::event::WindowEvent<'_>> for GEvent {
-    fn from(winit_event: &WindowEvent) -> Self {
+impl From<winit::event::WindowEvent<'_>> for GEvent {
+    fn from(winit_event: WindowEvent) -> Self {
         match winit_event {
             WindowEvent::MouseInput { state, button, .. } => GEvent {
-                event: EventType::Mouse((*button).into()),
-                state: (*state).into(),
+                event: EventType::Mouse((button).into()),
+                state: state.into(),
             },
             WindowEvent::KeyboardInput {
                 input:
@@ -67,16 +67,16 @@ impl From<&winit::event::WindowEvent<'_>> for GEvent {
                 ..
             } => {
                 let mut keycode = None;
-                if let Some(key) = *virtual_keycode {
+                if let Some(key) = virtual_keycode {
                     keycode = Some(translate_key(key))
                 };
                 GEvent {
                     event: EventType::KeyBoard(keycode),
-                    state: (*state).into(),
+                    state: state.into(),
                 }
             }
             WindowEvent::ReceivedCharacter(c) => GEvent {
-                event: EventType::ReceivedCharacter(*c),
+                event: EventType::ReceivedCharacter(c),
                 state: State::None,
             },
             _ => GEvent {

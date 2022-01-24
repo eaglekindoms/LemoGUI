@@ -1,4 +1,3 @@
-use crate::device::EventContext;
 use crate::graphic::base::GCharMap;
 use crate::graphic::render_api::PaintBrush;
 use crate::widget::*;
@@ -29,7 +28,7 @@ impl<M: Clone + PartialEq, I: Instance<M = M>> ComponentModel<M> for Frame<M, I>
         }
     }
 
-    fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
+    fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
         let mut is_update = false;
         let mut updated_instance: Vec<(I, Panel<M>)> = Vec::with_capacity(self.display_panel.len());
         let mut updated_index = Vec::with_capacity(self.display_panel.len());
@@ -42,7 +41,7 @@ impl<M: Clone + PartialEq, I: Instance<M = M>> ComponentModel<M> for Frame<M, I>
                 instance.update(event_context.get_message().unwrap());
                 updated_index.push(i);
                 // 清除消息，防止重复发送
-                event_context.clear_message();
+                event_context.set_message(None);
             }
             i += 1;
         }

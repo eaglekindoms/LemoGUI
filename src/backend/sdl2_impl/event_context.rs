@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use futures::channel::mpsc;
+use futures::channel::mpsc::UnboundedReceiver;
 use futures::{task, Future, StreamExt};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::video::Window;
@@ -18,7 +19,7 @@ pub struct SEventContext<M: 'static> {
     /// 鼠标位置
     cursor_pos: Point<f32>,
     /// 窗口事件
-    window_event: Option<Event>,
+    window_event: Option<GEvent>,
     /// 自定义事件
     message: Option<M>,
     /// 自定义事件广播器
@@ -41,24 +42,35 @@ impl<M: 'static> SEventContext<M> {
             message_channel: event_channel,
         }
     }
+}
 
-    /// 更新鼠标坐标
-    pub fn set_cursor_pos<P: Into<Point<f32>>>(&mut self, pos: P) {
-        self.cursor_pos = pos.into();
+impl<M> EventContext<M> for SEventContext<M> {
+    fn get_window_id(&self) -> String {
+        format!("{:?}", Some(self.window.id()))
     }
 
-    pub fn get_cursor_pos(&self) -> Point<f32> {
+    /// 更新鼠标坐标
+    fn set_cursor_pos(&mut self, pos: Point<f32>) {
+        self.cursor_pos = pos;
+    }
+
+    fn get_cursor_pos(&self) -> Point<f32> {
         self.cursor_pos
     }
 
     /// 设置鼠标图标
-    pub fn set_cursor_icon(&mut self, _cursor: Cursor) {}
+    fn set_cursor_icon(&mut self, _cursor: Cursor) {}
     /// 设置输入框位置
-    pub fn set_ime_position(&mut self) {}
+    fn set_ime_position(&mut self) {}
+
+    fn set_event(&mut self, event: GEvent) {
+        self.window_event = Some(event)
+    }
+
     /// 获取当前事件
-    pub fn get_event(&self) -> GEvent {
-        return if let Some(event) = &self.window_event {
-            event.into()
+    fn get_event(&self) -> GEvent {
+        return if let Some(event) = self.window_event.clone() {
+            event
         } else {
             GEvent {
                 event: EventType::Other,
@@ -67,15 +79,15 @@ impl<M: 'static> SEventContext<M> {
         };
     }
 
-    pub fn get_message(&self) -> Option<&M> {
+    fn get_message(&self) -> Option<&M> {
         self.message.as_ref()
     }
 
-    pub fn clear_message(&mut self) {
-        self.message = None;
+    fn set_message(&mut self, message: Option<M>) {
+        self.message = message;
     }
     /// 发送自定义事件消息
-    pub fn send_message(&self, message: M) {
+    fn send_message(&self, message: M) {
         self.message_channel.push_custom_event(message).unwrap();
     }
 }
@@ -105,7 +117,7 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
             event_pump,
             _message: None,
         },
-        event_context,
+        event_context: Box::new(event_context),
         font_map,
     };
     return display_window;
@@ -146,7 +158,7 @@ where
 /// 事件监听方法
 async fn event_listener<C, M>(
     mut gpu_context: GPUContext,
-    mut event_context: SEventContext<M>,
+    mut event_context: Box<dyn EventContext<M>>,
     mut font_map: GCharMap,
     mut container: C,
     mut receiver: mpsc::UnboundedReceiver<sdl2::event::Event>,
@@ -156,10 +168,13 @@ async fn event_listener<C, M>(
 {
     while let Some(event) = receiver.next().await {
         if event.is_user_event() {
-            event_context.message = event.as_user_event_type::<M>();
-            log::debug!("customer event: {:?}", event_context.message);
+            event_context.set_message(event.as_user_event_type::<M>());
+            log::debug!("customer event: {:?}", event_context.get_message());
         }
-        if event.get_window_id() == Some(event_context.window.id()) {
+        if event_context
+            .get_window_id()
+            .eq_ignore_ascii_case(format!("{:?}", event.get_window_id()).as_str())
+        {
             match event {
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(width, height)
@@ -184,8 +199,8 @@ async fn event_listener<C, M>(
                 | Event::MouseButtonUp { .. }
                 | Event::KeyUp { .. }
                 | Event::KeyDown { .. } => {
-                    event_context.window_event = Some(event);
-                    if container.listener(&mut event_context) {
+                    event_context.set_event(event.into());
+                    if container.listener(&mut *event_context) {
                         gpu_context.present(&mut container, &mut font_map)
                     }
                 }

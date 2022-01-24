@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 use std::option::Option::Some;
 
-use crate::device::EventContext;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::*;
@@ -41,7 +40,7 @@ impl<'a, M: Clone + PartialEq> Button<M> {
     }
     fn key_listener(
         &mut self,
-        _event_context: &EventContext<M>,
+        _event_context: &dyn EventContext<M>,
         virtual_keycode: Option<KeyCode>,
     ) -> bool {
         if let Some(key_codes) = &self.bind_event.shortcuts {
@@ -51,7 +50,7 @@ impl<'a, M: Clone + PartialEq> Button<M> {
         }
         false
     }
-    fn action_listener(&mut self, event_context: &EventContext<M>, mouse: Mouse) -> bool {
+    fn action_listener(&mut self, event_context: &dyn EventContext<M>, mouse: Mouse) -> bool {
         if mouse == self.bind_event.mouse {
             return component::action_animation(
                 event_context,
@@ -74,7 +73,7 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         self.button_label.draw(paint_brush, font_map)
     }
-    fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
+    fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
         let mut key_listener = false;
         let mut mouse_listener = false;
         let g_event = event_context.get_event();
@@ -83,10 +82,10 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
                 if g_event.state == State::Released {
                     event_context.set_ime_position();
                 }
-                mouse_listener = self.action_listener(&event_context, mouse);
+                mouse_listener = self.action_listener(event_context, mouse);
             }
             EventType::KeyBoard(key_code) => {
-                key_listener = self.key_listener(&event_context, key_code);
+                key_listener = self.key_listener(event_context, key_code);
             }
             _ => {}
         }

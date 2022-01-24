@@ -1,8 +1,10 @@
+use std::any::Any;
 use std::fmt::Debug;
 use std::future::Future;
 use std::path::Path;
 
 use futures::channel::mpsc;
+use futures::channel::mpsc::UnboundedReceiver;
 use futures::{task, StreamExt};
 use winit::event::*;
 use winit::event_loop::*;
@@ -20,7 +22,7 @@ pub struct WEventContext<M: 'static> {
     /// 鼠标位置
     cursor_pos: Point<f32>,
     /// 窗口事件
-    window_event: Option<WindowEvent<'static>>,
+    window_event: Option<GEvent>,
     /// 自定义事件
     message: Option<M>,
     /// 自定义事件广播器
@@ -37,40 +39,52 @@ impl<M: 'static> WEventContext<M> {
             message_channel: event_loop.create_proxy(),
         }
     }
-    /// 更新鼠标坐标
-    pub fn set_cursor_pos<P: Into<Point<f32>>>(&mut self, pos: P) {
-        self.cursor_pos = pos.into();
+}
+
+impl<M> EventContext<M> for WEventContext<M> {
+    fn get_window_id(&self) -> String {
+        format!("{:?}", &self.window.id())
     }
 
-    pub fn get_cursor_pos(&self) -> Point<f32> {
+    /// 更新鼠标坐标
+    fn set_cursor_pos(&mut self, pos: Point<f32>) {
+        self.cursor_pos = pos;
+    }
+
+    fn get_cursor_pos(&self) -> Point<f32> {
         self.cursor_pos
     }
 
     /// 设置鼠标图标
-    pub fn set_cursor_icon(&mut self, cursor: Cursor) {
+    fn set_cursor_icon(&mut self, cursor: Cursor) {
         match cursor {
             Cursor::Default => self.window.set_cursor_icon(CursorIcon::Default),
             Cursor::Text => self.window.set_cursor_icon(CursorIcon::Text),
         }
     }
     /// 设置输入框位置
-    pub fn set_ime_position(&mut self) {
+    fn set_ime_position(&mut self) {
         self.window.set_ime_position(self.cursor_pos);
     }
-    /// 获取当前事件
-    pub fn get_event(&self) -> GEvent {
-        self.window_event.as_ref().unwrap().into()
+
+    fn set_event(&mut self, event: GEvent) {
+        self.window_event = Some(event);
     }
 
-    pub fn get_message(&self) -> Option<&M> {
+    /// 获取当前事件
+    fn get_event(&self) -> GEvent {
+        self.window_event.clone().unwrap()
+    }
+
+    fn get_message(&self) -> Option<&M> {
         self.message.as_ref()
     }
 
-    pub fn clear_message(&mut self) {
-        self.message = None;
+    fn set_message(&mut self, message: Option<M>) {
+        self.message = message;
     }
     /// 发送自定义事件消息
-    pub fn send_message(&self, message: M) {
+    fn send_message(&self, message: M) {
         self.message_channel.send_event(message).ok();
     }
 }
@@ -96,7 +110,7 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
     let display_window = DisplayWindow {
         gpu_context,
         event_loop,
-        event_context,
+        event_context: Box::new(event_context),
         font_map,
     };
     return display_window;
@@ -154,7 +168,7 @@ where
 #[cfg(feature = "winit_impl")]
 async fn event_listener<C, M>(
     mut gpu_context: GPUContext,
-    mut event_context: WEventContext<M>,
+    mut event_context: Box<dyn EventContext<M>>,
     mut font_map: GCharMap,
     mut container: C,
     mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'static, M>>,
@@ -164,7 +178,10 @@ async fn event_listener<C, M>(
 {
     while let Some(event) = receiver.next().await {
         match event {
-            Event::WindowEvent { event, window_id } if window_id == event_context.window.id() => {
+            Event::WindowEvent { event, window_id }
+                if format!("{:?}", window_id)
+                    .eq_ignore_ascii_case(event_context.get_window_id().as_str()) =>
+            {
                 // 捕获窗口关闭请求
                 if event == WindowEvent::CloseRequested {
                     break;
@@ -176,21 +193,25 @@ async fn event_listener<C, M>(
                     }
                     // 储存鼠标位置坐标
                     WindowEvent::CursorMoved { position, .. } => {
-                        event_context.set_cursor_pos(position);
+                        event_context.set_cursor_pos(position.into());
                     }
                     _ => {}
                 }
                 // 监听到组件关注事件，决定是否重绘
-                event_context.window_event = Some(event);
-                if container.listener(&mut event_context) {
+                event_context.set_event(event.into());
+                if container.listener(&mut *event_context) {
                     gpu_context.present(&mut container, &mut font_map)
                 }
             }
-            Event::RedrawRequested(window_id) if window_id == event_context.window.id() => {
+            Event::RedrawRequested(window_id)
+                if format!("{:?}", window_id)
+                    .eq_ignore_ascii_case(event_context.get_window_id().as_str()) =>
+            {
                 gpu_context.present(&mut container, &mut font_map)
             }
             Event::UserEvent(event) => {
-                event_context.message = Some(event);
+                event_context.set_message(Some(event));
+                println!("{:?}", event_context.get_message());
             }
             _ => {}
         }

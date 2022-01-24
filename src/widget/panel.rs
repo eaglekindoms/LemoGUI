@@ -1,7 +1,6 @@
-use crate::device::EventContext;
 use crate::graphic::base::GCharMap;
 use crate::graphic::render_api::PaintBrush;
-use crate::widget::{Component, ComponentModel};
+use crate::widget::{Component, ComponentModel, EventContext};
 
 /// 容器面板结构体
 #[derive(Debug)]
@@ -35,10 +34,10 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
             widget.widget.draw(paint_brush, font_map);
         }
     }
-    fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
+    fn listener(&mut self, _event_context: &mut dyn EventContext<M>) -> bool {
         let mut is_listener = false;
         for comp in &mut self.widgets {
-            if comp.widget.listener(event_context) {
+            if comp.widget.listener(_event_context) {
                 is_listener = true;
             }
         }

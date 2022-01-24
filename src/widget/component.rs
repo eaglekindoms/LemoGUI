@@ -1,17 +1,16 @@
 use std::fmt::Formatter;
 
-use crate::device::EventContext;
 use crate::graphic::base::{GCharMap, Rectangle};
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::Style;
-use crate::widget::State;
+use crate::widget::{EventContext, State};
 
 /// 组件模型trait
 /// 作用：定义组件必须的公共方法接口
 pub trait ComponentModel<M> {
     /// 组件绘制方法实现
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap);
-    fn listener(&mut self, _event_context: &mut EventContext<M>) -> bool {
+    fn listener(&mut self, _event_context: &mut dyn EventContext<M>) -> bool {
         false
     }
 }
@@ -37,7 +36,7 @@ impl<M> std::fmt::Debug for Component<M> {
 
 /// 键鼠单击动画效果
 pub fn action_animation<M>(
-    event_context: &EventContext<M>,
+    event_context: &dyn EventContext<M>,
     style: &mut Style,
     position: &Rectangle,
     message: Option<M>,

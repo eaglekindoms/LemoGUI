@@ -19,13 +19,13 @@ impl From<sdl2::mouse::MouseButton> for Mouse {
 }
 
 /// sdl2事件转换
-impl From<&sdl2::event::Event> for GEvent {
-    fn from(sdl2_event: &Event) -> Self {
+impl From<sdl2::event::Event> for GEvent {
+    fn from(sdl2_event: Event) -> Self {
         match sdl2_event {
             Event::KeyDown { keycode, .. } => {
                 let mut key_code = None;
                 if let Some(key) = keycode {
-                    key_code = Some(translate_key(*key))
+                    key_code = Some(translate_key(key))
                 };
                 GEvent {
                     event: EventType::KeyBoard(key_code),
@@ -35,7 +35,7 @@ impl From<&sdl2::event::Event> for GEvent {
             Event::KeyUp { keycode, .. } => {
                 let mut key_code = None;
                 if let Some(key) = keycode {
-                    key_code = Some(translate_key(*key))
+                    key_code = Some(translate_key(key))
                 };
                 GEvent {
                     event: EventType::KeyBoard(key_code),
@@ -43,11 +43,11 @@ impl From<&sdl2::event::Event> for GEvent {
                 }
             }
             Event::MouseButtonDown { mouse_btn, .. } => GEvent {
-                event: EventType::Mouse((*mouse_btn).into()),
+                event: EventType::Mouse(mouse_btn.into()),
                 state: State::Pressed,
             },
             Event::MouseButtonUp { mouse_btn, .. } => GEvent {
-                event: EventType::Mouse((*mouse_btn).into()),
+                event: EventType::Mouse(mouse_btn.into()),
                 state: State::Released,
             },
             _ => GEvent {

@@ -1,7 +1,7 @@
 use std::fmt::*;
 
 /// 控件点击状态结构体
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum State {
     Pressed,
     Released,
@@ -9,7 +9,7 @@ pub enum State {
 }
 
 /// 鼠标事件结构体
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum Mouse {
     Left,
     Right,
@@ -28,7 +28,7 @@ pub enum Cursor {
 }
 
 /// 事件类型枚举
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum EventType {
     Mouse(Mouse),
     KeyBoard(Option<KeyCode>),
@@ -37,7 +37,7 @@ pub enum EventType {
 }
 
 /// 事件描述结构体
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BindEvent<M> {
     pub message: Option<M>,
     pub mouse: Mouse,
@@ -45,7 +45,7 @@ pub struct BindEvent<M> {
 }
 
 /// 组件状态结构体，记录绑定的事件、及与事件联动的消息
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GEvent {
     pub event: EventType,
     pub state: State,
