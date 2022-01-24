@@ -3,12 +3,11 @@ use std::fmt::Debug;
 /// sdl2的HasRawWindowHandle是内部另外封装的
 /// 需要特别引用
 #[cfg(feature = "sdl2_impl")]
-use sdl2::raw_window_handle;
+use sdl2::video::Window;
 use wgpu::RenderPipeline;
-
 /// 默认的HasRawWindowHandle接口
 #[cfg(feature = "winit_impl")]
-use raw_window_handle;
+use winit::window::Window;
 
 use crate::backend::wgpu_impl::*;
 use crate::graphic::base::*;
@@ -32,10 +31,7 @@ pub struct WGPUContext {
 }
 
 impl WGPUContext {
-    pub async fn new<W: raw_window_handle::HasRawWindowHandle>(
-        window: &W,
-        window_size: Point<u32>,
-    ) -> WGPUContext {
+    pub async fn new(window: &Window, window_size: Point<u32>) -> WGPUContext {
         log::info!("Initializing the surface...");
         let instance = wgpu::Instance::new(wgpu::Backends::all());
 

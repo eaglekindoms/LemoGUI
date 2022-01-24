@@ -227,7 +227,7 @@ pub(crate) fn translate_key(key: Keycode) -> KeyCode {
         Keycode::Sysreq => KeyCode::Sysreq,
         Keycode::Cancel => KeyCode::Cancel,
         Keycode::Clear => KeyCode::Clear,
-        Keycode::Prior => KeyCode::Prior,
+        Keycode::Prior => KeyCode::Period,
         Keycode::Return2 => KeyCode::Return2,
         Keycode::Separator => KeyCode::Separator,
         Keycode::Out => KeyCode::Out,

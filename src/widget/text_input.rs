@@ -48,7 +48,7 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
             is_focus: false,
         }
     }
-    fn hover_listener(&mut self, event_context: &mut EventContext<'_, M>) -> bool {
+    fn hover_listener(&mut self, event_context: &mut EventContext<M>) -> bool {
         let input = self
             .text_label
             .size
@@ -60,7 +60,7 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
         }
         input
     }
-    fn received_character(&mut self, event_context: &mut EventContext<'_, M>, c: char) -> bool {
+    fn received_character(&mut self, event_context: &mut EventContext<M>, c: char) -> bool {
         if self.hover_listener(event_context) {
             log::debug!("ime: {:?}", c);
             if let Some(text) = &mut self.text_label.text {
@@ -86,7 +86,7 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         self.text_label.draw(paint_brush, font_map)
     }
-    fn listener(&mut self, event_context: &mut EventContext<'_, M>) -> bool {
+    fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
         let mut key_listener = false;
         let hover_listener = self.hover_listener(event_context);
         let g_event = event_context.get_event();

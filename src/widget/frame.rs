@@ -29,7 +29,7 @@ impl<M: Clone + PartialEq, I: Instance<M = M>> ComponentModel<M> for Frame<M, I>
         }
     }
 
-    fn listener(&mut self, event_context: &mut EventContext<'_, M>) -> bool {
+    fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
         let mut is_update = false;
         let mut updated_instance: Vec<(I, Panel<M>)> = Vec::with_capacity(self.display_panel.len());
         let mut updated_index = Vec::with_capacity(self.display_panel.len());

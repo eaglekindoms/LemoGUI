@@ -9,7 +9,7 @@ use crate::graphic::render_api::PaintBrush;
 pub trait ComponentModel<M> {
     /// 组件绘制方法实现
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap);
-    fn listener(&mut self, _event_context: &mut EventContext<'_, M>) -> bool {
+    fn listener(&mut self, _event_context: &mut EventContext<M>) -> bool {
         false
     }
 }

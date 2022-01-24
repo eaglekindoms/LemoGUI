@@ -14,21 +14,21 @@ use crate::graphic::style::Style;
 use crate::widget::*;
 
 /// 事件上下文
-pub struct WEventContext<'a, M: 'static> {
+pub struct WEventContext<M: 'static> {
     /// 窗口id
     window: Window,
     /// 鼠标位置
     cursor_pos: Point<f32>,
     /// 窗口事件
-    window_event: Option<WindowEvent<'a>>,
+    window_event: Option<WindowEvent<'static>>,
     /// 自定义事件
     message: Option<M>,
     /// 自定义事件广播器
     message_channel: EventLoopProxy<M>,
 }
 
-impl<'a, M: 'static> WEventContext<'a, M> {
-    pub fn new(window: Window, event_loop: &EventLoop<M>) -> WEventContext<'a, M> {
+impl<M: 'static> WEventContext<M> {
+    pub fn new(window: Window, event_loop: &EventLoop<M>) -> WEventContext<M> {
         WEventContext {
             window,
             cursor_pos: Point::new(-1.0, -1.0),
@@ -37,7 +37,6 @@ impl<'a, M: 'static> WEventContext<'a, M> {
             message_channel: event_loop.create_proxy(),
         }
     }
-
     /// 更新鼠标坐标
     pub fn set_cursor_pos<P: Into<Point<f32>>>(&mut self, pos: P) {
         self.cursor_pos = pos.into();
@@ -100,7 +99,7 @@ impl<'a, M: 'static> WEventContext<'a, M> {
 }
 
 /// 初始化窗口
-pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWindow<'a, M> {
+pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<M> {
     log::info!("Initializing the window...");
     let mut builder = WindowBuilder::new();
     let icon = if setting.icon_path.is_some() {
@@ -127,7 +126,7 @@ pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWin
 }
 
 /// 运行窗口实例
-pub(crate) fn run<C, M>(window: DisplayWindow<'static, M>, container: C)
+pub(crate) fn run<C, M>(window: DisplayWindow<M>, container: C)
 where
     C: ComponentModel<M> + 'static,
     M: 'static + Debug,
@@ -175,12 +174,13 @@ where
 }
 
 /// 事件监听方法
+#[cfg(feature = "winit_impl")]
 async fn event_listener<C, M>(
     mut gpu_context: GPUContext,
-    mut event_context: WEventContext<'_, M>,
+    mut event_context: WEventContext<M>,
     mut font_map: GCharMap,
     mut container: C,
-    mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>,
+    mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'static, M>>,
 ) where
     C: ComponentModel<M> + 'static,
     M: 'static + Debug,
