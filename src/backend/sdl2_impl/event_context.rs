@@ -15,7 +15,7 @@ use crate::widget::*;
 
 /// 事件上下文
 #[allow(missing_debug_implementations)]
-pub struct WEventContext<M: 'static> {
+pub struct SEventContext<M: 'static> {
     /// 窗口id
     window: Window,
     /// 鼠标位置
@@ -28,10 +28,10 @@ pub struct WEventContext<M: 'static> {
     message_channel: EventSubsystem,
 }
 
-impl<M: 'static> WEventContext<M> {
-    pub fn new(window: Window, event_channel: EventSubsystem, type_id: M) -> WEventContext<M> {
+impl<M: 'static> SEventContext<M> {
+    pub fn new(window: Window, event_channel: EventSubsystem, type_id: M) -> SEventContext<M> {
         event_channel.register_custom_event::<M>();
-        WEventContext {
+        SEventContext {
             window,
             cursor_pos: Point::new(-1.0, -1.0),
             window_event: None,
@@ -88,7 +88,7 @@ pub(crate) async fn init<'a, M: 'static + Debug + Default>(
     let channel = sdl_context.event().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
     let gpu_context = GPUContext::new(&window, window_size).await;
-    let event_context = WEventContext::new(window, channel, M::default());
+    let event_context = SEventContext::new(window, channel, M::default());
     let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
     let display_window = DisplayWindow {
         gpu_context,

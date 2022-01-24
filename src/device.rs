@@ -15,7 +15,7 @@ pub type EventContext<'a, M> = winit_impl::WEventContext<'a, M>;
 pub type EventListener<M> = winit::event_loop::EventLoop<M>;
 /// 窗口及事件监听器采用sdl2实现
 #[cfg(feature = "sdl2_impl")]
-pub type EventContext<'a, M> = sdl2_impl::WEventContext<M>;
+pub type EventContext<'a, M> = sdl2_impl::SEventContext<M>;
 #[cfg(feature = "sdl2_impl")]
 pub type EventListener<M> = sdl2::EventPump;
 
