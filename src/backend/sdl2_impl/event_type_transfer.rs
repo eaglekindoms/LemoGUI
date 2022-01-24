@@ -1,7 +1,62 @@
+use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
 
-use crate::widget::KeyCode;
-use crate::widget::KeyCode::Key0;
+use crate::widget::*;
+
+/// sdl2鼠标按键转换
+impl From<sdl2::mouse::MouseButton> for Mouse {
+    fn from(mouse_btn: MouseButton) -> Self {
+        match mouse_btn {
+            MouseButton::Unknown => Mouse::Other,
+            MouseButton::Left => Mouse::Left,
+            MouseButton::Middle => Mouse::Middle,
+            MouseButton::Right => Mouse::Right,
+            MouseButton::X1 => Mouse::Other,
+            MouseButton::X2 => Mouse::Other,
+        }
+    }
+}
+
+/// sdl2事件转换
+impl From<sdl2::event::Event> for GEvent {
+    fn from(sdl2_event: Event) -> Self {
+        match sdl2_event {
+            Event::KeyDown { keycode, .. } => {
+                let mut key_code = None;
+                if let Some(key) = keycode {
+                    key_code = Some(translate_key(key))
+                };
+                GEvent {
+                    event: EventType::KeyBoard(key_code),
+                    state: State::Pressed,
+                }
+            }
+            Event::KeyUp { keycode, .. } => {
+                let mut key_code = None;
+                if let Some(key) = keycode {
+                    key_code = Some(translate_key(key))
+                };
+                GEvent {
+                    event: EventType::KeyBoard(key_code),
+                    state: State::Released,
+                }
+            }
+            Event::MouseButtonDown { mouse_btn, .. } => GEvent {
+                event: EventType::Mouse(mouse_btn.into()),
+                state: State::Pressed,
+            },
+            Event::MouseButtonUp { mouse_btn, .. } => GEvent {
+                event: EventType::Mouse(mouse_btn.into()),
+                state: State::Released,
+            },
+            _ => GEvent {
+                event: EventType::Other,
+                state: State::None,
+            },
+        }
+    }
+}
 
 /// 键盘按键类型转换
 pub(crate) fn translate_key(key: Keycode) -> KeyCode {

@@ -29,7 +29,7 @@ pub struct SEventContext<M: 'static> {
 }
 
 impl<M: 'static> SEventContext<M> {
-    pub fn new(window: Window, event_channel: EventSubsystem, type_id: M) -> SEventContext<M> {
+    pub fn new(window: Window, event_channel: EventSubsystem) -> SEventContext<M> {
         event_channel.register_custom_event::<M>();
         SEventContext {
             window,
@@ -73,9 +73,7 @@ impl<M: 'static> SEventContext<M> {
 
 /// 初始化窗口
 #[cfg(feature = "sdl2_impl")]
-pub(crate) async fn init<'a, M: 'static + Debug + Default>(
-    setting: Setting,
-) -> DisplayWindow<'a, M> {
+pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWindow<'a, M> {
     log::info!("Initializing the window...");
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -88,7 +86,7 @@ pub(crate) async fn init<'a, M: 'static + Debug + Default>(
     let channel = sdl_context.event().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
     let gpu_context = GPUContext::new(&window, window_size).await;
-    let event_context = SEventContext::new(window, channel, M::default());
+    let event_context: SEventContext<M> = SEventContext::new(window, channel);
     let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
     let display_window = DisplayWindow {
         gpu_context,
