@@ -87,7 +87,6 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
         self.text_label.draw(paint_brush, font_map)
     }
     fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
-        let mut key_listener = false;
         let hover_listener = self.hover_listener(event_context);
         let g_event = event_context.get_event();
         match g_event.event {
@@ -96,6 +95,6 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
             }
             _ => {}
         }
-        key_listener || hover_listener
+        hover_listener
     }
 }
