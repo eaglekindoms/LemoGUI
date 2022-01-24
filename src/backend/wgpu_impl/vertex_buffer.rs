@@ -56,11 +56,7 @@ impl<'a> VertexBuffer {
         texture_state: Option<&'a TextureBufferData>,
     ) {
         // 获取顶点缓冲对应的渲染管道
-        let pipeline = render_utils
-            .context
-            .glob_pipeline
-            .get_pipeline(self.shape_type)
-            .unwrap();
+        let pipeline = render_utils.context.get_pipeline(self.shape_type).unwrap();
         // 创建临时渲染变量，并设置渲染管道
         let mut render_pass = create_render_pass(
             &mut render_utils.encoder,

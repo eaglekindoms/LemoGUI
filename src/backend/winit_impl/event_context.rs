@@ -14,21 +14,21 @@ use crate::graphic::style::Style;
 use crate::widget::*;
 
 /// 事件上下文
-pub struct WEventContext<'a, M: 'static> {
+pub struct WEventContext<M: 'static> {
     /// 窗口id
-    pub window: Window,
+    window: Window,
     /// 鼠标位置
-    pub cursor_pos: Point<f32>,
+    cursor_pos: Point<f32>,
     /// 窗口事件
-    pub window_event: Option<WindowEvent<'a>>,
+    window_event: Option<WindowEvent<'static>>,
     /// 自定义事件
-    pub message: Option<M>,
+    message: Option<M>,
     /// 自定义事件广播器
     message_channel: EventLoopProxy<M>,
 }
 
-impl<'a, M: 'static> WEventContext<'a, M> {
-    pub fn new(window: Window, event_loop: &EventLoop<M>) -> WEventContext<'a, M> {
+impl<M: 'static> WEventContext<M> {
+    pub fn new(window: Window, event_loop: &EventLoop<M>) -> WEventContext<M> {
         WEventContext {
             window,
             cursor_pos: Point::new(-1.0, -1.0),
@@ -37,48 +37,46 @@ impl<'a, M: 'static> WEventContext<'a, M> {
             message_channel: event_loop.create_proxy(),
         }
     }
-
     /// 更新鼠标坐标
-    pub fn update_cursor<P: Into<Point<f32>>>(&mut self, pos: P) {
+    pub fn set_cursor_pos<P: Into<Point<f32>>>(&mut self, pos: P) {
         self.cursor_pos = pos.into();
     }
 
+    pub fn get_cursor_pos(&self) -> Point<f32> {
+        self.cursor_pos
+    }
+
+    /// 设置鼠标图标
+    pub fn set_cursor_icon(&mut self, cursor: Cursor) {
+        match cursor {
+            Cursor::Default => self.window.set_cursor_icon(CursorIcon::Default),
+            Cursor::Text => self.window.set_cursor_icon(CursorIcon::Text),
+        }
+    }
+    /// 设置输入框位置
+    pub fn set_ime_position(&mut self) {
+        self.window.set_ime_position(self.cursor_pos);
+    }
     /// 获取当前事件
     pub fn get_event(&self) -> GEvent {
         self.window_event.as_ref().unwrap().into()
     }
 
+    pub fn get_message(&self) -> Option<&M> {
+        self.message.as_ref()
+    }
+
+    pub fn clear_message(&mut self) {
+        self.message = None;
+    }
     /// 发送自定义事件消息
     pub fn send_message(&self, message: M) {
         self.message_channel.send_event(message).ok();
     }
-
-    /// 键鼠单击动画效果
-    pub fn action_animation(
-        &self,
-        style: &mut Style,
-        position: &Rectangle,
-        message: Option<M>,
-    ) -> bool {
-        let input = position.contain_coord(self.cursor_pos);
-        if input && message.is_some() {
-            let message = message.unwrap();
-            let hover_color = style.get_hover_color();
-            let back_color = style.get_back_color();
-            if self.get_event().state == State::Pressed {
-                style.display_color(hover_color);
-                self.send_message(message);
-            } else if self.get_event().state == State::Released {
-                style.display_color(back_color);
-            }
-            return true;
-        }
-        return false;
-    }
 }
 
 /// 初始化窗口
-pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWindow<'a, M> {
+pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<M> {
     log::info!("Initializing the window...");
     let mut builder = WindowBuilder::new();
     let icon = if setting.icon_path.is_some() {
@@ -105,7 +103,7 @@ pub(crate) async fn init<'a, M: 'static + Debug>(setting: Setting) -> DisplayWin
 }
 
 /// 运行窗口实例
-pub(crate) fn run<C, M>(window: DisplayWindow<'static, M>, container: C)
+pub(crate) fn run<C, M>(window: DisplayWindow<M>, container: C)
 where
     C: ComponentModel<M> + 'static,
     M: 'static + Debug,
@@ -153,12 +151,13 @@ where
 }
 
 /// 事件监听方法
+#[cfg(feature = "winit_impl")]
 async fn event_listener<C, M>(
     mut gpu_context: GPUContext,
-    mut event_context: WEventContext<'_, M>,
+    mut event_context: WEventContext<M>,
     mut font_map: GCharMap,
     mut container: C,
-    mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'_, M>>,
+    mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'static, M>>,
 ) where
     C: ComponentModel<M> + 'static,
     M: 'static + Debug,
@@ -177,7 +176,7 @@ async fn event_listener<C, M>(
                     }
                     // 储存鼠标位置坐标
                     WindowEvent::CursorMoved { position, .. } => {
-                        event_context.update_cursor(position);
+                        event_context.set_cursor_pos(position);
                     }
                     _ => {}
                 }

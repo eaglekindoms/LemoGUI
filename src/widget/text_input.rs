@@ -1,5 +1,3 @@
-use winit::window::CursorIcon;
-
 use crate::device::EventContext;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
@@ -50,16 +48,19 @@ impl<'a, M: Clone + PartialEq> TextInput<M> {
             is_focus: false,
         }
     }
-    fn hover_listener(&mut self, event_context: &EventContext<'_, M>) -> bool {
-        let input = self.text_label.size.contain_coord(event_context.cursor_pos);
+    fn hover_listener(&mut self, event_context: &mut EventContext<M>) -> bool {
+        let input = self
+            .text_label
+            .size
+            .contain_coord(event_context.get_cursor_pos());
         if input {
-            event_context.window.set_cursor_icon(CursorIcon::Text);
+            event_context.set_cursor_icon(Cursor::Text);
         } else {
-            event_context.window.set_cursor_icon(CursorIcon::Default);
+            event_context.set_cursor_icon(Cursor::Default);
         }
         input
     }
-    fn received_character(&mut self, event_context: &EventContext<'_, M>, c: char) -> bool {
+    fn received_character(&mut self, event_context: &mut EventContext<M>, c: char) -> bool {
         if self.hover_listener(event_context) {
             log::debug!("ime: {:?}", c);
             if let Some(text) = &mut self.text_label.text {
@@ -85,16 +86,15 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         self.text_label.draw(paint_brush, font_map)
     }
-    fn listener(&mut self, event_context: &mut EventContext<'_, M>) -> bool {
-        let mut key_listener = false;
-        let hover_listener = self.hover_listener(&event_context);
+    fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
+        let hover_listener = self.hover_listener(event_context);
         let g_event = event_context.get_event();
         match g_event.event {
             EventType::ReceivedCharacter(c) => {
-                self.received_character(&event_context, c);
+                self.received_character(event_context, c);
             }
             _ => {}
         }
-        key_listener || hover_listener
+        hover_listener
     }
 }

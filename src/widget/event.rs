@@ -17,6 +17,16 @@ pub enum Mouse {
     Other,
 }
 
+/// Describes the appearance of the mouse cursor.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Cursor {
+    /// The platform-dependent default cursor.
+    Default,
+    /// Indicates text that may be selected or edited.
+    Text,
+}
+
 /// 事件类型枚举
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum EventType {
@@ -55,15 +65,25 @@ impl<M> Default for BindEvent<M> {
 #[derive(Debug, Hash, Ord, PartialOrd, PartialEq, Eq, Clone, Copy)]
 #[repr(u32)]
 pub enum KeyCode {
+    /// 1 !
     Key1,
+    /// 2 @
     Key2,
+    /// 3 #
     Key3,
+    /// 4 $
     Key4,
+    /// 5 %
     Key5,
+    /// 6 ^
     Key6,
+    /// 7 &
     Key7,
+    /// 8 *
     Key8,
+    /// 9 (
     Key9,
+    /// 0 )
     Key0,
     A,
     B,
@@ -118,8 +138,9 @@ pub enum KeyCode {
     F22,
     F23,
     F24,
-
+    /// printScreen
     Snapshot,
+    /// scroll lock
     Scroll,
     Pause,
 
@@ -139,9 +160,86 @@ pub enum KeyCode {
     Return,
     Space,
 
-    Compose,
+    LAlt,
+    RAlt,
+    LControl,
+    RControl,
+    LShift,
+    RShift,
+    LWin,
+    RWin,
 
+    /// special char
+    /// - _
+    Minus,
+    /// = +
+    Equals,
+    /// ` ~
+    Grave,
+    /// [ {
+    LBracket,
+    /// ] }
+    RBracket,
+    /// \\  |
+    Backslash,
+    /// ; :
+    Semicolon,
+    /// :
+    Colon,
+    /// \' \"
+    Apostrophe,
+    /// , <
+    Comma,
+    /// /  ?
+    Slash,
+    /// . >
+    Period,
+
+    /// SDL Keycode
+    /// `
+    Backquote,
+    /// !
+    Exclaim,
+    /// @
+    At,
+    /// \"
+    Quotedbl,
+    /// #
+    Hash,
+    /// $
+    Dollar,
+    /// %
+    Percent,
+    /// ^
     Caret,
+    /// &
+    Ampersand,
+    /// *
+    Asterisk,
+    /// \'
+    Quote,
+    /// (
+    LeftParen,
+    /// )
+    RightParen,
+    /// _
+    Underline,
+    /// +
+    Plus,
+    /// <
+    Less,
+    /// >
+    Greater,
+    /// ?
+    Question,
+
+    Tab,
+    CapsLock,
+    Copy,
+    Paste,
+    Cut,
+    VolumeDown,
+    VolumeUp,
 
     Numlock,
     Numpad0,
@@ -154,66 +252,51 @@ pub enum KeyCode {
     Numpad7,
     Numpad8,
     Numpad9,
+    //// .
+    NumpadDecimal,
+    /// ,
+    NumpadComma,
+    /// enter
+    NumpadEnter,
+    /// =
+    NumpadEquals,
+    /// +
+    NumpadAdd,
+    /// -
+    NumpadSubtract,
+    /// *
+    NumpadMultiply,
+    /// /
+    NumpadDivide,
 
+    /// winit special code
+    Compose,
     AbntC1,
     AbntC2,
-    NumpadAdd,
-    Apostrophe,
     Apps,
-    At,
     Ax,
-    Backslash,
     Calculator,
     Capital,
-    Colon,
-    Comma,
     Convert,
-    NumpadDecimal,
-    NumpadDivide,
-    Equals,
-    Grave,
     Kana,
     Kanji,
-    LAlt,
-    LBracket,
-    LControl,
-    LShift,
-    LWin,
     Mail,
     MediaSelect,
     MediaStop,
-    Minus,
-    NumpadMultiply,
     Mute,
     MyComputer,
     NavigateForward,
     NavigateBackward,
     NextTrack,
     NoConvert,
-    NumpadComma,
-    NumpadEnter,
-    NumpadEquals,
     OEM102,
-    Period,
     PlayPause,
     Power,
     PrevTrack,
-    RAlt,
-    RBracket,
-    RControl,
-    RShift,
-    RWin,
-    Semicolon,
-    Slash,
     Sleep,
     Stop,
-    NumpadSubtract,
     Sysrq,
-    Tab,
-    Underline,
     Unlabeled,
-    VolumeDown,
-    VolumeUp,
     Wake,
     WebBack,
     WebFavorites,
@@ -223,9 +306,85 @@ pub enum KeyCode {
     WebSearch,
     WebStop,
     Yen,
-    Copy,
-    Paste,
-    Cut,
-    Asterisk,
-    Plus,
+
+    ///SDL2 scancode
+    Application,
+    Execute,
+    Help,
+    Menu,
+    Select,
+    Again,
+    Undo,
+    Find,
+    AltErase,
+    Sysreq,
+    Cancel,
+    Clear,
+    Return2,
+    Separator,
+    Out,
+    Oper,
+    ClearAgain,
+    CrSel,
+    ExSel,
+    ThousandsSeparator,
+    DecimalSeparator,
+    CurrencyUnit,
+    CurrencySubUnit,
+    LGui,
+    RGui,
+    Mode,
+    AudioNext,
+    AudioPrev,
+    AudioStop,
+    AudioPlay,
+    AudioMute,
+    Www,
+    Computer,
+    AcSearch,
+    AcHome,
+    AcBack,
+    AcForward,
+    AcStop,
+    AcRefresh,
+    AcBookmarks,
+    BrightnessDown,
+    BrightnessUp,
+    DisplaySwitch,
+    Eject,
+
+    Kp00,
+    Kp000,
+    KpEqualsAS400,
+    KbdIllumToggle,
+    KbdIllumDown,
+    KbdIllumUp,
+    KpLeftParen,
+    KpRightParen,
+    KpLeftBrace,
+    KpRightBrace,
+    KpA,
+    KpB,
+    KpC,
+    KpD,
+    KpE,
+    KpF,
+    KpXor,
+    KpPower,
+    KpPercent,
+    KpDblAmpersand,
+    KpVerticalBar,
+    KpDblVerticalBar,
+    KpMemStore,
+    KpMemRecall,
+    KpMemClear,
+    KpMemAdd,
+    KpMemSubtract,
+    KpMemMultiply,
+    KpMemDivide,
+    KpPlusMinus,
+    KpClearEntry,
+    KpBinary,
+    KpOctal,
+    KpHexadecimal,
 }

@@ -1,5 +1,14 @@
 use std::fmt::Debug;
 
+/// sdl2的HasRawWindowHandle是内部另外封装的
+/// 需要特别引用
+#[cfg(feature = "sdl2_impl")]
+use sdl2::video::Window;
+use wgpu::RenderPipeline;
+/// 默认的HasRawWindowHandle接口
+#[cfg(feature = "winit_impl")]
+use winit::window::Window;
+
 use crate::backend::wgpu_impl::*;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
@@ -10,7 +19,7 @@ use crate::widget::ComponentModel;
 #[derive(Debug)]
 pub struct WGPUContext {
     /// 渲染面板
-    pub surface: wgpu::Surface,
+    surface: wgpu::Surface,
     /// 图形设备
     pub device: wgpu::Device,
     /// 渲染命令队列
@@ -18,14 +27,11 @@ pub struct WGPUContext {
     /// 交换缓冲区描述符
     sc_desc: wgpu::SurfaceConfiguration,
     /// 渲染管道
-    pub glob_pipeline: PipelineState,
+    glob_pipeline: PipelineState,
 }
 
 impl WGPUContext {
-    pub async fn new<W: raw_window_handle::HasRawWindowHandle>(
-        window: &W,
-        window_size: Point<u32>,
-    ) -> WGPUContext {
+    pub async fn new(window: &Window, window_size: Point<u32>) -> WGPUContext {
         log::info!("Initializing the surface...");
         let instance = wgpu::Instance::new(wgpu::Backends::all());
 
@@ -79,7 +85,10 @@ impl WGPUContext {
         self.sc_desc.height = size.y;
         self.surface.configure(&self.device, &self.sc_desc);
     }
-
+    /// 获取渲染管线
+    pub fn get_pipeline(&self, shape_type: ShapeType) -> Option<&RenderPipeline> {
+        self.glob_pipeline.get_pipeline(shape_type)
+    }
     /// 获取当前帧尺寸
     pub fn get_surface_size(&self) -> Point<u32> {
         Point::new(self.sc_desc.width, self.sc_desc.height)

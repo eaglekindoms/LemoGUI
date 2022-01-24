@@ -35,7 +35,7 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
             widget.widget.draw(paint_brush, font_map);
         }
     }
-    fn listener(&mut self, event_context: &mut EventContext<'_, M>) -> bool {
+    fn listener(&mut self, event_context: &mut EventContext<M>) -> bool {
         let mut is_listener = false;
         for comp in &mut self.widgets {
             if comp.widget.listener(event_context) {
