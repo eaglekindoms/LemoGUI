@@ -10,7 +10,8 @@ use winit::event::*;
 use winit::event_loop::*;
 use winit::window::*;
 
-use crate::device::*;
+use crate::adapter::*;
+use crate::event::*;
 use crate::graphic::base::*;
 use crate::graphic::style::Style;
 use crate::widget::*;

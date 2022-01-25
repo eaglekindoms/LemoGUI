@@ -1,4 +1,4 @@
-use crate::device::{GPUContext, VBuffer};
+use crate::adapter::{GPUContext, VBuffer};
 use crate::graphic::style::Style;
 
 /// 点结构体

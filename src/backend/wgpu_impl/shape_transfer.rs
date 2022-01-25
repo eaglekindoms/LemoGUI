@@ -1,5 +1,5 @@
+use crate::adapter::*;
 use crate::backend::wgpu_impl::*;
-use crate::device::*;
 use crate::graphic::base::*;
 use crate::graphic::style::Style;
 

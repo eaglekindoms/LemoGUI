@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::device::DisplayWindow;
+use crate::adapter::DisplayWindow;
 use crate::graphic::base::Point;
 use crate::widget::{Frame, Panel};
 
