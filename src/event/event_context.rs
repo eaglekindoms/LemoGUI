@@ -1,5 +1,5 @@
+use crate::event::{Cursor, GEvent};
 use crate::graphic::base::Point;
-use crate::widget::{Cursor, GEvent};
 
 /// 事件上下文接口
 pub trait EventContext<M> {

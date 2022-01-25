@@ -1,8 +1,8 @@
 use winit::dpi::PhysicalSize;
 use winit::event::*;
 
+use crate::event::*;
 use crate::graphic::base::Point;
-use crate::widget::*;
 
 impl From<Point<f32>> for winit::dpi::Position {
     #[inline]

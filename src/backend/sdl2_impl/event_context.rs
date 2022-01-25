@@ -1,13 +1,13 @@
 use std::fmt::Debug;
 
 use futures::channel::mpsc;
-use futures::channel::mpsc::UnboundedReceiver;
 use futures::{task, Future, StreamExt};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::video::Window;
 use sdl2::{EventPump, EventSubsystem};
 
 use crate::device::{DisplayWindow, GPUContext};
+use crate::event::*;
 use crate::graphic::base::*;
 use crate::widget::*;
 

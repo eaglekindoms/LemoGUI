@@ -1,8 +1,6 @@
 pub use button::*;
 pub use component::*;
 pub use drawing_board::*;
-pub use event::*;
-pub use event_context::*;
 pub use frame::*;
 pub use instance::*;
 pub use label::*;
@@ -12,8 +10,6 @@ pub use text_input::*;
 mod button;
 mod component;
 mod drawing_board;
-mod event;
-mod event_context;
 mod frame;
 mod instance;
 mod label;

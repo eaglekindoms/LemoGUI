@@ -1,3 +1,4 @@
+use crate::event::*;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::*;

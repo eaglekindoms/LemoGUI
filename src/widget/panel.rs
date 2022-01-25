@@ -1,6 +1,7 @@
+use crate::event::EventContext;
 use crate::graphic::base::GCharMap;
 use crate::graphic::render_api::PaintBrush;
-use crate::widget::{Component, ComponentModel, EventContext};
+use crate::widget::{Component, ComponentModel};
 
 /// 容器面板结构体
 #[derive(Debug)]

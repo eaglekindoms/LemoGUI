@@ -2,7 +2,7 @@
 
 ## Features
 
-### Implement a GUI library dependent on wgpu
+### Implement a GUI library depend on wgpu
 
 #### Plan
 

@@ -1,9 +1,9 @@
 use std::fmt::Formatter;
 
+use crate::event::{EventContext, State};
 use crate::graphic::base::{GCharMap, Rectangle};
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::Style;
-use crate::widget::{EventContext, State};
 
 /// 组件模型trait
 /// 作用：定义组件必须的公共方法接口
