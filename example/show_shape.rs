@@ -2,8 +2,8 @@ use simple_logger::SimpleLogger;
 
 use LemoGUI::graphic::base::*;
 use LemoGUI::graphic::style::*;
-use LemoGUI::widget::ShapeBoard;
-use LemoGUI::widget::{Instance, Panel, Setting};
+use LemoGUI::instance::*;
+use LemoGUI::widget::*;
 
 fn main() {
     SimpleLogger::new()
