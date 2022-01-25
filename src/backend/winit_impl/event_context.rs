@@ -1,10 +1,8 @@
-use std::any::Any;
 use std::fmt::Debug;
 use std::future::Future;
 use std::path::Path;
 
 use futures::channel::mpsc;
-use futures::channel::mpsc::UnboundedReceiver;
 use futures::{task, StreamExt};
 use winit::event::*;
 use winit::event_loop::*;
@@ -13,7 +11,7 @@ use winit::window::*;
 use crate::adapter::*;
 use crate::event::*;
 use crate::graphic::base::*;
-use crate::graphic::style::Style;
+use crate::instance::Setting;
 use crate::widget::*;
 
 /// 事件上下文

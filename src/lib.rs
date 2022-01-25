@@ -6,5 +6,7 @@ pub mod backend;
 pub mod event;
 /// 定义图形抽象层
 pub mod graphic;
+/// 运行实例(Controller)
+pub mod instance;
 /// 定义gui控件
 pub mod widget;

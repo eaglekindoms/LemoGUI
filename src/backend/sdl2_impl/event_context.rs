@@ -9,6 +9,7 @@ use sdl2::{EventPump, EventSubsystem};
 use crate::adapter::{DisplayWindow, GPUContext};
 use crate::event::*;
 use crate::graphic::base::*;
+use crate::instance::Setting;
 use crate::widget::*;
 
 /// 事件上下文

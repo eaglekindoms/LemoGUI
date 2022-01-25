@@ -4,6 +4,7 @@ use simple_logger::SimpleLogger;
 
 use LemoGUI::graphic::base::*;
 use LemoGUI::graphic::style::*;
+use LemoGUI::instance::*;
 use LemoGUI::widget::*;
 
 fn main() {

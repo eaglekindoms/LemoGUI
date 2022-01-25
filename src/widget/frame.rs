@@ -1,6 +1,7 @@
 use crate::event::EventContext;
 use crate::graphic::base::GCharMap;
 use crate::graphic::render_api::PaintBrush;
+use crate::instance::*;
 use crate::widget::*;
 
 /// 窗口帧结构体

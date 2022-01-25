@@ -2,7 +2,6 @@ pub use button::*;
 pub use component::*;
 pub use drawing_board::*;
 pub use frame::*;
-pub use instance::*;
 pub use label::*;
 pub use panel::*;
 pub use text_input::*;
@@ -15,8 +14,6 @@ mod component;
 mod drawing_board;
 /// 窗口帧容器
 mod frame;
-/// 运行实例(Controller)
-mod instance;
 /// 组件内容显示板
 mod label;
 /// 面板容器

@@ -31,7 +31,7 @@ impl<M: 'static + std::fmt::Debug> DisplayWindow<M> {
         run_instance(self, container);
     }
 
-    pub fn new<'a>(setting: crate::widget::Setting) -> DisplayWindow<M> {
+    pub fn new<'a>(setting: crate::instance::Setting) -> DisplayWindow<M> {
         init_window(setting)
     }
 }
@@ -51,7 +51,9 @@ where
 }
 
 /// 初始化窗口方法
-fn init_window<M: 'static + std::fmt::Debug>(setting: crate::widget::Setting) -> DisplayWindow<M> {
+fn init_window<M: 'static + std::fmt::Debug>(
+    setting: crate::instance::Setting,
+) -> DisplayWindow<M> {
     use futures::executor::block_on;
     // 使用winit初始化窗口
     #[cfg(feature = "winit_impl")]
