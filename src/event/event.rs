@@ -45,10 +45,22 @@ pub struct BindEvent<M> {
 }
 
 /// 组件状态结构体，记录绑定的事件、及与事件联动的消息
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct GEvent {
     pub event: EventType,
     pub state: State,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        State::None
+    }
+}
+
+impl Default for EventType {
+    fn default() -> Self {
+        EventType::Other
+    }
 }
 
 impl<M> Default for BindEvent<M> {

@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use futures::channel::mpsc;
 use futures::{task, Future, StreamExt};
 use sdl2::event::{Event, WindowEvent};
+use sdl2::keyboard::TextInputUtil;
 use sdl2::video::Window;
 use sdl2::{EventPump, EventSubsystem};
 
@@ -25,6 +26,8 @@ pub struct SEventContext<M: 'static> {
     message: Option<M>,
     /// 自定义事件广播器
     message_channel: EventSubsystem,
+    /// 输入框配置工具
+    pub key_utils: TextInputUtil,
 }
 
 pub struct SEventListener<M: 'static> {
@@ -33,7 +36,11 @@ pub struct SEventListener<M: 'static> {
 }
 
 impl<M: 'static> SEventContext<M> {
-    pub fn new(window: Window, event_channel: EventSubsystem) -> SEventContext<M> {
+    pub fn new(
+        window: Window,
+        event_channel: EventSubsystem,
+        key_utils: TextInputUtil,
+    ) -> SEventContext<M> {
         event_channel.register_custom_event::<M>().unwrap();
         SEventContext {
             window,
@@ -41,6 +48,7 @@ impl<M: 'static> SEventContext<M> {
             window_event: None,
             message: None,
             message_channel: event_channel,
+            key_utils,
         }
     }
 }
@@ -62,7 +70,12 @@ impl<M> EventContext<M> for SEventContext<M> {
     /// 设置鼠标图标
     fn set_cursor_icon(&mut self, _cursor: Cursor) {}
     /// 设置输入框位置
-    fn set_ime_position(&mut self) {}
+    fn set_ime_position(&mut self) {
+        let pos = self.cursor_pos;
+        self.key_utils
+            .set_rect(sdl2::rect::Rect::new(pos.x as i32, pos.y as i32, 111, 60));
+        self.key_utils.start();
+    }
 
     fn set_event(&mut self, event: GEvent) {
         self.window_event = Some(event)
@@ -99,7 +112,8 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window_size = Point::new(setting.size.x as u32, setting.size.y as u32);
-
+    // show windows native ime candidate box
+    sdl2::hint::set_with_priority("SDL_IME_SHOW_UI", "1", &sdl2::hint::Hint::Override);
     let window = video_subsystem
         .window(setting.title.as_str(), window_size.x, window_size.y)
         .position_centered()
@@ -109,8 +123,9 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
         .unwrap();
     let channel = sdl_context.event().unwrap();
     let event_pump = sdl_context.event_pump().unwrap();
+    let key_utils = video_subsystem.text_input();
     let gpu_context = GPUContext::new(&window, window_size).await;
-    let event_context: SEventContext<M> = SEventContext::new(window, channel);
+    let event_context: SEventContext<M> = SEventContext::new(window, channel, key_utils);
     let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
     let display_window = DisplayWindow {
         gpu_context,
@@ -176,6 +191,7 @@ async fn event_listener<C, M>(
             .get_window_id()
             .eq_ignore_ascii_case(format!("{:?}", event.get_window_id()).as_str())
         {
+            event_context.set_ime_position();
             match event {
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(width, height)
@@ -195,6 +211,12 @@ async fn event_listener<C, M>(
                 }
                 Event::MouseMotion { x, y, .. } => {
                     event_context.set_cursor_pos(Point::new(x as f32, y as f32))
+                }
+                Event::TextInput { text: words, .. } => {
+                    println!("text input {:?}", words);
+                }
+                Event::TextEditing { text: c_words, .. } => {
+                    println!("text char: {:?}", c_words);
                 }
                 Event::MouseButtonDown { .. }
                 | Event::MouseButtonUp { .. }
