@@ -41,10 +41,6 @@ impl<M: 'static> WEventContext<M> {
 }
 
 impl<M> EventContext<M> for WEventContext<M> {
-    fn get_window_id(&self) -> String {
-        format!("{:?}", &self.window.id())
-    }
-
     /// 更新鼠标坐标
     fn set_cursor_pos(&mut self, pos: Point<f32>) {
         self.cursor_pos = pos;
@@ -109,7 +105,7 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
     let display_window = DisplayWindow {
         gpu_context,
         event_loop,
-        event_context: Box::new(event_context),
+        event_context,
         font_map,
     };
     return display_window;
@@ -167,7 +163,7 @@ where
 #[cfg(feature = "winit_impl")]
 async fn event_listener<C, M>(
     mut gpu_context: GPUContext,
-    mut event_context: Box<dyn EventContext<M>>,
+    mut event_context: WEventContext<M>,
     mut font_map: GCharMap,
     mut container: C,
     mut receiver: mpsc::UnboundedReceiver<winit::event::Event<'static, M>>,
@@ -177,10 +173,7 @@ async fn event_listener<C, M>(
 {
     while let Some(event) = receiver.next().await {
         match event {
-            Event::WindowEvent { event, window_id }
-                if format!("{:?}", window_id)
-                    .eq_ignore_ascii_case(event_context.get_window_id().as_str()) =>
-            {
+            Event::WindowEvent { event, window_id } if window_id == event_context.window.id() => {
                 // 捕获窗口关闭请求
                 if event == WindowEvent::CloseRequested {
                     break;
@@ -198,14 +191,11 @@ async fn event_listener<C, M>(
                 }
                 // 监听到组件关注事件，决定是否重绘
                 event_context.set_event(event.into());
-                if container.listener(&mut *event_context) {
+                if container.listener(&mut event_context) {
                     gpu_context.present(&mut container, &mut font_map)
                 }
             }
-            Event::RedrawRequested(window_id)
-                if format!("{:?}", window_id)
-                    .eq_ignore_ascii_case(event_context.get_window_id().as_str()) =>
-            {
+            Event::RedrawRequested(window_id) if window_id == event_context.window.id() => {
                 gpu_context.present(&mut container, &mut font_map)
             }
             Event::UserEvent(event) => {

@@ -27,11 +27,6 @@ pub struct SEventContext<M: 'static> {
     message_channel: EventSubsystem,
 }
 
-pub struct SEventListener<M: 'static> {
-    pub event_pump: EventPump,
-    _message: Option<M>,
-}
-
 impl<M: 'static> SEventContext<M> {
     pub fn new(window: Window, event_channel: EventSubsystem) -> SEventContext<M> {
         event_channel.register_custom_event::<M>().unwrap();
@@ -46,10 +41,6 @@ impl<M: 'static> SEventContext<M> {
 }
 
 impl<M> EventContext<M> for SEventContext<M> {
-    fn get_window_id(&self) -> String {
-        format!("{:?}", Some(self.window.id()))
-    }
-
     /// 更新鼠标坐标
     fn set_cursor_pos(&mut self, pos: Point<f32>) {
         self.cursor_pos = pos;
@@ -114,11 +105,8 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
     let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
     let display_window = DisplayWindow {
         gpu_context,
-        event_loop: SEventListener::<M> {
-            event_pump,
-            _message: None,
-        },
-        event_context: Box::new(event_context),
+        event_loop: event_pump,
+        event_context,
         font_map,
     };
     return display_window;
@@ -139,7 +127,7 @@ where
         receiver,
     ));
     let mut context = task::Context::from_waker(task::noop_waker_ref());
-    let mut event_pump: EventPump = window.event_loop.event_pump;
+    let mut event_pump: EventPump = window.event_loop;
     loop {
         for event in event_pump.poll_iter() {
             sender.unbounded_send(event).unwrap();
@@ -159,7 +147,7 @@ where
 /// 事件监听方法
 async fn event_listener<C, M>(
     mut gpu_context: GPUContext,
-    mut event_context: Box<dyn EventContext<M>>,
+    mut event_context: SEventContext<M>,
     mut font_map: GCharMap,
     mut container: C,
     mut receiver: mpsc::UnboundedReceiver<sdl2::event::Event>,
@@ -172,10 +160,7 @@ async fn event_listener<C, M>(
             event_context.set_message(event.as_user_event_type::<M>());
             log::debug!("customer event: {:?}", event_context.get_message());
         }
-        if event_context
-            .get_window_id()
-            .eq_ignore_ascii_case(format!("{:?}", event.get_window_id()).as_str())
-        {
+        if event.get_window_id() == Some(event_context.window.id()) {
             match event {
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(width, height)
@@ -201,7 +186,7 @@ async fn event_listener<C, M>(
                 | Event::KeyUp { .. }
                 | Event::KeyDown { .. } => {
                     event_context.set_event(event.into());
-                    if container.listener(&mut *event_context) {
+                    if container.listener(&mut event_context) {
                         gpu_context.present(&mut container, &mut font_map)
                     }
                 }

@@ -3,8 +3,6 @@ use crate::graphic::base::Point;
 
 /// 事件上下文接口
 pub trait EventContext<M> {
-    /// 获取窗口id
-    fn get_window_id(&self) -> String;
     /// 设置鼠标位置
     fn set_cursor_pos(&mut self, pos: Point<f32>);
     /// 获取鼠标位置
