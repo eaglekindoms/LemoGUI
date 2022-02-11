@@ -49,10 +49,9 @@ impl VertexLayout for CircleVertex {
     fn get_shader(device: &Device) -> ShaderModule {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("circle shader"),
-            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/shader_c/circle.wgsl"
-            )))),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(
+                "./shader/circle.wgsl"
+            ))),
         })
     }
 }
@@ -91,10 +90,9 @@ impl VertexLayout for RectVertex {
     fn get_shader(device: &Device) -> ShaderModule {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("round_rect shader"),
-            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/shader_c/round_rect.wgsl"
-            )))),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(
+                "./shader/round_rect.wgsl"
+            ))),
         })
     }
 }
@@ -164,10 +162,9 @@ impl VertexLayout for PointVertex {
     fn get_shader(device: &Device) -> ShaderModule {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("triangle shader"),
-            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/shader_c/triangle.wgsl"
-            )))),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(
+                "./shader/triangle.wgsl"
+            ))),
         })
     }
 }
