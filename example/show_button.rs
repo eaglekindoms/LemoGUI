@@ -36,23 +36,23 @@ impl Instance for Counter {
 
     fn layout(&self) -> Panel<Ms> {
         // 自定义设置
-        let rect = Rectangle::new(100.0, 100.0, 170, 40);
+        let rect = Rectangle::new(100.0, 100.0, 80, 40);
         let style = Style::default()
             .border(RGBA(0.2, 0.2, 0.2, 0.5))
             .hover_color(RGBA(0.0, 0.75, 1.0, 0.5))
             .back_color(RGBA(1.0, 0.5, 0.5, 1.0))
             .font_color(RGBA(0.1, 0.3, 0.8, 1.0))
             .round();
-        let b1 = Button::new_with_style(rect, style, "add button 加").action(Ms::Add);
+        let b1 = Button::new_with_style(rect, style, "数字 +").action(Ms::Add);
         Panel::new()
-            .push(Button::new(Point::new(100.0, 200.0), "sub button 减").action(Ms::Sub))
+            .push(Button::new(Point::new(300.0, 100.0), "数字 -").action(Ms::Sub))
             .push(TextInput::new(
-                Point::new(100.0, 300.0),
+                Point::new(200.0, 300.0),
                 self.text.as_str(),
                 Ms::Text,
             ))
             .push(b1)
-            .push(Button::new(Point::new(120., 20.), self.value.to_string()))
+            .push(Button::new(Point::new(230., 100.), self.value.to_string()))
     }
 
     fn update(&mut self, broadcast: &Ms) {
