@@ -1,4 +1,4 @@
-# LemoGUI
+# lemo_gui
 
 ## Features
 

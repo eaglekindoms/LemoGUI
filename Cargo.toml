@@ -1,5 +1,5 @@
 [package]
-name = "LemoGUI"
+name = "lemo_gui"
 version = "0.0.1"
 authors = ["eaglekindoms <huyongmao35@outlook.com>"]
 edition = "2021"
@@ -21,6 +21,10 @@ path = "example/show_shape.rs"
 name = "test_graph_algo"
 path = "example/proto/test_algo.rs"
 
+[[example]]
+name = "test_glow"
+path = "example/glow_test/test_glow.rs"
+
 [dependencies]
 wgpu = { version = "0.12", features = ["spirv"] }
 async-trait = "0.1.51"
@@ -34,6 +38,8 @@ bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
 ab_glyph = "0.2.11"
 raw-window-handle = "0.4.2"
+glow = "0.11.2"
+glutin = "0.28.0"
 
 [dependencies.sdl2]
 git = "https://github.com/Rust-SDL2/rust-sdl2"

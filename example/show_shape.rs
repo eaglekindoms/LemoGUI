@@ -1,9 +1,9 @@
 use simple_logger::SimpleLogger;
 
-use LemoGUI::graphic::base::*;
-use LemoGUI::graphic::style::*;
-use LemoGUI::instance::*;
-use LemoGUI::widget::*;
+use lemo_gui::graphic::base::*;
+use lemo_gui::graphic::style::*;
+use lemo_gui::instance::*;
+use lemo_gui::widget::*;
 
 fn main() {
     SimpleLogger::new()
