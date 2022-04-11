@@ -42,6 +42,7 @@ impl GLGPUContext {
             window,
         );
     }
+
     pub fn clear_frame(&self, color: RGBA) {
         unsafe {
             self.gl_context

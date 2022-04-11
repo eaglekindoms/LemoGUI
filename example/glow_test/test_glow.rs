@@ -7,18 +7,22 @@ use winit::{
     window::WindowBuilder,
 };
 
-use lemo_gui::graphic::base::{BACKGROUND_COLOR, WHITE};
+use lemo_gui::backend::wgpu_impl::RenderUtil;
+use lemo_gui::graphic::base::{Rectangle, BACKGROUND_COLOR, WHITE, ShapeGraph};
+use lemo_gui::graphic::render_api::PaintBrush;
+use lemo_gui::graphic::style::Style;
 
 fn main() {
     SimpleLogger::new().init().unwrap();
     let event_loop = EventLoop::new();
+    let rect = Rectangle::new(21.0, 31.0, 221, 111);
 
     let wb = WindowBuilder::new().with_title("gl test");
     use lemo_gui::backend::glow_impl::*;
-    let (context, window) = GLGPUContext::new(wb, &event_loop);
-    let render_util = GRenderUtil::new();
+    let (mut context, window) = GLGPUContext::new(wb, &event_loop);
     event_loop.run(move |event, _, control_flow| {
-        println!("{:?}", event);
+        // println!("{:?}", event);
+        let mut render_util = GRenderUtil::new(&mut context);
 
         *control_flow = ControlFlow::Wait;
 
@@ -29,13 +33,16 @@ fn main() {
                     state: ElementState::Released,
                     ..
                 } => {
+                    println!(" redrawing! ");
+                    let rec:Box<dyn ShapeGraph>=Box::new(rect);
+                    render_util.draw_shape(&rec, Style::default());
                     window.request_redraw();
                 }
                 _ => (),
             },
             Event::RedrawRequested(_) => {
-                println!("\nredrawing!\n");
-                context.clear_frame(BACKGROUND_COLOR);
+                println!(" redrawing! ");
+                render_util.clear_frame(BACKGROUND_COLOR);
             }
             _ => (),
         }
