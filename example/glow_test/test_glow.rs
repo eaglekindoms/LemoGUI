@@ -33,15 +33,17 @@ fn main() {
                     state: ElementState::Released,
                     ..
                 } => {
-                    println!(" redrawing! ");
+                    println!("mous input redrawing! ");
                     let rec:Box<dyn ShapeGraph>=Box::new(rect);
                     render_util.draw_shape(&rec, Style::default());
-                    window.request_redraw();
+                    // window.request_redraw();
                 }
                 _ => (),
             },
             Event::RedrawRequested(_) => {
                 println!(" redrawing! ");
+                // let rec:Box<dyn ShapeGraph>=Box::new(rect);
+                // render_util.draw_shape(&rec, Style::default());
                 render_util.clear_frame(BACKGROUND_COLOR);
             }
             _ => (),

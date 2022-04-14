@@ -1,6 +1,6 @@
 use glow::HasContext;
 
-use crate::backend::glow_impl::{create_program, create_shader, GLGPUContext, ShaderType};
+use crate::backend::glow_impl::*;
 use crate::graphic::base::{GCharMap, ImageRaw, Rectangle, ShapeGraph, RGBA};
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::Style;
@@ -26,24 +26,8 @@ impl<'a> PaintBrush for GRenderUtil<'a> {
     }
 
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {
-        let program = create_program(&self.context.gl_context);
-        let s_vert = create_shader(
-            &self.context.gl_context,
-            &program,
-            ShaderType::Vertex,
-            include_str!("./shader/triangle.vert"),
-        );
-        let s_frag = create_shader(
-            &self.context.gl_context,
-            &program,
-            ShaderType::Fragment,
-            include_str!("./shader/triangle.frag"),
-        );
-        unsafe {
-            self.context.gl_context.use_program(Some(program));
-            self.context.gl_context.clear(glow::COLOR_BUFFER_BIT);
-            self.context.gl_context.draw_arrays(glow::TRIANGLES, 0, 3);
-        }
+        let pipeline = Pipeline::create_triangle_pipeline(&self.context.gl_context);
+        pipeline.draw(&self.context);
     }
 
     fn draw_text(
