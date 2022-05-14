@@ -37,3 +37,7 @@
 - use winit/sdl2 as window and event backend (async event is supported by futures)
 - use ab_glyph to provide font shape parsing
 - use image to provide the implementations of image encoding and decoding
+
+### Architecture
+
+![widget-architecture](./res/widget-architecture.svg)
