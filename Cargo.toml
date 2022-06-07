@@ -48,6 +48,7 @@ features = ["raw-window-handle", "bundled"]
 
 [features]
 wgpu_impl = []
+glow_impl = []
 winit_impl = []
 sdl2_impl = []
 default = ["wgpu_impl", "winit_impl"]

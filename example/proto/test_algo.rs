@@ -50,7 +50,6 @@ fn main() {
         use lemo_gui::backend::glow_impl::*;
         let program = create_shader(&gl, vertex_shader_source, fragment_shader_source);
 
-
         gl.use_program(Some(program));
         gl.clear_color(0.1, 0.2, 0.3, 1.0);
 

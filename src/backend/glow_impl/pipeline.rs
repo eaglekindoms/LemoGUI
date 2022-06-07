@@ -9,16 +9,13 @@ pub struct Pipeline {
 
 impl Pipeline {
     pub fn create_triangle_pipeline(gl: &glow::Context) -> Pipeline {
-
         let shader = CShader::new(
             gl,
             include_str!("./shader/triangle.vert"),
             include_str!("./shader/triangle.frag"),
         );
-        let program=link_program(gl,&shader);
-        Pipeline {
-            program
-        }
+        let program = link_program(gl, &shader);
+        Pipeline { program }
     }
 
     pub fn draw(&self, context: &GLGPUContext) {

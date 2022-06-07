@@ -8,7 +8,7 @@ use winit::{
 };
 
 use lemo_gui::backend::wgpu_impl::RenderUtil;
-use lemo_gui::graphic::base::{Rectangle, BACKGROUND_COLOR, WHITE, ShapeGraph};
+use lemo_gui::graphic::base::{Rectangle, ShapeGraph, BACKGROUND_COLOR, WHITE};
 use lemo_gui::graphic::render_api::PaintBrush;
 use lemo_gui::graphic::style::Style;
 
@@ -34,7 +34,7 @@ fn main() {
                     ..
                 } => {
                     println!("mous input redrawing! ");
-                    let rec:Box<dyn ShapeGraph>=Box::new(rect);
+                    let rec: Box<dyn ShapeGraph> = Box::new(rect);
                     render_util.draw_shape(&rec, Style::default());
                     // window.request_redraw();
                 }

@@ -48,7 +48,7 @@ impl<'a> RenderUtil<'a> {
 
 impl PaintBrush for RenderUtil<'_> {
     fn clear_frame(&mut self, color: RGBA) {
-        vertex_buffer::create_render_pass(&mut self.encoder, &self.view, RenderModel::Clear(color));
+        create_render_pass(&mut self.encoder, &self.view, RenderModel::Clear(color));
     }
 
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {
@@ -66,12 +66,7 @@ impl PaintBrush for RenderUtil<'_> {
         let mut x = text_rect.position.x + 8.;
         let scale = 10. / (font_map.scale / 2.5);
         for c in text.chars() {
-            let c_font = font_map.character_texture(
-                c,
-                &mut self.g_texture,
-                &self.context.device,
-                &self.context.queue,
-            );
+            let c_font = font_map.character_texture(c, self);
             let c_buffer = c_font.texture.as_ref().unwrap();
             let c_x = x;
             let c_y = text_rect.position.y;

@@ -1,14 +1,26 @@
-use crate::event::EventContext;
-
 /// 图形渲染采用wgpu实现
 #[cfg(feature = "wgpu_impl")]
-pub type GPUContext = crate::backend::wgpu_impl::WGPUContext;
+mod wgpu_adapter {
+    pub type GPUContext = crate::backend::wgpu_impl::WGPUContext;
+    pub type VBuffer = crate::backend::wgpu_impl::VertexBuffer;
+    pub type TextureBuffer = crate::backend::wgpu_impl::TextureBufferData;
+}
 #[cfg(feature = "wgpu_impl")]
-pub type VBuffer = crate::backend::wgpu_impl::VertexBuffer;
+pub use wgpu_adapter::*;
+
+/// 图形渲染采用wgpu实现
+#[cfg(feature = "glow_impl")]
+mod glow_adapter {
+    pub type GPUContext = crate::backend::glow_impl::GLGPUContext;
+}
+#[cfg(feature = "glow_impl")]
+#[cfg(not(feature = "wgpu_impl"))]
+pub use glow_adapter::*;
 
 /// 窗口结构体
 /// 作用：封装窗体，事件循环器，图形上下文
 #[cfg(feature = "sdl2_impl")]
+#[cfg(not(feature = "winit_impl"))]
 pub struct DisplayWindow<M: 'static> {
     /// 图形上下文
     pub gpu_context: GPUContext,
