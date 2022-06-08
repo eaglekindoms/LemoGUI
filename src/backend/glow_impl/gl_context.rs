@@ -1,12 +1,13 @@
 use glow::HasContext;
+use std::sync::Arc;
 
 use crate::graphic::base::RGBA;
 
 /// openGL context
 #[derive(Debug)]
 pub struct GLGPUContext {
-    pub gl_context: glow::Context,
-    pub gl_window: glutin::RawContext<glutin::PossiblyCurrent>,
+    pub gl_context: Arc<glow::Context>,
+    gl_window: glutin::RawContext<glutin::PossiblyCurrent>,
 }
 
 impl GLGPUContext {
@@ -36,11 +37,15 @@ impl GLGPUContext {
         };
         return (
             GLGPUContext {
-                gl_context: gl,
+                gl_context: Arc::new(gl),
                 gl_window,
             },
             window,
         );
+    }
+
+    pub fn swap_buffers(&self) {
+        self.gl_window.swap_buffers().unwrap();
     }
 
     pub fn clear_frame(&self, color: RGBA) {

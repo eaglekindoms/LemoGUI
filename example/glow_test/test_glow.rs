@@ -7,7 +7,6 @@ use winit::{
     window::WindowBuilder,
 };
 
-use lemo_gui::backend::wgpu_impl::RenderUtil;
 use lemo_gui::graphic::base::{Rectangle, ShapeGraph, BACKGROUND_COLOR, WHITE};
 use lemo_gui::graphic::render_api::PaintBrush;
 use lemo_gui::graphic::style::Style;

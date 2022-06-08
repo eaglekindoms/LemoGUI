@@ -1,4 +1,5 @@
 use bytemuck::Pod;
+use log::debug;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::Device;
 
@@ -72,6 +73,12 @@ impl<'a> VertexBuffer {
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
         render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
         render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+    }
+}
+
+impl Drop for VertexBuffer {
+    fn drop(&mut self) {
+        debug!("drop vertex buffer...")
     }
 }
 

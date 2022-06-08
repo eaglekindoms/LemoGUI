@@ -28,7 +28,8 @@ impl<'a> PaintBrush for GRenderUtil<'a> {
 
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {
         let pipeline = Pipeline::create_triangle_pipeline(&self.context.gl_context);
-        pipeline.draw(&self.context);
+        pipeline.draw();
+        self.context.swap_buffers();
     }
 
     fn draw_text(
