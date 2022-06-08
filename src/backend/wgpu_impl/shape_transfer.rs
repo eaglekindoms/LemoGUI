@@ -56,6 +56,6 @@ impl ShapeGraph for RegularPolygon {
 
 impl ShapeGraph for Polygon {
     fn to_buffer(&self, gpu_context: &GPUContext, style: Style) -> VertexBuffer {
-        PointVertex::from_shape_to_vector(gpu_context, &self.points, style.get_display_color())
+        from_shape_to_vector(gpu_context, &self.points, style.get_display_color())
     }
 }

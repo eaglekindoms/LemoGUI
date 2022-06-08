@@ -40,6 +40,7 @@ ab_glyph = "0.2.11"
 raw-window-handle = "0.4.2"
 glow = "0.11.2"
 glutin = "0.28.0"
+derive_builder = "0.11"
 
 [dependencies.sdl2]
 #git = "https://github.com/Rust-SDL2/rust-sdl2"

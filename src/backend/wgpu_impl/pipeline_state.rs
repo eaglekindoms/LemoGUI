@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use wgpu::*;
 
 use crate::backend::wgpu_impl::*;
+use crate::graphic::base::*;
 
 /// 渲染管道状态元结构体
 #[derive(Debug)]

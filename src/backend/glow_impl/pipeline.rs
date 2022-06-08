@@ -51,18 +51,19 @@ impl Pipeline {
     }
 
     pub fn draw(&self) {
+        let firstTriangle: [f32; 9] = [
+            -0.9, -0.5, 0.0, // left
+            -0.0, -0.5, 0.0, // right
+            -0.45, 0.5, 0.0, // top
+        ];
+        self.set_buffer_data(bytemuck::cast_slice(&firstTriangle));
+        self.draw_arr();
+    }
+    pub fn set_buffer_data(&self, data: &[u8]) {
         unsafe {
-            let firstTriangle: [f32; 9] = [
-                -0.9, -0.5, 0.0, // left
-                -0.0, -0.5, 0.0, // right
-                -0.45, 0.5, 0.0, // top
-            ];
-            set_buffer_data(
-                &self.context,
-                self.vbo,
-                bytemuck::cast_slice(&firstTriangle),
-            );
-            self.draw_arr();
+            self.context.bind_buffer(glow::ARRAY_BUFFER, Some(self.vbo));
+            self.context
+                .buffer_data_u8_slice(glow::ARRAY_BUFFER, data, glow::STREAM_DRAW);
         }
     }
 }
@@ -87,6 +88,7 @@ pub fn bind_vertex_attrib(
             vertex_layout.offset,
         );
         gl_context.enable_vertex_attrib_array(vertex_layout.location);
+        gl_context.bind_vertex_array(None);
     }
     return vao;
 }
