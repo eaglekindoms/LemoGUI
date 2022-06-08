@@ -4,8 +4,8 @@ use std::path::Path;
 use ab_glyph::{Font, FontVec, PxScale, PxScaleFont, ScaleFont};
 
 use crate::adapter::*;
-use crate::backend::wgpu_impl::*;
 use crate::graphic::base::{ImageRaw, BLACK, RGBA};
+use crate::graphic::render_api::PaintBrush;
 
 pub const DEFAULT_FONT_SIZE: f32 = 40.0;
 pub const DEFAULT_FONT_COLOR: RGBA = BLACK;
@@ -105,15 +105,10 @@ impl Character {
     }
 
     /// 给字形生成纹理缓冲数据
-    pub fn set_texture(
-        &mut self,
-        g_texture: &mut GTexture,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-    ) -> &TextureBuffer {
+    pub fn set_texture(&mut self, render_utils: &mut dyn PaintBrush) -> &TextureBuffer {
         if self.texture.is_none() {
             let raw_data = self.to_raw();
-            self.texture = Some(g_texture.create_bind_group(device, queue, raw_data));
+            self.texture = Some(render_utils.set_texture(raw_data));
         }
         return self.texture.as_ref().unwrap();
     }
@@ -183,7 +178,7 @@ impl GCharMap {
     }
 
     /// 给容器中的每个字符生成相应纹理缓冲
-    pub fn character_texture(&mut self, c: char, render_utils: &mut RenderUtil) -> &Character {
+    pub fn character_texture(&mut self, c: char, render_utils: &mut dyn PaintBrush) -> &Character {
         let ch = self.map.get(&c);
         if ch.is_none() || ch.unwrap().texture.is_none() {
             let mut new_ch;
@@ -193,11 +188,7 @@ impl GCharMap {
             } else {
                 new_ch = Character::witch_scaled_font(&self.scaled_font, c);
             }
-            new_ch.set_texture(
-                &mut render_utils.g_texture,
-                &render_utils.context.device,
-                &render_utils.context.queue,
-            );
+            new_ch.set_texture(render_utils);
             self.map.insert(c, new_ch);
         }
         return self.map.get(&c).unwrap();

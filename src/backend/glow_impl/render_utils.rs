@@ -1,3 +1,4 @@
+use crate::adapter::TextureBuffer;
 use glow::HasContext;
 
 use crate::backend::glow_impl::*;
@@ -37,6 +38,10 @@ impl<'a> PaintBrush for GRenderUtil<'a> {
         text: &str,
         text_color: RGBA,
     ) {
+        todo!()
+    }
+
+    fn set_texture(&mut self, image: ImageRaw) -> TextureBuffer {
         todo!()
     }
 

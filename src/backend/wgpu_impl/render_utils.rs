@@ -1,3 +1,4 @@
+use crate::adapter::TextureBuffer;
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
 
 use crate::backend::wgpu_impl::*;
@@ -77,6 +78,11 @@ impl PaintBrush for RenderUtil<'_> {
 
             c_vertex.render(self, Some(&c_buffer));
         }
+    }
+
+    fn set_texture(&mut self, raw_data: ImageRaw) -> TextureBuffer {
+        self.g_texture
+            .create_bind_group(&self.context.device, &self.context.queue, raw_data)
     }
 
     fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {

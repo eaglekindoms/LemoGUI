@@ -1,3 +1,4 @@
+use crate::adapter::TextureBuffer;
 use crate::graphic::base::*;
 use crate::graphic::style::Style;
 
@@ -18,6 +19,8 @@ pub trait PaintBrush {
         text_color: RGBA,
     );
 
+    /// 生成纹理缓冲数据
+    fn set_texture(&mut self, image: ImageRaw) -> TextureBuffer;
     /// 绘制图像
     fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw);
 }
