@@ -78,4 +78,16 @@ impl PointVertex {
             color: color.to_vec(),
         }
     }
+    pub fn get_points_indices(points_num: usize) -> Vec<u32> {
+        let indices_nums = (points_num - 3) * 2 + points_num;
+        let mut indices = Vec::with_capacity(indices_nums);
+        let mut i = 1u32;
+        while i < points_num as u32 - 1 {
+            indices.push(0);
+            indices.push(i);
+            i = i + 1;
+            indices.push(i);
+        }
+        return indices;
+    }
 }

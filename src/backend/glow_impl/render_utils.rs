@@ -2,7 +2,9 @@ use crate::adapter::TextureBuffer;
 use glow::HasContext;
 
 use crate::backend::glow_impl::*;
-use crate::graphic::base::{GCharMap, ImageRaw, Rectangle, ShapeGraph, RGBA};
+use crate::graphic::base::{
+    CircleVertex, GCharMap, ImageRaw, PointVertex, Rectangle, ShapeGraph, RGBA,
+};
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::Style;
 
@@ -27,7 +29,7 @@ impl<'a> PaintBrush for GRenderUtil<'a> {
     }
 
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {
-        let pipeline = Pipeline::create_triangle_pipeline(&self.context.gl_context);
+        let pipeline = GLPipeline::new::<PointVertex>(&self.context.gl_context);
         pipeline.draw();
         self.context.swap_buffers();
     }

@@ -12,7 +12,10 @@ use lemo_gui::graphic::render_api::PaintBrush;
 use lemo_gui::graphic::style::Style;
 
 fn main() {
-    SimpleLogger::new().init().unwrap();
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Trace)
+        .init()
+        .unwrap();
     let event_loop = EventLoop::new();
     let rect = Rectangle::new(21.0, 31.0, 221, 111);
 

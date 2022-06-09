@@ -95,19 +95,11 @@ pub fn from_shape_to_vector(
     points: &Vec<Point<f32>>,
     color: RGBA,
 ) -> VertexBuffer {
-    let vertex_nums = (points.len() - 3) * 2 + points.len();
     let mut vect = Vec::with_capacity(points.len());
-    let mut indices = Vec::with_capacity(vertex_nums);
     for i in 0..points.len() {
         vect.push(PointVertex::new(points[i].x, points[i].y, color));
     }
-    let mut i = 1u16;
-    while i < points.len() as u16 - 1 {
-        indices.push(0);
-        indices.push(i);
-        i = i + 1;
-        indices.push(i);
-    }
+    let indices = PointVertex::get_points_indices(vect.len());
     let point_buffer = VertexBuffer::create_vertex_buf::<PointVertex>(
         &gpu_context.device,
         vect,

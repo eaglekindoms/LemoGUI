@@ -15,8 +15,8 @@ pub struct VertexBuffer {
     pub shape_type: ShapeType,
 }
 
-pub const RECT_INDEX: &[u16; 4] = &[0, 2, 1, 3];
-pub const RECT_LINE_INDEX: &[u16; 5] = &[0, 1, 3, 2, 0];
+pub const RECT_INDEX: &[u32; 4] = &[0, 2, 1, 3];
+pub const RECT_LINE_INDEX: &[u32; 5] = &[0, 1, 3, 2, 0];
 
 /// 渲染模式
 pub enum RenderModel {
@@ -25,7 +25,7 @@ pub enum RenderModel {
 }
 
 impl<'a> VertexBuffer {
-    pub fn create_vertex_buf<V>(device: &Device, vect: Vec<V>, indices: &'a [u16]) -> Self
+    pub fn create_vertex_buf<V>(device: &Device, vect: Vec<V>, indices: &'a [u32]) -> Self
     where
         V: Pod + VertexLayout,
     {
@@ -71,7 +71,7 @@ impl<'a> VertexBuffer {
         }
         // 设置顶点缓冲及其索引缓冲，并调用渲染方法
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
         render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
     }
 }

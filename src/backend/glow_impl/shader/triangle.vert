@@ -1,15 +1,12 @@
 #version 450
-//const vec2 verts[3] = vec2[3](
-//vec2(0.5f, 1.0f),
-//vec2(0.0f, 0.0f),
-//vec2(1.0f, 0.0f)
-//);
-//out vec2 vert;
-//void main() {
-//    vert = verts[gl_VertexID];
-//    gl_Position = vec4(vert - 0.5, 0.0, 1.0);
-//}
-layout (location = 0) in vec3 aPos;
-void main(){
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+#extension GL_KHR_vulkan_glsl : enable
+
+layout(location=0) in vec2 a_position;
+layout(location=1) in vec4 a_color;
+
+layout(location=0) out vec4 v_color;
+
+void main() {
+    v_color = a_color;
+    gl_Position = vec4(a_position, 0.0, 1.0);
 }

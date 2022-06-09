@@ -3,36 +3,35 @@ use std::borrow::Cow;
 use glow::*;
 
 #[derive(Debug)]
-pub struct CShader {
+pub struct GLShader {
     pub vert: NativeShader,
     pub frag: NativeShader,
 }
 
-impl CShader {
+impl GLShader {
     pub fn new(gl: &glow::Context, vert_src: &str, frag_src: &str) -> Self {
-        CShader {
+        GLShader {
             vert: compile_shader(gl, VERTEX_SHADER, vert_src),
             frag: compile_shader(gl, FRAGMENT_SHADER, frag_src),
         }
     }
-}
-
-pub fn link_program(gl: &glow::Context, shader: &CShader) -> glow::NativeProgram {
-    let program;
-    unsafe {
-        program = gl.create_program().expect("Cannot create program");
-        gl.attach_shader(program, shader.vert);
-        gl.attach_shader(program, shader.frag);
-        gl.link_program(program);
-        if !gl.get_program_link_status(program) {
-            panic!("{}", gl.get_program_info_log(program));
+    pub fn link_program(&self, gl: &glow::Context) -> glow::NativeProgram {
+        let program;
+        unsafe {
+            program = gl.create_program().expect("Cannot create program");
+            gl.attach_shader(program, self.vert);
+            gl.attach_shader(program, self.frag);
+            gl.link_program(program);
+            if !gl.get_program_link_status(program) {
+                panic!("{}", gl.get_program_info_log(program));
+            }
+            gl.detach_shader(program, self.vert);
+            gl.delete_shader(self.vert);
+            gl.detach_shader(program, self.frag);
+            gl.delete_shader(self.frag);
         }
-        gl.detach_shader(program, shader.vert);
-        gl.delete_shader(shader.vert);
-        gl.detach_shader(program, shader.frag);
-        gl.delete_shader(shader.frag);
+        return program;
     }
-    return program;
 }
 
 fn compile_shader(gl: &glow::Context, shader_type: u32, shader_src: &str) -> NativeShader {
@@ -49,8 +48,8 @@ fn compile_shader(gl: &glow::Context, shader_type: u32, shader_src: &str) -> Nat
 
 #[deprecated]
 pub fn create_shader(gl: &glow::Context, vert_src: &str, frag_src: &str) -> glow::NativeProgram {
-    let shader = CShader::new(gl, vert_src, frag_src);
-    let program = link_program(gl, &shader);
+    let shader = GLShader::new(gl, vert_src, frag_src);
+    let program = shader.link_program(gl);
 
     return program;
 }
