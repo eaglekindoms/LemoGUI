@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::future::Future;
 use std::path::Path;
+use std::sync::Arc;
 
 use futures::channel::mpsc;
 use futures::{task, StreamExt};
@@ -17,7 +18,7 @@ use crate::widget::*;
 /// 事件上下文
 pub struct WEventContext<M: 'static> {
     /// 窗口id
-    window: Window,
+    window: Arc<Window>,
     /// 鼠标位置
     cursor_pos: Point<f32>,
     /// 窗口事件
@@ -29,7 +30,7 @@ pub struct WEventContext<M: 'static> {
 }
 
 impl<M: 'static> WEventContext<M> {
-    pub fn new(window: Window, event_loop: &EventLoop<M>) -> WEventContext<M> {
+    pub fn new(window: Arc<Window>, event_loop: &EventLoop<M>) -> WEventContext<M> {
         WEventContext {
             window,
             cursor_pos: Point::new(-1.0, -1.0),
@@ -97,9 +98,15 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
         .with_title(setting.title)
         .with_inner_size(winit::dpi::LogicalSize::new(setting.size.x, setting.size.y))
         .with_window_icon(icon);
+    let wb = builder.clone();
     let event_loop = EventLoop::<M>::with_user_event();
-    let window = builder.build(&event_loop).unwrap();
+    #[cfg(feature = "wgpu_impl")]
+    let window = Arc::new(builder.build(&event_loop).unwrap());
+    #[cfg(feature = "wgpu_impl")]
     let gpu_context = GPUContext::new(&window, window.inner_size().into()).await;
+    #[cfg(feature = "glow_impl")]
+    #[cfg(not(feature = "wgpu_impl"))]
+    let (gpu_context, window) = GPUContext::new_with_builder(wb, &event_loop);
     let event_context = WEventContext::new(window, &event_loop);
     let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
     let display_window = DisplayWindow {

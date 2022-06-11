@@ -1,6 +1,21 @@
 use crate::adapter::{GPUContext, VBuffer};
 use crate::graphic::style::Style;
 
+/// 图形类型枚举
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+pub enum ShapeType {
+    /// 纹理
+    TEXTURE,
+    /// 圆角
+    ROUND,
+    /// 线框
+    BORDER,
+    /// 点
+    POINT,
+    /// 圆
+    Circle,
+}
+
 /// 点结构体
 #[repr(C)]
 #[derive(Copy, Default, Clone, Debug)]

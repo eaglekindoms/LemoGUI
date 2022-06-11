@@ -21,7 +21,7 @@ fn main() {
 
     let wb = WindowBuilder::new().with_title("gl test");
     use lemo_gui::backend::glow_impl::*;
-    let (mut context, window) = GLGPUContext::new(wb, &event_loop);
+    let (mut context, window) = GLGPUContext::new_with_builder(wb, &event_loop);
     event_loop.run(move |event, _, control_flow| {
         // println!("{:?}", event);
         let mut render_util = GRenderUtil::new(&mut context);
@@ -38,6 +38,8 @@ fn main() {
                     println!("mous input redrawing! ");
                     let rec: Box<dyn ShapeGraph> = Box::new(rect);
                     render_util.draw_shape(&rec, Style::default());
+                    // render_util.context.swap_buffers();
+                    context.update_surface_configure(window.inner_size());
                     // window.request_redraw();
                 }
                 _ => (),

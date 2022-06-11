@@ -1,7 +1,7 @@
 use wgpu::*;
 
 use crate::backend::wgpu_impl::*;
-use crate::graphic::base::{Rectangle, RGBA};
+use crate::graphic::base::*;
 
 /// 2D纹理顶点数据布局结构体
 #[repr(C)]

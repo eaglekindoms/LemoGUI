@@ -10,8 +10,11 @@ pub use wgpu_adapter::*;
 
 /// 图形渲染采用wgpu实现
 #[cfg(feature = "glow_impl")]
+#[cfg(not(feature = "wgpu_impl"))]
 mod glow_adapter {
     pub type GPUContext = crate::backend::glow_impl::GLGPUContext;
+    pub type VBuffer = crate::backend::glow_impl::GLBuffer;
+    pub type TextureBuffer = crate::backend::glow_impl::TextureBufferData;
 }
 #[cfg(feature = "glow_impl")]
 #[cfg(not(feature = "wgpu_impl"))]

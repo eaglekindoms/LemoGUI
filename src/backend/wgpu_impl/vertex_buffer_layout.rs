@@ -1,7 +1,6 @@
+use crate::graphic::base::*;
 use wgpu::PrimitiveTopology::*;
 use wgpu::*;
-
-use crate::backend::wgpu_impl::ShapeType;
 
 /// wgpu图形顶点布局trait
 /// 作用：定义顶点布局接口

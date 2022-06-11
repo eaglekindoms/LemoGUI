@@ -1,10 +1,7 @@
 use crate::adapter::TextureBuffer;
-use glow::HasContext;
 
 use crate::backend::glow_impl::*;
-use crate::graphic::base::{
-    CircleVertex, GCharMap, ImageRaw, PointVertex, Rectangle, ShapeGraph, RGBA,
-};
+use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::Style;
 
@@ -29,9 +26,12 @@ impl<'a> PaintBrush for GRenderUtil<'a> {
     }
 
     fn draw_shape(&mut self, shape: &Box<dyn ShapeGraph>, shape_style: Style) {
-        let pipeline = GLPipeline::new::<PointVertex>(&self.context.gl_context);
-        pipeline.draw();
-        self.context.swap_buffers();
+        // let pipeline = GLPipeline::new::<PointVertex>(&self.context.gl_context);
+        // pipeline.draw();
+        // let rect_pipeline = GLPipeline::new::<RectVertex>(&self.context.gl_context);
+        // rect_pipeline.draw_instance(self.context.window.inner_size().into());
+        // rect_pipeline.draw_instance(Point::new(800, 600));
+        let shape_buffer = shape.to_buffer(self.context, shape_style);
     }
 
     fn draw_text(

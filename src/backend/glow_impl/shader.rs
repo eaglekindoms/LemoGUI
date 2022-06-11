@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use glow::*;
 
 #[derive(Debug)]

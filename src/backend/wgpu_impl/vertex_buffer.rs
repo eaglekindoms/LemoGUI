@@ -4,7 +4,7 @@ use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::Device;
 
 use crate::backend::wgpu_impl::*;
-use crate::graphic::base::RGBA;
+use crate::graphic::base::*;
 
 /// 渲染顶点缓冲结构体
 #[derive(Debug)]

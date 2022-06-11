@@ -3,21 +3,6 @@ use crate::backend::wgpu_impl::*;
 use crate::graphic::base::*;
 use crate::graphic::style::Style;
 
-/// 图形类型枚举
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-pub enum ShapeType {
-    /// 纹理
-    TEXTURE,
-    /// 圆角
-    ROUND,
-    /// 线框
-    BORDER,
-    /// 点
-    POINT,
-    /// 圆
-    Circle,
-}
-
 impl ShapeGraph for Rectangle {
     fn to_buffer(&self, gpu_context: &GPUContext, style: Style) -> VertexBuffer {
         let rect_vertex = RectVertex::new(&self, style);
