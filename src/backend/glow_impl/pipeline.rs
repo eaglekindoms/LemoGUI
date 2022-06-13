@@ -26,60 +26,23 @@ impl GLPipeline {
 
     pub fn draw_indexed(&self, indices_num: i32) {
         unsafe {
-            //clear screen
-            self.context.clear(glow::COLOR_BUFFER_BIT);
             // use shader darw
             self.context.use_program(Some(self.program));
             self.context.bind_vertex_array(Some(self.vao));
             self.context
                 .draw_elements(glow::TRIANGLES, indices_num, glow::UNSIGNED_INT, 0);
-            // self.context.draw_arrays(glow::TRIANGLES, 0, 3);
-            // self.context.swap_buffers().unwrap();
-            // unbind(&self.context, 0);
             self.context.use_program(None);
         }
     }
 
-    #[deprecated]
-    pub fn draw(&self) {
-        let points = vec![
-            Point::new(0.2, -0.6), //0
-            Point::new(0.4, -0.6), //1
-            Point::new(0.5, -0.4), //2
-            Point::new(0.4, -0.2), //3
-            Point::new(0.2, -0.2), //4
-            Point::new(0.1, -0.4), //5
-        ];
-        let mut vect = Vec::with_capacity(points.len());
-        for i in 0..points.len() {
-            vect.push(PointVertex::new(points[i].x, points[i].y, LIGHT_BLUE));
-        }
-        // when the indices is u16, the cast_slice will make the number two u8.
-        // so the type of indices cannot be u16
-        let mut indices = PointVertex::get_points_indices(points.len());
-        self.set_vertex_buffer(bytemuck::cast_slice(vect.as_slice()));
-        self.set_index_buffer(bytemuck::cast_slice(indices.as_slice()));
-        self.draw_indexed(indices.len() as i32);
-    }
-
     pub fn draw_instance(&self) {
-        // let rect = Rectangle::new(121.0, 131.0, 221, 111);
-        // let rect_vertex = RectVertex::new(&rect, Style::default().back_color(LIGHT_BLUE));
-        // let indices = [0, 2, 1, 1, 2, 3];
-        // self.set_screen_size(size);
-        // self.set_vertex_buffer(bytemuck::cast_slice(vec![rect_vertex].as_slice()));
-        // self.set_index_buffer(bytemuck::cast_slice(indices.as_slice()));
         unsafe {
-            self.context.clear(glow::COLOR_BUFFER_BIT);
             // use shader darw
             self.context.use_program(Some(self.program));
             self.context.bind_vertex_array(Some(self.vao));
             self.context
                 .draw_arrays_instanced(glow::TRIANGLE_STRIP, 0, 4, 1);
             self.context.use_program(None);
-            // self.context.draw_arrays(glow::TRIANGLES, 0, 3);
-            // self.context.swap_buffers().unwrap();
-            // unbind(&self.context, 0);
         }
     }
 

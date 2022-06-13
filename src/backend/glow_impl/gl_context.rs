@@ -52,6 +52,7 @@ impl GLGPUContext {
 
     pub fn clear_frame(&self, color: RGBA) {
         unsafe {
+            // self.gl_context.disable(glow::SCISSOR_TEST);
             self.gl_context
                 .clear_color(color.0, color.1, color.2, color.3);
             self.gl_context.clear(glow::COLOR_BUFFER_BIT);
@@ -94,6 +95,7 @@ fn config_gl(context: &Arc<glow::Context>) {
         // Enable alpha blending
         context.enable(glow::BLEND);
         // gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
+        context.blend_equation_separate(glow::FUNC_ADD, glow::FUNC_ADD);
         context.blend_func_separate(
             glow::SRC_ALPHA,
             glow::ONE_MINUS_SRC_ALPHA,

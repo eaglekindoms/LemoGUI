@@ -7,7 +7,7 @@ use winit::{
     window::WindowBuilder,
 };
 
-use lemo_gui::graphic::base::{Rectangle, ShapeGraph, BACKGROUND_COLOR, WHITE};
+use lemo_gui::graphic::base::*;
 use lemo_gui::graphic::render_api::PaintBrush;
 use lemo_gui::graphic::style::Style;
 
@@ -36,8 +36,21 @@ fn main() {
                     ..
                 } => {
                     println!("mous input redrawing! ");
+                    render_util.clear_frame(LIGHT_WHITE);
                     let rec: Box<dyn ShapeGraph> = Box::new(rect);
                     render_util.draw_shape(&rec, Style::default());
+                    let triangle: Box<dyn ShapeGraph> =
+                        Box::new(RegularPolygon::new(Circle::new(331., 560.2, 100.2), 3));
+                    render_util.draw_shape(&triangle, Style::default());
+                    let rect2: Box<dyn ShapeGraph> = Box::new(Polygon::new(vec![
+                        Point::new(0.2, -0.6), //0
+                        Point::new(0.4, -0.6), //1
+                        Point::new(0.5, -0.4), //2
+                        Point::new(0.4, -0.2), //3
+                        Point::new(0.2, -0.2), //4
+                        Point::new(0.1, -0.4), //5
+                    ]));
+                    render_util.draw_shape(&rect2, Style::default());
                     // render_util.context.swap_buffers();
                     context.update_surface_configure(window.inner_size());
                     // window.request_redraw();
@@ -48,7 +61,7 @@ fn main() {
                 println!(" redrawing! ");
                 // let rec:Box<dyn ShapeGraph>=Box::new(rect);
                 // render_util.draw_shape(&rec, Style::default());
-                render_util.clear_frame(BACKGROUND_COLOR);
+                render_util.clear_frame(LIGHT_WHITE);
             }
             _ => (),
         }
