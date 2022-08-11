@@ -31,7 +31,7 @@ impl VertexLayout for TextureVertex {
     }
 
     fn get_shader(device: &Device) -> ShaderModule {
-        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("texture shader"),
             source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(concat!(
                 env!("CARGO_MANIFEST_DIR"),

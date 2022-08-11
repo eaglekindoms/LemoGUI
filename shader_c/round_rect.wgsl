@@ -1,24 +1,24 @@
 
 struct VertexInput {
-	[[location(0)]] size: vec2<f32>;
-    [[location(1)]] pos: vec2<f32>;
-    [[location(2)]] borderColor: vec4<f32>;
-    [[location(3)]] rectColor: vec4<f32>;
-    [[location(4)]] is_round_or_border: vec2<u32>;
-    [[builtin(vertex_index)]] gl_VertexIndex: u32;
+	@location(0) size: vec2<f32>,
+    @location(1) pos: vec2<f32>,
+    @location(2) borderColor: vec4<f32>,
+    @location(3) rectColor: vec4<f32>,
+    @location(4) is_round_or_border: vec2<u32>,
+    @builtin(vertex_index) gl_VertexIndex: u32,
 };
 
 struct VertexOutput {
-	[[location(0)]] pos: vec2<f32>;
-    [[location(1)]] size: vec2<f32>;
-    [[location(2)]] is_round_or_border: vec2<u32>;
-    [[location(3)]] borderColor: vec4<f32>;
-    [[location(4)]] rectColor: vec4<f32>;
-    [[builtin(position)]] gl_Position: vec4<f32>;
+	@location(0) pos: vec2<f32>,
+    @location(1) size: vec2<f32>,
+    @location(2) is_round_or_border: vec2<u32>,
+    @location(3) borderColor: vec4<f32>,
+    @location(4) rectColor: vec4<f32>,
+    @builtin(position) gl_Position: vec4<f32>,
 };
 // var gl_VertexIndex: i32;
 
-[[stage(vertex)]]
+@vertex
 fn vs_main(input: VertexInput) -> VertexOutput  {
 	var out: VertexOutput;
 
@@ -62,8 +62,8 @@ fn rect(uvs: vec2<f32>, pos: vec2<f32>, size: vec2<f32>, rad: f32) -> f32{
     }
     return alpha;
 }
-[[stage(fragment)]]
-fn fs_main(input: VertexOutput) -> [[location(0)]] vec4<f32>  {
+@fragment
+fn fs_main(input: VertexOutput) -> @location(0) vec4<f32>  {
 	var frameAlpha: f32;
 	var size: vec2<f32>;
 	var radius: f32;

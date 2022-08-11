@@ -1,22 +1,22 @@
 
 struct VertexInput {
-	[[location(0)]] pos: vec2<f32>;
-	[[location(1)]] color: vec4<f32>;
-	[[location(2)]] radius: f32;
-	[[location(3)]] edge: u32;
-	[[builtin(vertex_index)]] gl_VertexIndex: u32;
+	@location(0) pos: vec2<f32>,
+	@location(1) color: vec4<f32>,
+	@location(2) radius: f32,
+	@location(3) edge: u32,
+	@builtin(vertex_index) gl_VertexIndex: u32,
 };
 
 struct VertexOutput {
-    [[builtin(position)]] gl_Position: vec4<f32>;
-	[[location(0)]] pos: vec2<f32>;
-    [[location(1)]] color: vec4<f32>;
-    [[location(2)]] radius: f32;
-    [[location(3)]] edge: f32;
+    @builtin(position) gl_Position: vec4<f32>,
+	@location(0) pos: vec2<f32>,
+    @location(1) color: vec4<f32>,
+    @location(2) radius: f32,
+    @location(3) edge: f32,
 };
 // var gl_VertexIndex: i32;
 
-[[stage(vertex)]]
+@vertex
 fn vs_main(input: VertexInput) -> VertexOutput  {
 	var out: VertexOutput;
 
@@ -26,8 +26,8 @@ fn vs_main(input: VertexInput) -> VertexOutput  {
     out.edge = f32(input.edge);
 
     let gl_VertexIndex = i32(input.gl_VertexIndex);
-    var positions: array<vec2<f32>,4u> =
-                    array<vec2<f32>,4u>(vec2<f32>(-1.0, 1.0),
+    var positions: array<vec2<f32>, 4> =
+                    array<vec2<f32>, 4>(vec2<f32>(-1.0, 1.0),
                                         vec2<f32>(1.0, 1.0),
                                         vec2<f32>(-1.0, -1.0),
                                         vec2<f32>(1.0, -1.0));
@@ -60,8 +60,8 @@ fn polygon(uvs1:vec2<f32>, pos1:vec2<f32>, radius: f32, n: f32) -> f32 {
 }
 
 
-[[stage(fragment)]]
-fn fs_main(input: VertexOutput) -> [[location(0)]] vec4<f32>  {
+@fragment
+fn fs_main(input: VertexOutput) -> @location(0) vec4<f32>  {
 
     var intensity: f32;
 

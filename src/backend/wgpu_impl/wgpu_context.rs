@@ -43,8 +43,10 @@ impl WGPUContext {
             .expect("Request adapter");
 
         let format = surface
-            .get_preferred_format(&adapter)
-            .expect("Get preferred format");
+            .get_supported_formats(&adapter)
+            .first()
+            .copied()
+            .unwrap();
 
         let (device, queue) = adapter
             .request_device(
@@ -105,7 +107,7 @@ impl WGPUContext {
                 let mut utils = RenderUtil::new(&target_view, self);
                 utils.clear_frame(BACKGROUND_COLOR);
                 container.draw(&mut utils, font_map);
-                utils.context.queue.submit(Some(utils.encoder.finish()));
+                let _submission = utils.context.queue.submit(Some(utils.encoder.finish()));
                 target_view.present();
             }
         }

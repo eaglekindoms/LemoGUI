@@ -8,7 +8,10 @@ use LemoGUI::instance::*;
 use LemoGUI::widget::*;
 
 fn main() {
-    // SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Debug)
+        .init()
+        .unwrap();
     Counter::run();
 }
 

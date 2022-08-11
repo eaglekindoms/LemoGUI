@@ -1,15 +1,15 @@
 
 struct VertexInput {
-    [[location(0)]] a_position: vec2<f32>;
-    [[location(1)]] a_color: vec4<f32>;
+    @location(0) a_position: vec2<f32>,
+    @location(1) a_color: vec4<f32>,
 };
 
 struct VertexOutput {
-    [[builtin(position)]] position: vec4<f32>;
-    [[location(0)]] v_color: vec4<f32>;
+    @builtin(position) position: vec4<f32>,
+    @location(0) v_color: vec4<f32>,
 };
 
-[[stage(vertex)]]
+@vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
 
@@ -19,7 +19,7 @@ fn vs_main(input: VertexInput) -> VertexOutput {
     return out;
 }
 
-[[stage(fragment)]]
-fn fs_main(input: VertexOutput) -> [[location(0)]] vec4<f32> {
+@fragment
+fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     return input.v_color;
 }

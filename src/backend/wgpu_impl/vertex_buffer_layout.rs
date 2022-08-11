@@ -45,11 +45,11 @@ pub trait VertexLayout: Sized {
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
                 entry_point: "fs_main",
-                targets: &[wgpu::ColorTargetState {
+                targets: &[Some(wgpu::ColorTargetState {
                     format: wgpu::TextureFormat::Bgra8UnormSrgb,
                     write_mask: wgpu::ColorWrites::ALL,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),
-                }],
+                })],
             }),
             multiview: None,
         });
