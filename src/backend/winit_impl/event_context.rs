@@ -127,7 +127,7 @@ where
     ));
     let mut context = task::Context::from_waker(task::noop_waker_ref());
     window.event_loop.run(move |event, _, control_flow| {
-        if let ControlFlow::Exit = control_flow {
+        if ControlFlow::Exit == *control_flow {
             return;
         }
         // 封装窗口尺寸变更事件

@@ -25,7 +25,9 @@ pub struct WGPUContext {
 }
 
 impl WGPUContext {
-    pub async fn new<W: raw_window_handle::HasRawWindowHandle>(
+    pub async fn new<
+        W: raw_window_handle::HasRawWindowHandle + raw_window_handle::HasRawDisplayHandle,
+    >(
         window: &W,
         window_size: Point<u32>,
     ) -> WGPUContext {
@@ -65,6 +67,7 @@ impl WGPUContext {
             width: window_size.x,
             height: window_size.y,
             present_mode: wgpu::PresentMode::Fifo,
+            alpha_mode: surface.get_supported_alpha_modes(&adapter)[0],
         };
         let glob_pipeline = PipelineState::default(&device);
 

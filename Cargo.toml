@@ -22,9 +22,9 @@ name = "test_graph_algo"
 path = "example/proto/test_algo.rs"
 
 [dependencies]
-wgpu = { version = "0.13", features = ["spirv"] }
+wgpu = { version = "0.14.0", features = ["spirv"] }
 async-trait = "0.1.51"
-winit = "0.26.0"
+winit = "0.27.5"
 futures = "0.3.10"
 cgmath = "0.18"
 log = "0.4.14"
@@ -33,7 +33,7 @@ rand = "0.8.2"
 bytemuck = { version = "1.4", features = ["derive"] }
 image = "0.23.12"
 ab_glyph = "0.2.11"
-raw-window-handle = "0.4.2"
+raw-window-handle = "0.5.0"
 
 [dependencies.sdl2]
 #git = "https://github.com/Rust-SDL2/rust-sdl2"
