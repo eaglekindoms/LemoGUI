@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use raw_window_handle;
-use wgpu::RenderPipeline;
+use wgpu::{Instance, RenderPipeline};
 
 use crate::backend::wgpu_impl::*;
 use crate::graphic::base::*;
@@ -32,9 +32,11 @@ impl WGPUContext {
         window_size: Point<u32>,
     ) -> WGPUContext {
         log::info!("Initializing the surface...");
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
-
-        let surface = unsafe { instance.create_surface(window) };
+        let instance = Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu::Backends::all(),
+            dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
+        });
+        let surface = unsafe { instance.create_surface(window).unwrap() };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
@@ -44,12 +46,10 @@ impl WGPUContext {
             .await
             .expect("Request adapter");
 
-        let format = surface
-            .get_supported_formats(&adapter)
-            .first()
-            .copied()
-            .unwrap();
-
+        let caps = surface.get_capabilities(&adapter);
+        let formats = caps.formats;
+        let present_modes = caps.present_modes;
+        let alpha_modes = caps.alpha_modes;
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
@@ -61,13 +61,15 @@ impl WGPUContext {
             )
             .await
             .unwrap();
+
         let sc_desc = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format,
+            format: wgpu::TextureFormat::Bgra8UnormSrgb,
             width: window_size.x,
             height: window_size.y,
-            present_mode: wgpu::PresentMode::Fifo,
-            alpha_mode: surface.get_supported_alpha_modes(&adapter)[0],
+            present_mode: present_modes[0],
+            alpha_mode: alpha_modes[0],
+            view_formats: vec![wgpu::TextureFormat::Bgra8UnormSrgb],
         };
         let glob_pipeline = PipelineState::default(&device);
 

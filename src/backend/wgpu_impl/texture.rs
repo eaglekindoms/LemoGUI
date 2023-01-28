@@ -114,6 +114,7 @@ pub fn create_2d_texture(
         dimension: wgpu::TextureDimension::D2,
         format: texture_format,
         usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        view_formats: &[TextureFormat::R8Unorm],
     })
 }
 
