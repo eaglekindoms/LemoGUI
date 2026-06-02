@@ -18,7 +18,7 @@ pub trait VertexLayout: Sized {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[],
-                push_constant_ranges: &[],
+                immediate_size: 0,
             });
         return render_pipeline_layout;
     }
@@ -31,11 +31,18 @@ pub trait VertexLayout: Sized {
             layout: Some(&Self::set_pipeline_layout(device)),
             vertex: VertexState {
                 module: &shader,
-                entry_point: "vs_main",
+                entry_point: Some("vs_main"),
+                compilation_options: Default::default(),
                 buffers: &[Self::set_vertex_desc()],
             },
             primitive: wgpu::PrimitiveState {
                 topology: fill_topology,
+                strip_index_format: match fill_topology {
+                    wgpu::PrimitiveTopology::TriangleStrip | wgpu::PrimitiveTopology::LineStrip => {
+                        Some(wgpu::IndexFormat::Uint16)
+                    }
+                    _ => None,
+                },
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Back),
                 ..Default::default()
@@ -44,14 +51,16 @@ pub trait VertexLayout: Sized {
             multisample: wgpu::MultisampleState::default(),
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
-                entry_point: "fs_main",
+                entry_point: Some("fs_main"),
+                compilation_options: Default::default(),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: wgpu::TextureFormat::Bgra8UnormSrgb,
                     write_mask: wgpu::ColorWrites::ALL,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                 })],
             }),
-            multiview: None,
+            multiview_mask: None,
+            cache: None,
         });
         return render_pipeline;
     }

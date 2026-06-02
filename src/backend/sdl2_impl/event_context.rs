@@ -100,7 +100,17 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
         .unwrap();
     let channel = sdl_context.event().unwrap();
     let event_pump = sdl_context.event_pump().unwrap();
-    let gpu_context = GPUContext::new(&window, window_size).await;
+    let gpu_context = {
+        use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
+        let instance = GPUContext::create_instance();
+        // SAFETY: window 在整个程序生命周期内有效，surface 不会超过 window 的生命周期
+        let target = wgpu::SurfaceTargetUnsafe::RawHandle {
+            raw_display_handle: Some(window.display_handle().unwrap().as_raw()),
+            raw_window_handle: window.window_handle().unwrap().as_raw(),
+        };
+        let surface = unsafe { instance.create_surface_unsafe(target).unwrap() };
+        GPUContext::new(surface, &instance, window_size).await
+    };
     let event_context: SEventContext<M> = SEventContext::new(window, channel);
     let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
     let display_window = DisplayWindow {
@@ -184,7 +194,8 @@ async fn event_listener<C, M>(
                 Event::MouseButtonDown { .. }
                 | Event::MouseButtonUp { .. }
                 | Event::KeyUp { .. }
-                | Event::KeyDown { .. } => {
+                | Event::KeyDown { .. }
+                | Event::TextInput { .. } => {
                     event_context.set_event(event.into());
                     if container.listener(&mut event_context) {
                         gpu_context.present(&mut container, &mut font_map)

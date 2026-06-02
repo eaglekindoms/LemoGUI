@@ -1,5 +1,3 @@
-use std::num::NonZeroU32;
-
 use wgpu::TextureFormat;
 
 use crate::graphic::base::*;
@@ -19,7 +17,7 @@ pub struct GTexture {
     pub sampler: wgpu::Sampler,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub texture_format: wgpu::TextureFormat,
-    pub image_layout: wgpu::ImageDataLayout,
+    pub image_layout: wgpu::TexelCopyBufferLayout,
     pub size: wgpu::Extent3d,
 }
 
@@ -46,10 +44,10 @@ impl GTexture {
             TextureFormat::R8Unorm => image_width = data_size.x,
             _ => image_width = data_size.x * 4,
         }
-        let image_layout = wgpu::ImageDataLayout {
+        let image_layout = wgpu::TexelCopyBufferLayout {
             offset: 0,
-            bytes_per_row: NonZeroU32::new(image_width),
-            rows_per_image: NonZeroU32::new(data_size.y),
+            bytes_per_row: Option::from(image_width),
+            rows_per_image: Option::from(data_size.y),
         };
 
         let texture = create_2d_texture(device, size, texture_format);
@@ -71,10 +69,10 @@ impl GTexture {
         self.size.height = size.y;
         self.texture = create_2d_texture(device, self.size, self.texture_format);
         match self.texture_format {
-            TextureFormat::R8Unorm => self.image_layout.bytes_per_row = NonZeroU32::new(size.x),
-            _ => self.image_layout.bytes_per_row = NonZeroU32::new(size.x * 4),
+            TextureFormat::R8Unorm => self.image_layout.bytes_per_row = Option::from(size.x),
+            _ => self.image_layout.bytes_per_row = Option::from(size.x * 4),
         }
-        self.image_layout.rows_per_image = NonZeroU32::new(size.y);
+        self.image_layout.rows_per_image = Option::from(size.y);
     }
 
     /// 创建图像的纹理缓冲
@@ -122,7 +120,7 @@ pub fn create_2d_texture(
 pub fn writer_data_to_texture(
     queue: &wgpu::Queue,
     texture: &wgpu::Texture,
-    image_layout: wgpu::ImageDataLayout,
+    image_layout: wgpu::TexelCopyBufferLayout,
     size: wgpu::Extent3d,
     raw_data: ImageRaw,
 ) -> wgpu::TextureView {
@@ -173,11 +171,11 @@ pub const DEFAULT_TEXTURE_SAMPLER: &wgpu::SamplerDescriptor = &wgpu::SamplerDesc
     address_mode_w: wgpu::AddressMode::ClampToEdge,
     mag_filter: wgpu::FilterMode::Linear,
     min_filter: wgpu::FilterMode::Nearest,
-    mipmap_filter: wgpu::FilterMode::Nearest,
+    mipmap_filter: wgpu::MipmapFilterMode::Nearest,
     lod_min_clamp: 0.0,
     lod_max_clamp: f32::MAX,
     compare: None,
-    anisotropy_clamp: None,
+    anisotropy_clamp: 1,
     border_color: None,
 };
 

@@ -84,7 +84,7 @@ pub fn create_render_pass<'a>(
     let ops = match render_model {
         RenderModel::Load => wgpu::Operations {
             load: wgpu::LoadOp::Load,
-            store: true,
+            store: wgpu::StoreOp::Store,
         },
         RenderModel::Clear(color) => wgpu::Operations {
             load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -93,17 +93,21 @@ pub fn create_render_pass<'a>(
                 b: color.2 as f64,
                 a: color.3 as f64,
             }),
-            store: true,
+            store: wgpu::StoreOp::Store,
         },
     };
     let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
         label: None,
         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
             view: target,
+            depth_slice: None,
             resolve_target: None,
             ops,
         })],
         depth_stencil_attachment: None,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
     });
     render_pass
 }

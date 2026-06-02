@@ -1,5 +1,5 @@
-use winit::event::{KeyboardInput, VirtualKeyCode};
-
+// use winit::event::{KeyboardInput, WKeyCode};
+use winit::keyboard::KeyCode;
 /// a send message
 /// m broadcast message
 /// b listen message
@@ -27,7 +27,7 @@ use winit::event::{KeyboardInput, VirtualKeyCode};
 #[derive(Debug)]
 enum EventType {
     mouse,
-    KeyBoard(VirtualKeyCode),
+    KeyBoard(KeyCode),
 }
 
 /// 组件状态结构体，记录绑定的事件、及与事件联动的消息
@@ -42,7 +42,7 @@ fn main() {
     use winit::{
         event::{Event, WindowEvent},
         event_loop::{ControlFlow, EventLoop},
-        window::WindowBuilder,
+        window::Window,
     };
 
     #[derive(Debug, Clone, Copy)]

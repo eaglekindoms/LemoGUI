@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 
-use raw_window_handle;
 use wgpu::{Instance, RenderPipeline};
 
 use crate::backend::wgpu_impl::*;
@@ -13,7 +12,7 @@ use crate::widget::ComponentModel;
 #[derive(Debug)]
 pub struct WGPUContext {
     /// 渲染面板
-    surface: wgpu::Surface,
+    surface: wgpu::Surface<'static>,
     /// 图形设备
     pub device: wgpu::Device,
     /// 渲染命令队列
@@ -25,18 +24,24 @@ pub struct WGPUContext {
 }
 
 impl WGPUContext {
-    pub async fn new<
-        W: raw_window_handle::HasRawWindowHandle + raw_window_handle::HasRawDisplayHandle,
-    >(
-        window: &W,
+    /// 创建 wgpu Instance
+    pub fn create_instance() -> Instance {
+        Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu::Backends::all(),
+            flags: wgpu::InstanceFlags::default(),
+            memory_budget_thresholds: wgpu::MemoryBudgetThresholds::default(),
+            backend_options: Default::default(),
+            display: None,
+        })
+    }
+
+    /// 从已创建的 surface 初始化渲染上下文
+    pub async fn new(
+        surface: wgpu::Surface<'static>,
+        instance: &Instance,
         window_size: Point<u32>,
     ) -> WGPUContext {
         log::info!("Initializing the surface...");
-        let instance = Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::all(),
-            dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
-        });
-        let surface = unsafe { instance.create_surface(window).unwrap() };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
@@ -47,18 +52,18 @@ impl WGPUContext {
             .expect("Request adapter");
 
         let caps = surface.get_capabilities(&adapter);
-        let formats = caps.formats;
         let present_modes = caps.present_modes;
         let alpha_modes = caps.alpha_modes;
         let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: None,
-                    features: wgpu::Features::empty(),
-                    limits: wgpu::Limits::downlevel_defaults().using_resolution(adapter.limits()),
-                },
-                None, // Trace path
-            )
+            .request_device(&wgpu::DeviceDescriptor {
+                label: None,
+                required_features: wgpu::Features::empty(),
+                required_limits: wgpu::Limits::downlevel_defaults()
+                    .using_resolution(adapter.limits()),
+                memory_hints: wgpu::MemoryHints::default(),
+                experimental_features: Default::default(),
+                trace: Default::default(),
+            })
             .await
             .unwrap();
 
@@ -70,6 +75,7 @@ impl WGPUContext {
             present_mode: present_modes[0],
             alpha_mode: alpha_modes[0],
             view_formats: vec![wgpu::TextureFormat::Bgra8UnormSrgb],
+            desired_maximum_frame_latency: 2,
         };
         let glob_pipeline = PipelineState::default(&device);
 
@@ -104,17 +110,19 @@ impl WGPUContext {
         C: ComponentModel<M> + 'static,
         M: 'static + Debug,
     {
-        match self.surface.get_current_texture() {
-            Err(error) => {
-                log::error!("{}", error);
+        let surface_texture = self.surface.get_current_texture();
+        let target_view = match surface_texture {
+            wgpu::CurrentSurfaceTexture::Success(tex)
+            | wgpu::CurrentSurfaceTexture::Suboptimal(tex) => tex,
+            other => {
+                log::error!("get_current_texture failed: {:?}", other);
+                return;
             }
-            Ok(target_view) => {
-                let mut utils = RenderUtil::new(&target_view, self);
-                utils.clear_frame(BACKGROUND_COLOR);
-                container.draw(&mut utils, font_map);
-                let _submission = utils.context.queue.submit(Some(utils.encoder.finish()));
-                target_view.present();
-            }
-        }
+        };
+        let mut utils = RenderUtil::new(&target_view, self);
+        utils.clear_frame(BACKGROUND_COLOR);
+        container.draw(&mut utils, font_map);
+        let _submission = utils.context.queue.submit(Some(utils.encoder.finish()));
+        target_view.present();
     }
 }
