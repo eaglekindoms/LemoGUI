@@ -93,6 +93,9 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for TextInput<M> {
             EventType::ReceivedCharacter(c) => {
                 self.received_character(_event_context, c);
             }
+            EventType::KeyBoard(Some(KeyCode::Backspace)) if g_event.state == State::Pressed => {
+                self.received_character(_event_context, '\u{8}');
+            }
             _ => {}
         }
         hover_listener
