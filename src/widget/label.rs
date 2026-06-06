@@ -15,7 +15,7 @@ pub struct Label {
     /// 面板文本
     pub text: Option<String>,
     /// 面板图像
-    pub image_path: Option<String>,
+    pub image: Option<ImageRaw>,
 }
 
 impl Label {
@@ -26,17 +26,28 @@ impl Label {
             size: rect,
             style,
             text: Some(text),
-            image_path: None,
+            image: None,
         }
     }
-    /// 创建图像面板
-    pub fn new_image_label(rect: Rectangle, style: Style, image: String) -> Self {
+    /// 创建图像面板 By 图像路径
+    pub fn new_image_label_by_path(rect: Rectangle, style: Style, image_path: String) -> Self {
         log::info!("create image label");
         Self {
             size: rect,
             style,
             text: None,
-            image_path: Some(image),
+            image: Some(ImageRaw::new(image_path.as_str())),
+        }
+    }
+
+    /// 创建图像面板
+    pub fn new_image_label(rect: Rectangle, style: Style, image: ImageRaw) -> Self {
+        log::info!("create image label");
+        Self {
+            size: rect,
+            style,
+            text: None,
+            image: Some(image),
         }
     }
     /// 绘制label
@@ -52,10 +63,9 @@ impl Label {
                 self.style.get_font_color(),
             );
         }
-        if let Some(image_path) = &self.image_path {
+        if let Some(image) = &self.image {
             log::info!("draw label's image");
-            let img = ImageRaw::new(image_path.as_str());
-            paint_brush.draw_image(&self.size, img)
+            paint_brush.draw_image(&self.size, image.clone())
         }
     }
 }

@@ -3,7 +3,7 @@ use std::path::Path;
 use image::GenericImageView;
 
 /// 图像数据结构体
-#[derive(Debug, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct ImageRaw {
     /// 图像宽度
     pub width: u32,
