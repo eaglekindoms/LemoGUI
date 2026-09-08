@@ -25,6 +25,7 @@ enum Ms {
 struct Counter {
     value: i32,
     text: String,
+    input_focus: bool,
 }
 
 impl Instance for Counter {
@@ -34,6 +35,7 @@ impl Instance for Counter {
         Counter {
             value: 0,
             text: "文本测试".to_string(),
+            input_focus: false,
         }
     }
 
@@ -53,7 +55,7 @@ impl Instance for Counter {
                 Point::new(200.0, 300.0),
                 self.text.as_str(),
                 Ms::Text,
-            ))
+            ).focused(self.input_focus))
             .push(b1)
             .push(Button::new(Point::new(230., 100.), self.value.to_string()))
     }
@@ -62,7 +64,10 @@ impl Instance for Counter {
         match broadcast {
             Ms::Add => self.value += 1,
             Ms::Sub => self.value -= 1,
-            Ms::Text(str) => self.text = str.to_string(),
+            Ms::Text(str) => {
+                self.text = str.to_string();
+                self.input_focus = true;
+            }
         }
     }
 

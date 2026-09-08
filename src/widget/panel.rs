@@ -1,5 +1,5 @@
 use crate::event::EventContext;
-use crate::graphic::base::GCharMap;
+use crate::graphic::base::{GCharMap, Point};
 use crate::graphic::render_api::PaintBrush;
 use crate::widget::{Component, ComponentModel};
 
@@ -43,5 +43,14 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
             }
         }
         is_listener
+    }
+
+    fn ime_caret(&self) -> Option<(Point<f32>, f32)> {
+        for comp in &self.widgets {
+            if let Some(p) = comp.widget.ime_caret() {
+                return Some(p);
+            }
+        }
+        None
     }
 }

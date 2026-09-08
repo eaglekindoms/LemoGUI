@@ -269,17 +269,26 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
     }
 
     fn caret_glyph(layout: &[GlyphPos], caret: usize, fallback_h: f32) -> GlyphPos {
-        layout
-            .iter()
-            .find(|g| g.index == caret)
-            .copied()
-            .unwrap_or(GlyphPos {
-                index: caret,
-                x: 0.0,
-                y: 0.0,
-                w: 0.0,
-                h: fallback_h,
-            })
+        if let Some(g) = layout.iter().find(|g| g.index == caret).copied() {
+            return g;
+        }
+        if let Some(last) = layout.last().copied() {
+            if caret >= last.index {
+                return last;
+            }
+            return layout
+                .iter()
+                .min_by_key(|g| g.index.abs_diff(caret))
+                .copied()
+                .unwrap_or(last);
+        }
+        GlyphPos {
+            index: caret,
+            x: 0.0,
+            y: 0.0,
+            w: 0.0,
+            h: fallback_h,
+        }
     }
 
     fn move_vertical(&mut self, layout: &[GlyphPos], dir: i32) {
@@ -323,6 +332,23 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
             self.caret.set(idx.min(self.doc.chars.len()));
             self.sel_anchor.set(None);
         }
+    }
+
+    fn caret_screen(&self) -> (Point<f32>, f32) {
+        let content_h = self.content_h.get();
+        let origin = self.origin();
+        let scroll = self.scroll_px(content_h);
+        let layout = self.layout_cache.borrow();
+        let g = Self::caret_glyph(&layout, self.caret.get(), self.doc.current_style.size);
+        (
+            Point::new(origin.x + g.x, origin.y + g.y - scroll),
+            g.h.max(16.0),
+        )
+    }
+
+    fn sync_ime(&self, event_context: &mut dyn EventContext<M>) {
+        let (pos, h) = self.caret_screen();
+        event_context.set_ime_position(pos, h);
     }
 }
 
@@ -425,6 +451,14 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
         }
     }
 
+    fn ime_caret(&self) -> Option<(Point<f32>, f32)> {
+        if self.is_focus.get() {
+            Some(self.caret_screen())
+        } else {
+            None
+        }
+    }
+
     fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
         let g_event = event_context.get_event();
         let cursor = event_context.get_cursor_pos();
@@ -438,10 +472,10 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                 if g_event.state == State::Pressed {
                     if hover {
                         self.is_focus.set(true);
-                        event_context.set_ime_position();
                         self.dragging.set(true);
                         self.apply_pointer(cursor, false);
                         self.sel_anchor.set(Some(self.caret.get()));
+                        self.sync_ime(event_context);
                         return true;
                     }
                     if self.is_focus.get() {
@@ -453,6 +487,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                 } else if g_event.state == State::Released && self.dragging.get() {
                     self.apply_pointer(cursor, true);
                     self.dragging.set(false);
+                    self.sync_ime(event_context);
                     self.sync_and_emit(event_context);
                     return true;
                 }
@@ -462,6 +497,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                     return true;
                 }
                 self.edit(|d| d.insert(c));
+                self.sync_ime(event_context);
                 self.emit(event_context);
                 return true;
             }
@@ -471,16 +507,19 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                 match key {
                     KeyCode::Backspace => {
                         self.edit(|d| d.delete_backward());
+                        self.sync_ime(event_context);
                         self.emit(event_context);
                         return true;
                     }
                     KeyCode::Delete => {
                         self.edit(|d| d.delete_forward());
+                        self.sync_ime(event_context);
                         self.emit(event_context);
                         return true;
                     }
                     KeyCode::Return | KeyCode::NumpadEnter => {
                         self.edit(|d| d.insert('\n'));
+                        self.sync_ime(event_context);
                         self.emit(event_context);
                         return true;
                     }
@@ -489,6 +528,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                         if c > 0 {
                             self.caret.set(c - 1);
                             self.sel_anchor.set(None);
+                            self.sync_ime(event_context);
                             self.sync_and_emit(event_context);
                         }
                         return true;
@@ -498,6 +538,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                         if c < self.doc.chars.len() {
                             self.caret.set(c + 1);
                             self.sel_anchor.set(None);
+                            self.sync_ime(event_context);
                             self.sync_and_emit(event_context);
                         }
                         return true;
@@ -505,12 +546,14 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                     KeyCode::Up => {
                         let layout = self.layout_cache.borrow().clone();
                         self.move_vertical(&layout, -1);
+                        self.sync_ime(event_context);
                         self.sync_and_emit(event_context);
                         return true;
                     }
                     KeyCode::Down => {
                         let layout = self.layout_cache.borrow().clone();
                         self.move_vertical(&layout, 1);
+                        self.sync_ime(event_context);
                         self.sync_and_emit(event_context);
                         return true;
                     }
@@ -537,6 +580,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
             }
             EventType::Other if self.dragging.get() && self.is_focus.get() => {
                 self.apply_pointer(cursor, true);
+                self.sync_ime(event_context);
                 return true;
             }
             _ => {}

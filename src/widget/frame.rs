@@ -1,5 +1,5 @@
-use crate::event::EventContext;
-use crate::graphic::base::GCharMap;
+use crate::event::{Cursor, EventContext};
+use crate::graphic::base::{GCharMap, Point};
 use crate::graphic::render_api::PaintBrush;
 use crate::instance::*;
 use crate::widget::*;
@@ -47,6 +47,7 @@ impl<M: Clone + PartialEq, I: Instance<M = M>> ComponentModel<M> for Frame<M, I>
     }
 
     fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
+        event_context.set_cursor_icon(Cursor::Default);
         let mut is_update = false;
         for (instance, panel) in self.display_panel.as_mut_slice() {
             if panel.listener(event_context) {
@@ -64,5 +65,14 @@ impl<M: Clone + PartialEq, I: Instance<M = M>> ComponentModel<M> for Frame<M, I>
 
     fn commit(&mut self) {
         self.relayout_dirty();
+    }
+
+    fn ime_caret(&self) -> Option<(Point<f32>, f32)> {
+        for (_, panel) in &self.display_panel {
+            if let Some(p) = panel.ime_caret() {
+                return Some(p);
+            }
+        }
+        None
     }
 }

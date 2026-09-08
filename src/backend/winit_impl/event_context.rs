@@ -57,10 +57,12 @@ impl<M> EventContext<M> for WEventContext<M> {
         }
     }
 
-    fn set_ime_position(&mut self) {
+    fn set_ime_position(&mut self, pos: Point<f32>, height: f32) {
+        self.window.set_ime_allowed(true);
+        let h = height.max(16.0) as u32;
         self.window.set_ime_cursor_area(
-            winit::dpi::PhysicalPosition::new(self.cursor_pos.x as i32, self.cursor_pos.y as i32),
-            winit::dpi::PhysicalSize::new(20, 20),
+            winit::dpi::PhysicalPosition::new(pos.x as i32, pos.y as i32),
+            winit::dpi::PhysicalSize::new(2, h),
         );
     }
 
@@ -133,6 +135,32 @@ where
                 self.container.commit();
                 self.gpu_context
                     .present(&mut self.container, &mut self.font_map);
+                if let Some((pos, h)) = self.container.ime_caret() {
+                    self.event_context.set_ime_position(pos, h);
+                }
+                return;
+            }
+            WindowEvent::Ime(Ime::Enabled) | WindowEvent::Ime(Ime::Preedit(_, _)) => {
+                if let Some((pos, h)) = self.container.ime_caret() {
+                    self.event_context.set_ime_position(pos, h);
+                }
+                return;
+            }
+            WindowEvent::Ime(Ime::Commit(text)) => {
+                let text = text.clone();
+                let mut dirty = false;
+                for c in text.chars() {
+                    self.event_context.set_event(GEvent {
+                        event: EventType::ReceivedCharacter(c),
+                        state: State::None,
+                    });
+                    if self.container.listener(&mut self.event_context) {
+                        dirty = true;
+                    }
+                }
+                if dirty {
+                    self.event_context.window.request_redraw();
+                }
                 return;
             }
             _ => {}
@@ -163,6 +191,7 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
 
     #[allow(deprecated)]
     let window = Arc::new(event_loop.create_window(window_attributes).unwrap());
+    window.set_ime_allowed(true);
 
     let size: Point<u32> = window.inner_size().into();
     let instance = GPUContext::create_instance();

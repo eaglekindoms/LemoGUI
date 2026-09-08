@@ -48,12 +48,13 @@ impl<M> EventContext<M> for SEventContext<M> {
     /// 设置鼠标图标
     fn set_cursor_icon(&mut self, _cursor: Cursor) {}
     /// 设置输入框位置
-    fn set_ime_position(&mut self) {
+    fn set_ime_position(&mut self, pos: Point<f32>, height: f32) {
         let text_input = self.window.subsystem().text_input();
-        text_input.start();
-        let x = self.cursor_pos.x as i32;
-        let y = self.cursor_pos.y as i32;
-        text_input.set_rect(sdl2::rect::Rect::new(x, y, 20, 20));
+        if !text_input.is_active() {
+            text_input.start();
+        }
+        let h = height.max(16.0) as u32;
+        text_input.set_rect(sdl2::rect::Rect::new(pos.x as i32, pos.y as i32, 2, h));
     }
 
     fn set_event(&mut self, event: GEvent) {
@@ -88,6 +89,9 @@ impl<M> EventContext<M> for SEventContext<M> {
 /// 初始化窗口
 pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<M> {
     log::info!("Initializing the window...");
+    // 必须在 SDL_Init 之前：否则系统 IME 候选框被隐藏
+    sdl2::hint::set("SDL_IME_SHOW_UI", "1");
+    sdl2::hint::set("SDL_IME_INTERNAL_EDITING", "0");
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window_size = Point::new(setting.size.x as u32, setting.size.y as u32);
@@ -113,6 +117,7 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
         GPUContext::new(surface, &instance, window_size).await
     };
     let event_context: SEventContext<M> = SEventContext::new(window, channel);
+    event_context.window.subsystem().text_input().start();
     let font_map = GCharMap::new(setting.font_path, DEFAULT_FONT_SIZE);
     let display_window = DisplayWindow {
         gpu_context,
@@ -159,6 +164,9 @@ where
         container.commit();
         if dirty {
             gpu_context.present(&mut container, &mut font_map);
+            if let Some((pos, h)) = container.ime_caret() {
+                event_context.set_ime_position(pos, h);
+            }
         }
     }
 }
@@ -176,8 +184,10 @@ where
     if event.is_user_event() {
         return false;
     }
-    if event.get_window_id() != Some(event_context.window.id()) {
-        return false;
+    if let Some(id) = event.get_window_id() {
+        if id != 0 && id != event_context.window.id() {
+            return false;
+        }
     }
     match event {
         Event::Window { win_event, .. } => match win_event {
@@ -185,6 +195,10 @@ where
                 let new_size = Point::new(width as u32, height as u32);
                 gpu_context.update_surface_configure(new_size);
                 true
+            }
+            WindowEvent::FocusGained => {
+                event_context.window.subsystem().text_input().start();
+                false
             }
             WindowEvent::Close => {
                 println!("----- Close window -----");
@@ -217,6 +231,7 @@ where
             }
             dirty
         }
+        Event::TextEditing { .. } => false,
         Event::MouseButtonDown { .. }
         | Event::MouseButtonUp { .. }
         | Event::KeyUp { .. }

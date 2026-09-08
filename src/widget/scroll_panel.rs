@@ -37,6 +37,10 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ScrollPanel<M> {
     fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
         self.child.widget.listener(event_context)
     }
+
+    fn ime_caret(&self) -> Option<(Point<f32>, f32)> {
+        self.child.widget.ime_caret()
+    }
 }
 
 /// 视口 + 子控件 + 纵向滚动条
@@ -87,5 +91,9 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ScrollViewer<M> {
             return true;
         }
         self.panel.listener(event_context)
+    }
+
+    fn ime_caret(&self) -> Option<(Point<f32>, f32)> {
+        self.panel.ime_caret()
     }
 }

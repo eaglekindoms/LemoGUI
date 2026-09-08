@@ -1,7 +1,7 @@
 use std::fmt::Formatter;
 
 use crate::event::{EventContext, State};
-use crate::graphic::base::{GCharMap, Rectangle};
+use crate::graphic::base::{GCharMap, Point, Rectangle};
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::Style;
 
@@ -15,6 +15,10 @@ pub trait ComponentModel<M> {
     }
     /// 一批事件处理完后调用：延迟的 layout 在此落地
     fn commit(&mut self) {}
+    /// 当前焦点控件的插入符屏幕坐标（给 IME 候选框用）
+    fn ime_caret(&self) -> Option<(Point<f32>, f32)> {
+        None
+    }
 }
 
 /// 封装组件接口

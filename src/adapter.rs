@@ -57,10 +57,34 @@ where
     return crate::backend::sdl2_impl::run(window, container);
 }
 
+/// 捆绑 SDL2 未编 dbus/fcitx，却会因 XMODIFIERS 含 fcitx 而把 XIM 设成 @im=none，中文输入法失效。
+/// fcitx5 的 XIM 注册名是 fcitx；进程 locale 默认是 C，XOpenIM 也会失败。
+fn prepare_linux_ime() {
+    #[cfg(unix)]
+    {
+        unsafe {
+            extern "C" {
+                fn setlocale(
+                    category: i32,
+                    locale: *const std::os::raw::c_char,
+                ) -> *mut std::os::raw::c_char;
+            }
+            const LC_CTYPE: i32 = 0;
+            setlocale(LC_CTYPE, b"\0".as_ptr() as *const std::os::raw::c_char);
+        }
+        if let Ok(xm) = std::env::var("XMODIFIERS") {
+            if xm.contains("fcitx") {
+                std::env::set_var("XMODIFIERS", "@im=fcitx");
+            }
+        }
+    }
+}
+
 /// 初始化窗口方法
 fn init_window<M: 'static + std::fmt::Debug>(
     setting: crate::instance::Setting,
 ) -> DisplayWindow<M> {
+    prepare_linux_ime();
     use futures::executor::block_on;
     // 使用winit初始化窗口
     #[cfg(feature = "winit_impl")]

@@ -80,9 +80,6 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
         let g_event = event_context.get_event();
         match g_event.event {
             EventType::Mouse(mouse) => {
-                if g_event.state == State::Released {
-                    event_context.set_ime_position();
-                }
                 mouse_listener = self.action_listener(event_context, mouse);
             }
             EventType::KeyBoard(key_code) => {

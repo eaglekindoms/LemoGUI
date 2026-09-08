@@ -9,8 +9,8 @@ pub trait EventContext<M> {
     fn get_cursor_pos(&self) -> Point<f32>;
     /// 设置鼠标图标
     fn set_cursor_icon(&mut self, cursor: Cursor);
-    /// 设置输入框位置
-    fn set_ime_position(&mut self);
+    /// 设置 IME 候选框位置（屏幕坐标，通常是文本插入符）
+    fn set_ime_position(&mut self, pos: Point<f32>, height: f32);
     /// 设置事件
     fn set_event(&mut self, event: GEvent);
     /// 获取当前事件
