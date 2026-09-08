@@ -31,7 +31,9 @@ impl<M: Clone + PartialEq + 'static> From<ScrollPanel<M>> for Component<M> {
 
 impl<M: Clone + PartialEq> ComponentModel<M> for ScrollPanel<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
+        paint_brush.push_clip(self.viewport);
         self.child.widget.draw(paint_brush, font_map);
+        paint_brush.pop_clip();
     }
 
     fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {

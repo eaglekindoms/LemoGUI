@@ -564,6 +564,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
         let bg: Box<dyn ShapeGraph> = Box::new(self.bounds);
         paint_brush.draw_shape(&bg, Style::default().back_color(WHITE).border(BLACK));
+        paint_brush.push_clip(self.bounds);
 
         self.ensure_layout(font_map);
         let layout = self.layout_cache.borrow();
@@ -684,6 +685,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                 paint_brush.draw_shape(&shape, Style::default().back_color(BLACK).no_border());
             }
         }
+        paint_brush.pop_clip();
     }
 
     fn ime_caret(&self) -> Option<(Point<f32>, f32)> {

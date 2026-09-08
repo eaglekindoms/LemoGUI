@@ -56,6 +56,10 @@ impl<'a> VertexBuffer {
         texture_state: Option<&'a TextureBufferData>,
     ) {
         // 获取顶点缓冲对应的渲染管道
+        let (sx, sy, sw, sh) = render_utils.current_scissor();
+        if sw == 0 || sh == 0 {
+            return;
+        }
         let pipeline = render_utils.context.get_pipeline(self.shape_type).unwrap();
         // 创建临时渲染变量，并设置渲染管道
         let mut render_pass = create_render_pass(
@@ -64,6 +68,7 @@ impl<'a> VertexBuffer {
             RenderModel::Load,
         );
         render_pass.set_pipeline(&pipeline);
+        render_pass.set_scissor_rect(sx, sy, sw, sh);
         // 绑定纹理缓冲
         if let Some(texture_buffer) = texture_state {
             render_pass.set_bind_group(0, &texture_buffer.uniform, &[]);

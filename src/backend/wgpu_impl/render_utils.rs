@@ -19,6 +19,8 @@ pub struct RenderUtil<'a> {
     pub g_texture: GTexture,
     /// 彩色图像纹理
     pub g_image: GTexture,
+    /// 嵌套裁剪矩形（求交后用于 scissor）
+    clip_stack: Vec<Rectangle>,
 }
 
 impl<'a> RenderUtil<'a> {
@@ -50,8 +52,40 @@ impl<'a> RenderUtil<'a> {
             context: gpu_context,
             g_texture,
             g_image,
+            clip_stack: Vec::new(),
         }
     }
+
+    /// 当前裁剪相对帧缓冲的 scissor（空栈则为整窗）
+    pub fn current_scissor(&self) -> (u32, u32, u32, u32) {
+        let size = self.context.get_surface_size();
+        let mut acc = Rectangle::new(0.0, 0.0, size.x, size.y);
+        for r in &self.clip_stack {
+            acc = acc.intersect(r);
+        }
+        scissor_from_rect(&acc, size.x, size.y)
+    }
+}
+
+fn scissor_from_rect(rect: &Rectangle, surf_w: u32, surf_h: u32) -> (u32, u32, u32, u32) {
+    let x0 = rect.position.x.max(0.0).floor() as i32;
+    let y0 = rect.position.y.max(0.0).floor() as i32;
+    let x1 = (rect.position.x + rect.width as f32)
+        .min(surf_w as f32)
+        .ceil() as i32;
+    let y1 = (rect.position.y + rect.height as f32)
+        .min(surf_h as f32)
+        .ceil() as i32;
+    let x = x0.clamp(0, surf_w as i32) as u32;
+    let y = y0.clamp(0, surf_h as i32) as u32;
+    let w = (x1 - x as i32).max(0) as u32;
+    let h = (y1 - y as i32).max(0) as u32;
+    (
+        x,
+        y,
+        w.min(surf_w.saturating_sub(x)),
+        h.min(surf_h.saturating_sub(y)),
+    )
 }
 
 impl PaintBrush for RenderUtil<'_> {
@@ -156,5 +190,13 @@ impl PaintBrush for RenderUtil<'_> {
                 .create_bind_group(&self.context.device, &self.context.queue, image);
         let image_vertex = ColorImageVertex::new(&self.context, image_rect, WHITE);
         image_vertex.render(self, Some(&image_buffer))
+    }
+
+    fn push_clip(&mut self, rect: Rectangle) {
+        self.clip_stack.push(rect);
+    }
+
+    fn pop_clip(&mut self) {
+        self.clip_stack.pop();
     }
 }

@@ -1,13 +1,18 @@
+use std::rc::Rc;
+
 use crate::event::*;
 use crate::graphic::base::*;
 use crate::graphic::render_api::PaintBrush;
 use crate::graphic::style::*;
 use crate::widget::*;
 
-const ROW_H: u32 = 24;
+const TEXT_H: u32 = DEFAULT_FONT_SIZE as u32;
+const ROW_H: u32 = TEXT_H;
 const BTN_W: u32 = 80;
-const BTN_H: u32 = 28;
+const BTN_H: u32 = TEXT_H;
+const BAR_W: u32 = 16;
 const PAD: f32 = 12.0;
+const GAP: f32 = 6.0;
 
 /// 打开或保存
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -47,6 +52,8 @@ pub struct FileDialog<M: Clone> {
     hover_cancel: bool,
     hover_filename: bool,
     armed: bool,
+    scroll: Option<Rc<ScrollState>>,
+    bar: Option<Scrollbar<M>>,
 }
 
 impl<M: Clone + PartialEq> FileDialog<M> {
@@ -87,29 +94,61 @@ impl<M: Clone + PartialEq> FileDialog<M> {
             hover_cancel: false,
             hover_filename: false,
             armed: false,
+            scroll: None,
+            bar: None,
         }
+    }
+
+    pub fn scroll_state<F>(mut self, state: Rc<ScrollState>, on_release: F) -> Self
+    where
+        F: 'static + Fn(f32) -> M,
+    {
+        let track = self.bar_rect();
+        self.bar = Some(Scrollbar::new(
+            track,
+            Orientation::Vertical,
+            Rc::clone(&state),
+            on_release,
+        ));
+        self.scroll = Some(state);
+        self
     }
 
     fn panel(&self) -> Rectangle {
         let w = 520u32;
-        let h = 400u32;
+        let h = 520u32;
         let x = self.bounds.position.x + (self.bounds.width.saturating_sub(w) as f32) * 0.5;
         let y = self.bounds.position.y + (self.bounds.height.saturating_sub(h) as f32) * 0.5;
         Rectangle::new(x, y, w, h)
     }
 
+    fn header_h() -> f32 {
+        PAD + TEXT_H as f32 + GAP + TEXT_H as f32 + GAP
+    }
+
     fn list_rect(&self) -> Rectangle {
         let p = self.panel();
         let extra = if self.mode == FileDialogMode::Save {
-            36.0
+            TEXT_H as f32 + GAP
         } else {
             0.0
         };
+        let top = Self::header_h();
         Rectangle::new(
             p.position.x + PAD,
-            p.position.y + 52.0,
-            p.width - (PAD * 2.0) as u32,
-            (p.height as f32 - 52.0 - 48.0 - extra - PAD) as u32,
+            p.position.y + top,
+            p.width - (PAD * 2.0) as u32 - BAR_W,
+            (p.height as f32 - top - PAD - BTN_H as f32 - extra) as u32,
+        )
+    }
+
+    fn bar_rect(&self) -> Rectangle {
+        let list = self.list_rect();
+        Rectangle::new(
+            list.position.x + list.width as f32,
+            list.position.y,
+            BAR_W,
+            list.height,
         )
     }
 
@@ -117,9 +156,9 @@ impl<M: Clone + PartialEq> FileDialog<M> {
         let p = self.panel();
         Rectangle::new(
             p.position.x + PAD,
-            p.position.y + p.height as f32 - 48.0 - 36.0,
+            p.position.y + p.height as f32 - PAD - BTN_H as f32 - GAP - TEXT_H as f32,
             p.width - (PAD * 2.0) as u32,
-            28,
+            TEXT_H,
         )
     }
 
@@ -145,12 +184,22 @@ impl<M: Clone + PartialEq> FileDialog<M> {
 
     fn title_rect(&self) -> Rectangle {
         let p = self.panel();
-        Rectangle::new(p.position.x + PAD, p.position.y + 8.0, p.width - 24, 22)
+        Rectangle::new(
+            p.position.x + PAD,
+            p.position.y + PAD,
+            p.width - (PAD * 2.0) as u32,
+            TEXT_H,
+        )
     }
 
     fn dir_rect(&self) -> Rectangle {
         let p = self.panel();
-        Rectangle::new(p.position.x + PAD, p.position.y + 28.0, p.width - 24, 20)
+        Rectangle::new(
+            p.position.x + PAD,
+            p.position.y + PAD + TEXT_H as f32 + GAP,
+            p.width - (PAD * 2.0) as u32,
+            TEXT_H,
+        )
     }
 
     fn list_entries(&self) -> Vec<DirEntry> {
@@ -163,14 +212,19 @@ impl<M: Clone + PartialEq> FileDialog<M> {
 
     fn list_offset(&self, count: usize) -> usize {
         let vis = self.visible_count().max(1);
-        if let Some(sel) = self.selected {
-            if sel >= vis {
-                (sel + 1).saturating_sub(vis).min(count.saturating_sub(vis))
-            } else {
-                0
-            }
-        } else {
-            0
+        let max_off = count.saturating_sub(vis);
+        let t = self
+            .scroll
+            .as_ref()
+            .map(|s| s.value.get().clamp(0.0, 1.0))
+            .unwrap_or(0.0);
+        ((t * max_off as f32).round() as usize).min(max_off)
+    }
+
+    fn sync_scroll(&self, count: usize) {
+        if let Some(s) = &self.scroll {
+            s.content_h.set((count as u32 * ROW_H) as f32);
+            s.view_h.set(self.list_rect().height as f32);
         }
     }
 
@@ -253,15 +307,22 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
             FileDialogMode::Open => "打开",
             FileDialogMode::Save => "保存",
         };
-        paint_brush.draw_text(font_map, &self.title_rect(), title, BLACK);
+        let title_rect = self.title_rect();
+        paint_brush.push_clip(title_rect);
+        paint_brush.draw_text(font_map, &title_rect, title, BLACK);
+        paint_brush.pop_clip();
+        let dir_rect = self.dir_rect();
+        paint_brush.push_clip(dir_rect);
         paint_brush.draw_text(
             font_map,
-            &self.dir_rect(),
+            &dir_rect,
             &truncate_chars(&self.dir, 42),
             BLACK,
         );
+        paint_brush.pop_clip();
 
         let entries = self.list_entries();
+        self.sync_scroll(entries.len());
         let list = self.list_rect();
         let list_shape: Box<dyn ShapeGraph> = Box::new(list);
         paint_brush.draw_shape(
@@ -269,6 +330,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
             Style::default().back_color(WHITE).border(BLACK),
         );
 
+        paint_brush.push_clip(list);
         let offset = self.list_offset(entries.len());
         let vis = self.visible_count();
         for (vi, (abs, entry)) in entries
@@ -298,7 +360,14 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
                 EntryKind::Dir => format!("{}/", truncate_chars(&entry.name, 40)),
                 EntryKind::File => truncate_chars(&entry.name, 42),
             };
+            paint_brush.push_clip(row);
             paint_brush.draw_text(font_map, &row, &label, style.get_font_color());
+            paint_brush.pop_clip();
+        }
+        paint_brush.pop_clip();
+
+        if let Some(bar) = &self.bar {
+            bar.draw(paint_brush, font_map);
         }
 
         if self.mode == FileDialogMode::Save {
@@ -313,11 +382,14 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
                 &fr_shape,
                 Style::default().back_color(fill).border(BLACK),
             );
+            paint_brush.push_clip(fr);
             paint_brush.draw_text(font_map, &fr, &self.filename, BLACK);
+            paint_brush.pop_clip();
         }
 
+        let ok_rect = self.confirm_rect();
         let ok_fill = pointer_fill(&Style::default(), self.hover_confirm, self.armed);
-        let ok: Box<dyn ShapeGraph> = Box::new(self.confirm_rect());
+        let ok: Box<dyn ShapeGraph> = Box::new(ok_rect);
         paint_brush.draw_shape(
             &ok,
             Style::default()
@@ -325,10 +397,13 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
                 .border(BLACK)
                 .font_color(BLACK),
         );
-        paint_brush.draw_text(font_map, &self.confirm_rect(), "确定", BLACK);
+        paint_brush.push_clip(ok_rect);
+        paint_brush.draw_text(font_map, &ok_rect, "确定", BLACK);
+        paint_brush.pop_clip();
 
+        let cancel_rect = self.cancel_rect();
         let cancel_fill = pointer_fill(&Style::default(), self.hover_cancel, self.armed);
-        let cancel: Box<dyn ShapeGraph> = Box::new(self.cancel_rect());
+        let cancel: Box<dyn ShapeGraph> = Box::new(cancel_rect);
         paint_brush.draw_shape(
             &cancel,
             Style::default()
@@ -336,10 +411,20 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
                 .border(BLACK)
                 .font_color(BLACK),
         );
-        paint_brush.draw_text(font_map, &self.cancel_rect(), "取消", BLACK);
+        paint_brush.push_clip(cancel_rect);
+        paint_brush.draw_text(font_map, &cancel_rect, "取消", BLACK);
+        paint_brush.pop_clip();
     }
 
     fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
+        let track = self.bar_rect();
+        if let Some(bar) = &mut self.bar {
+            bar.track = track;
+            if bar.listener(event_context) {
+                return true;
+            }
+        }
+
         let g_event = event_context.get_event();
         let cursor = event_context.get_cursor_pos();
         let on_overlay = self.bounds.contain_coord(cursor);

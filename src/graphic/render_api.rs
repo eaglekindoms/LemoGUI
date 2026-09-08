@@ -29,4 +29,10 @@ pub trait PaintBrush {
 
     /// 绘制图像
     fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw);
+
+    /// 压入裁剪矩形，与当前栈求交
+    fn push_clip(&mut self, rect: Rectangle);
+
+    /// 弹出最近一次裁剪
+    fn pop_clip(&mut self);
 }

@@ -89,6 +89,19 @@ impl Rectangle {
             && (rel_x > 0.)
             && (rel_y > 0.)
     }
+
+    /// 与另一矩形求交；不相交则宽或高为 0
+    pub fn intersect(&self, other: &Rectangle) -> Rectangle {
+        let x1 = self.position.x.max(other.position.x);
+        let y1 = self.position.y.max(other.position.y);
+        let x2 = (self.position.x + self.width as f32)
+            .min(other.position.x + other.width as f32);
+        let y2 = (self.position.y + self.height as f32)
+            .min(other.position.y + other.height as f32);
+        let w = (x2 - x1).max(0.0) as u32;
+        let h = (y2 - y1).max(0.0) as u32;
+        Rectangle::new(x1, y1, w, h)
+    }
 }
 
 impl Circle {

@@ -61,6 +61,7 @@ enum Msg {
     DialogFilename(String),
     DialogConfirm(String),
     DialogCancel,
+    DialogScroll(f32),
 }
 
 struct Editor {
@@ -78,6 +79,7 @@ struct Editor {
     dialog_selected: Option<usize>,
     dialog_filename: String,
     scroll: Rc<ScrollState>,
+    dialog_scroll: Rc<ScrollState>,
 }
 
 impl Editor {
@@ -183,6 +185,12 @@ impl Editor {
         self.size_open = false;
         self.font_open = false;
         Rc::make_mut(&mut self.doc).is_focus = false;
+        self.reset_dialog_scroll();
+    }
+
+    fn reset_dialog_scroll(&self) {
+        self.dialog_scroll.value.set(0.0);
+        self.dialog_scroll.dragging.set(false);
     }
 
     fn close_dialog(&mut self) {
@@ -204,6 +212,7 @@ impl Editor {
             Msg::DialogSelect,
             Msg::DialogFilename,
         )
+        .scroll_state(self.dialog_scroll.clone(), Msg::DialogScroll)
     }
 }
 
@@ -236,6 +245,7 @@ impl Instance for Editor {
             dialog_selected: None,
             dialog_filename: String::new(),
             scroll: ScrollState::new(),
+            dialog_scroll: ScrollState::new(),
         }
     }
 
@@ -572,6 +582,7 @@ impl Instance for Editor {
             Msg::DialogDir(dir) => {
                 self.dialog_dir = dir.clone();
                 self.dialog_selected = None;
+                self.reset_dialog_scroll();
             }
             Msg::DialogSelect(sel) => {
                 self.dialog_selected = *sel;
@@ -585,6 +596,9 @@ impl Instance for Editor {
             }
             Msg::DialogFilename(name) => {
                 self.dialog_filename = name.clone();
+            }
+            Msg::DialogScroll(v) => {
+                self.dialog_scroll.value.set(*v);
             }
             Msg::DialogConfirm(path) => {
                 let kind = self.dialog.clone();

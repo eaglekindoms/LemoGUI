@@ -157,12 +157,14 @@ impl<M: Clone + PartialEq> ComponentModel<M> for MenuBar<M> {
                 .font_color(BLACK);
             let title_shape: Box<dyn ShapeGraph> = Box::new(menu.bounds);
             paint_brush.draw_shape(&title_shape, title_style);
+            paint_brush.push_clip(menu.bounds);
             paint_brush.draw_text(
                 font_map,
                 &menu.bounds,
                 menu.title.as_str(),
                 title_style.get_font_color(),
             );
+            paint_brush.pop_clip();
             if menu.open {
                 let drop = menu.dropdown_rect();
                 let bg: Box<dyn ShapeGraph> = Box::new(drop);
@@ -177,12 +179,14 @@ impl<M: Clone + PartialEq> ComponentModel<M> for MenuBar<M> {
                     let row_style = Style::default().back_color(fill).font_color(BLACK);
                     let row_shape: Box<dyn ShapeGraph> = Box::new(row);
                     paint_brush.draw_shape(&row_shape, row_style);
+                    paint_brush.push_clip(row);
                     paint_brush.draw_text(
                         font_map,
                         &row,
                         item.title.as_str(),
                         row_style.get_font_color(),
                     );
+                    paint_brush.pop_clip();
                 }
             }
         }

@@ -103,7 +103,9 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ComboBox<M> {
             .get(self.selected)
             .map(|s| s.as_str())
             .unwrap_or("");
+        paint_brush.push_clip(self.bounds);
         paint_brush.draw_text(font_map, &self.bounds, label, closed_style.get_font_color());
+        paint_brush.pop_clip();
         if self.open {
             let drop = self.dropdown_rect();
             let bg: Box<dyn ShapeGraph> = Box::new(drop);
@@ -120,7 +122,9 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ComboBox<M> {
                 let style = Style::default().back_color(fill).font_color(BLACK);
                 let row_shape: Box<dyn ShapeGraph> = Box::new(row);
                 paint_brush.draw_shape(&row_shape, style);
+                paint_brush.push_clip(row);
                 paint_brush.draw_text(font_map, &row, item.as_str(), style.get_font_color());
+                paint_brush.pop_clip();
             }
         }
     }
