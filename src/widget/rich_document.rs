@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::graphic::base::{Align, DEFAULT_FONT_PATH, RGBA, TextStyle};
 
 /// 带样式的单个字符
@@ -7,10 +9,39 @@ pub struct StyledChar {
     pub style: TextStyle,
 }
 
-/// 字符级富文本文档（状态必须放在 Instance 中，layout 会重建控件树）
+/// 图片排版
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ImageDisplay {
+    Inline,
+    Block,
+}
+
+/// 图片来源：路径链接或内嵌字节
+#[derive(Clone, Debug, PartialEq)]
+pub enum ImageSource {
+    Path(String),
+    Embedded(Rc<[u8]>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct RichImage {
+    pub source: ImageSource,
+    pub display: ImageDisplay,
+    /// 显示宽度（像素）；None 表示按原图（不超过行宽）
+    pub width: Option<f32>,
+}
+
+/// 文档原子：一个字符或一张图
+#[derive(Clone, Debug, PartialEq)]
+pub enum RichAtom {
+    Char(StyledChar),
+    Image(RichImage),
+}
+
+/// 富文本文档（状态必须放在 Instance 中，layout 会重建控件树）
 #[derive(Clone, Debug, PartialEq)]
 pub struct RichDocument {
-    pub chars: Vec<StyledChar>,
+    pub atoms: Vec<RichAtom>,
     pub caret: usize,
     pub sel_anchor: Option<usize>,
     pub current_style: TextStyle,
@@ -23,7 +54,7 @@ pub struct RichDocument {
 impl Default for RichDocument {
     fn default() -> Self {
         Self {
-            chars: Vec::new(),
+            atoms: Vec::new(),
             caret: 0,
             sel_anchor: None,
             current_style: TextStyle::default(),
@@ -40,27 +71,31 @@ impl RichDocument {
         Self::default()
     }
 
+    pub fn len(&self) -> usize {
+        self.atoms.len()
+    }
+
     pub fn from_plain(text: &str) -> Self {
         let style = TextStyle::default();
-        let chars = text
+        let atoms = text
             .chars()
-            .map(|ch| StyledChar { ch, style })
+            .map(|ch| RichAtom::Char(StyledChar { ch, style }))
             .collect::<Vec<_>>();
-        let caret = chars.len();
+        let caret = atoms.len();
         Self {
-            chars,
+            atoms,
             caret,
             ..Self::default()
         }
     }
 
     fn clamp_index(&self, i: usize) -> usize {
-        i.min(self.chars.len())
+        i.min(self.atoms.len())
     }
 
     pub fn selection(&self) -> Option<(usize, usize)> {
         let a = self.sel_anchor?;
-        let len = self.chars.len();
+        let len = self.atoms.len();
         let lo = a.min(self.caret).min(len);
         let hi = a.max(self.caret).min(len);
         if lo == hi {
@@ -76,7 +111,7 @@ impl RichDocument {
 
     pub fn delete_selection(&mut self) -> bool {
         if let Some((lo, hi)) = self.selection() {
-            self.chars.drain(lo..hi);
+            self.atoms.drain(lo..hi);
             self.caret = lo;
             self.sel_anchor = None;
             true
@@ -89,9 +124,31 @@ impl RichDocument {
         self.delete_selection();
         self.caret = self.clamp_index(self.caret);
         let style = self.current_style;
-        self.chars.insert(self.caret, StyledChar { ch: c, style });
+        self.atoms
+            .insert(self.caret, RichAtom::Char(StyledChar { ch: c, style }));
         self.caret += 1;
         self.sel_anchor = None;
+    }
+
+    pub fn insert_image(&mut self, source: ImageSource, display: ImageDisplay) {
+        self.delete_selection();
+        self.caret = self.clamp_index(self.caret);
+        self.atoms.insert(
+            self.caret,
+            RichAtom::Image(RichImage {
+                source,
+                display,
+                width: None,
+            }),
+        );
+        self.caret += 1;
+        self.sel_anchor = None;
+    }
+
+    pub fn set_image_width(&mut self, index: usize, width: f32) {
+        if let Some(RichAtom::Image(img)) = self.atoms.get_mut(index) {
+            img.width = Some(width.max(24.0));
+        }
     }
 
     pub fn delete_backward(&mut self) {
@@ -100,7 +157,7 @@ impl RichDocument {
         }
         if self.caret > 0 {
             self.caret -= 1;
-            self.chars.remove(self.caret);
+            self.atoms.remove(self.caret);
         }
     }
 
@@ -108,13 +165,13 @@ impl RichDocument {
         if self.delete_selection() {
             return;
         }
-        if self.caret < self.chars.len() {
-            self.chars.remove(self.caret);
+        if self.caret < self.atoms.len() {
+            self.atoms.remove(self.caret);
         }
     }
 
     pub fn move_caret(&mut self, pos: usize) {
-        self.caret = pos.min(self.chars.len());
+        self.caret = pos.min(self.atoms.len());
         self.sel_anchor = None;
     }
 
@@ -122,7 +179,7 @@ impl RichDocument {
         if self.sel_anchor.is_none() {
             self.sel_anchor = Some(self.caret);
         }
-        self.caret = pos.min(self.chars.len());
+        self.caret = pos.min(self.atoms.len());
     }
 
     pub fn apply_to_selection<F: Fn(&mut TextStyle)>(&mut self, f: F) {
@@ -130,77 +187,100 @@ impl RichDocument {
         f(&mut style);
         self.current_style = style;
         if let Some((lo, hi)) = self.selection() {
-            let hi = hi.min(self.chars.len());
+            let hi = hi.min(self.atoms.len());
             let lo = lo.min(hi);
-            for ch in &mut self.chars[lo..hi] {
-                ch.style = style;
+            for atom in &mut self.atoms[lo..hi] {
+                if let RichAtom::Char(ch) = atom {
+                    ch.style = style;
+                }
             }
         }
     }
 
     pub fn select_all(&mut self) {
-        if self.chars.is_empty() {
+        if self.atoms.is_empty() {
             self.caret = 0;
             self.sel_anchor = None;
             return;
         }
         self.sel_anchor = Some(0);
-        self.caret = self.chars.len();
+        self.caret = self.atoms.len();
     }
 
     pub fn display_style(&self) -> TextStyle {
-        if let Some((lo, _)) = self.selection() {
-            if let Some(ch) = self.chars.get(lo) {
-                return ch.style;
+        if let Some((lo, hi)) = self.selection() {
+            for atom in &self.atoms[lo..hi.min(self.atoms.len())] {
+                if let RichAtom::Char(ch) = atom {
+                    return ch.style;
+                }
             }
         }
         self.current_style
     }
 
-    pub fn copy_selection(&self) -> Vec<StyledChar> {
+    pub fn copy_selection(&self) -> Vec<RichAtom> {
         if let Some((lo, hi)) = self.selection() {
-            self.chars[lo..hi].to_vec()
+            self.atoms[lo..hi].to_vec()
         } else {
             Vec::new()
         }
     }
 
-    pub fn cut_selection(&mut self) -> Vec<StyledChar> {
+    pub fn cut_selection(&mut self) -> Vec<RichAtom> {
         let copied = self.copy_selection();
         self.delete_selection();
         copied
     }
 
-    pub fn paste(&mut self, clip: &[StyledChar]) {
+    pub fn paste(&mut self, clip: &[RichAtom]) {
         self.delete_selection();
         self.caret = self.clamp_index(self.caret);
-        for (i, sc) in clip.iter().enumerate() {
-            self.chars.insert(self.caret + i, sc.clone());
+        for (i, atom) in clip.iter().enumerate() {
+            self.atoms.insert(self.caret + i, atom.clone());
         }
         self.caret += clip.len();
         self.sel_anchor = None;
     }
 
     pub fn to_plain(&self) -> String {
-        self.chars.iter().map(|c| c.ch).collect()
+        self.atoms
+            .iter()
+            .filter_map(|a| match a {
+                RichAtom::Char(c) => Some(c.ch),
+                RichAtom::Image(_) => None,
+            })
+            .collect()
     }
 
     pub fn to_toml(&self) -> String {
         let global = self.current_style;
         let mut content = Vec::new();
         let mut i = 0;
-        while i < self.chars.len() {
-            let style = self.chars[i].style;
-            let mut text = String::new();
-            while i < self.chars.len() && self.chars[i].style == style {
-                text.push(self.chars[i].ch);
-                i += 1;
+        while i < self.atoms.len() {
+            match &self.atoms[i] {
+                RichAtom::Image(img) => {
+                    content.push(image_to_dto(img));
+                    i += 1;
+                }
+                RichAtom::Char(sc) => {
+                    let style = sc.style;
+                    let mut text = String::new();
+                    while i < self.atoms.len() {
+                        match &self.atoms[i] {
+                            RichAtom::Char(c) if c.style == style => {
+                                text.push(c.ch);
+                                i += 1;
+                            }
+                            _ => break,
+                        }
+                    }
+                    content.push(ContentDto {
+                        text: Some(text),
+                        style: style_diff(global, style),
+                        ..ContentDto::default()
+                    });
+                }
             }
-            content.push(ContentDto {
-                text: Some(text),
-                image: None,
-                style: style_diff(global, style),
-            });
         }
         let file = FileDoc {
             format: FORMAT_MAGIC.to_string(),
@@ -224,22 +304,25 @@ impl RichDocument {
         }
         let font_max = (fonts.len().saturating_sub(1)) as u8;
         let global = file.style.to_style(TextStyle::default(), font_max);
-        let mut chars = Vec::new();
+        let mut atoms = Vec::new();
         for block in &file.content {
-            let Some(run) = &block.text else {
+            if let Some(run) = &block.text {
+                let style = match &block.style {
+                    Some(dto) => dto.to_style(global, font_max),
+                    None => global,
+                };
+                for ch in run.chars() {
+                    atoms.push(RichAtom::Char(StyledChar { ch, style }));
+                }
                 continue;
-            };
-            let style = match &block.style {
-                Some(dto) => dto.to_style(global, font_max),
-                None => global,
-            };
-            for ch in run.chars() {
-                chars.push(StyledChar { ch, style });
+            }
+            if let Some(img) = image_from_dto(block) {
+                atoms.push(RichAtom::Image(img));
             }
         }
-        let caret = file.caret.min(chars.len());
+        let caret = file.caret.min(atoms.len());
         Some(Self {
-            chars,
+            atoms,
             caret,
             current_style: global,
             fonts,
@@ -248,7 +331,7 @@ impl RichDocument {
     }
 
     pub fn content_eq(&self, other: &Self) -> bool {
-        self.chars == other.chars && self.fonts == other.fonts
+        self.atoms == other.atoms && self.fonts == other.fonts
     }
 }
 
@@ -280,7 +363,144 @@ struct StyleDto {
 struct ContentDto {
     text: Option<String>,
     image: Option<String>,
+    image_b64: Option<String>,
+    display: Option<String>,
+    width: Option<f32>,
     style: Option<StyleDto>,
+}
+
+fn image_to_dto(img: &RichImage) -> ContentDto {
+    let display = match img.display {
+        ImageDisplay::Inline => Some("inline".to_string()),
+        ImageDisplay::Block => None,
+    };
+    let width = img.width;
+    match &img.source {
+        ImageSource::Path(path) => ContentDto {
+            image: Some(path.clone()),
+            display,
+            width,
+            ..ContentDto::default()
+        },
+        ImageSource::Embedded(bytes) => ContentDto {
+            image_b64: Some(b64_encode(bytes)),
+            display,
+            width,
+            ..ContentDto::default()
+        },
+    }
+}
+
+fn image_from_dto(block: &ContentDto) -> Option<RichImage> {
+    let display = match block.display.as_deref() {
+        Some("inline") => ImageDisplay::Inline,
+        _ => ImageDisplay::Block,
+    };
+    let width = block.width.filter(|w| *w > 0.0);
+    if let Some(b64) = &block.image_b64 {
+        let payload = strip_data_uri(b64).unwrap_or(b64.as_str());
+        let bytes = b64_decode(payload)?;
+        return Some(RichImage {
+            source: ImageSource::Embedded(Rc::from(bytes)),
+            display,
+            width,
+        });
+    }
+    let img = block.image.as_ref()?;
+    if let Some(payload) = strip_data_uri(img) {
+        let bytes = b64_decode(payload)?;
+        return Some(RichImage {
+            source: ImageSource::Embedded(Rc::from(bytes)),
+            display,
+            width,
+        });
+    }
+    Some(RichImage {
+        source: ImageSource::Path(img.clone()),
+        display,
+        width,
+    })
+}
+
+fn strip_data_uri(s: &str) -> Option<&str> {
+    let s = s.trim();
+    let rest = s.strip_prefix("data:")?;
+    let idx = rest.find("base64,")?;
+    Some(&rest[idx + 7..])
+}
+
+const B64_TABLE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+fn b64_encode(data: &[u8]) -> String {
+    let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
+    let mut i = 0;
+    while i < data.len() {
+        let b0 = data[i];
+        let b1 = data.get(i + 1).copied();
+        let b2 = data.get(i + 2).copied();
+        out.push(B64_TABLE[(b0 >> 2) as usize] as char);
+        out.push(B64_TABLE[(((b0 & 3) << 4) | (b1.unwrap_or(0) >> 4)) as usize] as char);
+        if b1.is_none() {
+            out.push('=');
+            out.push('=');
+        } else {
+            out.push(
+                B64_TABLE[(((b1.unwrap() & 0xf) << 2) | (b2.unwrap_or(0) >> 6)) as usize] as char,
+            );
+            if b2.is_none() {
+                out.push('=');
+            } else {
+                out.push(B64_TABLE[(b2.unwrap() & 0x3f) as usize] as char);
+            }
+        }
+        i += 3;
+    }
+    out
+}
+
+fn b64_val(c: u8) -> Option<u8> {
+    match c {
+        b'A'..=b'Z' => Some(c - b'A'),
+        b'a'..=b'z' => Some(c - b'a' + 26),
+        b'0'..=b'9' => Some(c - b'0' + 52),
+        b'+' => Some(62),
+        b'/' => Some(63),
+        _ => None,
+    }
+}
+
+fn b64_decode(s: &str) -> Option<Vec<u8>> {
+    let mut buf = Vec::new();
+    let mut acc: u32 = 0;
+    let mut n = 0;
+    for c in s.bytes() {
+        if c.is_ascii_whitespace() {
+            continue;
+        }
+        if c == b'=' {
+            break;
+        }
+        let v = b64_val(c)?;
+        acc = (acc << 6) | u32::from(v);
+        n += 1;
+        if n == 4 {
+            buf.push((acc >> 16) as u8);
+            buf.push((acc >> 8) as u8);
+            buf.push(acc as u8);
+            acc = 0;
+            n = 0;
+        }
+    }
+    match n {
+        0 => {}
+        2 => buf.push((acc >> 4) as u8),
+        3 => {
+            buf.push((acc >> 10) as u8);
+            buf.push((acc >> 2) as u8);
+        }
+        _ => return None,
+    }
+    Some(buf)
 }
 
 impl StyleDto {
@@ -405,6 +625,19 @@ fn toml_encode(file: &FileDoc) -> String {
             out.push_str(&quote(image));
             out.push('\n');
         }
+        if let Some(b64) = &block.image_b64 {
+            out.push_str("image_b64 = ");
+            out.push_str(&quote(b64));
+            out.push('\n');
+        }
+        if let Some(display) = &block.display {
+            out.push_str("display = ");
+            out.push_str(&quote(display));
+            out.push('\n');
+        }
+        if let Some(w) = block.width {
+            out.push_str(&format!("width = {}\n", w));
+        }
         if let Some(style) = &block.style {
             out.push_str("\n[content.style]\n");
             write_style(&mut out, style);
@@ -507,6 +740,9 @@ fn toml_decode(text: &str) -> Option<FileDoc> {
                 match key {
                     "text" => last.text = Some(parse_string(value)?),
                     "image" => last.image = Some(parse_string(value)?),
+                    "image_b64" => last.image_b64 = Some(parse_string(value)?),
+                    "display" => last.display = Some(parse_string(value)?),
+                    "width" => last.width = Some(parse_f32(value)?),
                     "style" => last.style = Some(parse_inline_style(value)?),
                     _ => {}
                 }
@@ -670,12 +906,12 @@ mod tests {
     #[test]
     fn stale_selection_does_not_panic() {
         let mut doc = RichDocument::from_plain("一二三四五六");
-        assert_eq!(doc.chars.len(), 6);
+        assert_eq!(doc.len(), 6);
         doc.sel_anchor = Some(0);
         doc.caret = 7;
         doc.apply_to_selection(|s| s.bold = true);
         doc.delete_selection();
-        assert!(doc.chars.len() <= 6);
+        assert!(doc.len() <= 6);
     }
 
     #[test]
@@ -685,14 +921,23 @@ mod tests {
         assert_eq!(doc.selection(), Some((0, 7)));
     }
 
+    fn atom_char(doc: &RichDocument, i: usize) -> &StyledChar {
+        match &doc.atoms[i] {
+            RichAtom::Char(c) => c,
+            RichAtom::Image(_) => panic!("expected char"),
+        }
+    }
+
     #[test]
     fn toml_roundtrip_keeps_text() {
         let mut doc = RichDocument::from_plain("ab\n文");
-        doc.chars[0].style.bold = true;
+        if let RichAtom::Char(c) = &mut doc.atoms[0] {
+            c.style.bold = true;
+        }
         let back = RichDocument::from_toml(&doc.to_toml()).unwrap();
         assert_eq!(back.to_plain(), "ab\n文");
-        assert!(back.chars[0].style.bold);
-        assert!(!back.chars[1].style.bold);
+        assert!(atom_char(&back, 0).style.bold);
+        assert!(!atom_char(&back, 1).style.bold);
         let dumped = doc.to_toml();
         assert!(dumped.contains("bold = true"));
     }
@@ -705,7 +950,7 @@ mod tests {
         assert!(!toml.contains("style.bold"));
         let back = RichDocument::from_toml(&toml).unwrap();
         assert_eq!(back.to_plain(), "普通正文");
-        assert_eq!(back.chars[0].style, back.current_style);
+        assert_eq!(atom_char(&back, 0).style, back.current_style);
     }
 
     #[test]
@@ -727,12 +972,12 @@ text = "Hi"
         assert!(doc.current_style.bold);
         assert_eq!(doc.current_style.size, 24.0);
         assert_eq!(doc.current_style.align, Align::Center);
-        assert!(doc.chars[0].style.bold);
-        assert_eq!(doc.chars[0].style.size, 24.0);
+        assert!(atom_char(&doc, 0).style.bold);
+        assert_eq!(atom_char(&doc, 0).style.size, 24.0);
     }
 
     #[test]
-    fn toml_skips_image_blocks() {
+    fn toml_keeps_image_path() {
         let src = r#"
 format = "lemogui-rich"
 version = 1
@@ -742,34 +987,133 @@ text = "A"
 
 [[content]]
 image = "img.png"
+display = "inline"
+width = 200
 
 [[content]]
 text = "B"
 "#;
         let doc = RichDocument::from_toml(src).unwrap();
         assert_eq!(doc.to_plain(), "AB");
+        assert_eq!(doc.len(), 3);
+        match &doc.atoms[1] {
+            RichAtom::Image(img) => {
+                assert_eq!(img.source, ImageSource::Path("img.png".into()));
+                assert_eq!(img.display, ImageDisplay::Inline);
+                assert_eq!(img.width, Some(200.0));
+            }
+            _ => panic!("expected image"),
+        }
+        let dumped = doc.to_toml();
+        assert!(dumped.contains("image = \"img.png\""));
+        assert!(dumped.contains("display = \"inline\""));
+        assert!(dumped.contains("width = 200"));
+    }
+
+    #[test]
+    fn toml_roundtrip_image_b64() {
+        let bytes: Rc<[u8]> = Rc::from(&b"png-bytes"[..]);
+        let mut doc = RichDocument::from_plain("A");
+        doc.insert_image(ImageSource::Embedded(Rc::clone(&bytes)), ImageDisplay::Block);
+        doc.insert('B');
+        let dumped = doc.to_toml();
+        assert!(dumped.contains("image_b64 ="));
+        assert!(!dumped.contains("display ="));
+        let back = RichDocument::from_toml(&dumped).unwrap();
+        assert_eq!(back.to_plain(), "AB");
+        match &back.atoms[1] {
+            RichAtom::Image(img) => match &img.source {
+                ImageSource::Embedded(b) => assert_eq!(&b[..], b"png-bytes"),
+                _ => panic!("expected embedded"),
+            },
+            _ => panic!("expected image"),
+        }
+    }
+
+    #[test]
+    fn toml_data_uri_becomes_embedded() {
+        let payload = b64_encode(b"xyz");
+        let src = format!(
+            r#"
+format = "lemogui-rich"
+version = 1
+
+[[content]]
+image = "data:image/png;base64,{payload}"
+"#
+        );
+        let doc = RichDocument::from_toml(&src).unwrap();
+        match &doc.atoms[0] {
+            RichAtom::Image(img) => match &img.source {
+                ImageSource::Embedded(b) => assert_eq!(&b[..], b"xyz"),
+                _ => panic!("expected embedded"),
+            },
+            _ => panic!("expected image"),
+        }
+    }
+
+    #[test]
+    fn toml_roundtrip_image_width() {
+        let mut doc = RichDocument::from_plain("");
+        doc.insert_image(ImageSource::Path("a.png".into()), ImageDisplay::Block);
+        doc.set_image_width(0, 180.0);
+        let dumped = doc.to_toml();
+        assert!(dumped.contains("width = 180"));
+        let back = RichDocument::from_toml(&dumped).unwrap();
+        match &back.atoms[0] {
+            RichAtom::Image(img) => assert_eq!(img.width, Some(180.0)),
+            _ => panic!("expected image"),
+        }
+    }
+
+    #[test]
+    fn toml_bad_b64_is_skipped() {
+        let src = r#"
+format = "lemogui-rich"
+version = 1
+
+[[content]]
+text = "A"
+
+[[content]]
+image_b64 = "!!!!"
+
+[[content]]
+text = "B"
+"#;
+        let doc = RichDocument::from_toml(src).unwrap();
+        assert_eq!(doc.to_plain(), "AB");
+        assert_eq!(doc.len(), 2);
+    }
+
+    #[test]
+    fn b64_roundtrip() {
+        let src = b"hello\x00\xff world";
+        assert_eq!(b64_decode(&b64_encode(src)).unwrap(), src);
     }
 
     #[test]
     fn toml_keeps_font_path_and_align() {
         let mut doc = RichDocument::from_plain("X");
         doc.fonts.push("/tmp/extra.ttf".into());
-        doc.chars[0].style.font = 1;
-        doc.chars[0].style.align = Align::Center;
+        if let RichAtom::Char(c) = &mut doc.atoms[0] {
+            c.style.font = 1;
+            c.style.align = Align::Center;
+        }
         let back = RichDocument::from_toml(&doc.to_toml()).unwrap();
         assert_eq!(back.fonts[1], "/tmp/extra.ttf");
-        assert_eq!(back.chars[0].style.font, 1);
-        assert_eq!(back.chars[0].style.align, Align::Center);
+        assert_eq!(atom_char(&back, 0).style.font, 1);
+        assert_eq!(atom_char(&back, 0).style.align, Align::Center);
     }
 
     #[test]
     fn paste_inserts_at_caret() {
         let mut doc = RichDocument::from_plain("ac");
         doc.move_caret(1);
-        doc.paste(&[StyledChar {
+        doc.paste(&[RichAtom::Char(StyledChar {
             ch: 'b',
             style: TextStyle::default(),
-        }]);
+        })]);
         assert_eq!(doc.to_plain(), "abc");
     }
 }

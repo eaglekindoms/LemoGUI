@@ -17,6 +17,8 @@ pub struct RenderUtil<'a> {
     pub context: &'a mut WGPUContext,
     /// 纹理配置上下文
     pub g_texture: GTexture,
+    /// 彩色图像纹理
+    pub g_image: GTexture,
 }
 
 impl<'a> RenderUtil<'a> {
@@ -37,11 +39,17 @@ impl<'a> RenderUtil<'a> {
             Point::new(40, 40),
             wgpu::TextureFormat::R8Unorm,
         );
+        let g_image = GTexture::new(
+            &gpu_context.device,
+            Point::new(40, 40),
+            wgpu::TextureFormat::Rgba8Unorm,
+        );
         RenderUtil {
             encoder,
             view,
             context: gpu_context,
             g_texture,
+            g_image,
         }
     }
 }
@@ -144,9 +152,9 @@ impl PaintBrush for RenderUtil<'_> {
 
     fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {
         let image_buffer =
-            self.g_texture
+            self.g_image
                 .create_bind_group(&self.context.device, &self.context.queue, image);
-        let image_vertex = TextureVertex::new(&self.context, &image_rect, ALPHA);
+        let image_vertex = ColorImageVertex::new(&self.context, image_rect, WHITE);
         image_vertex.render(self, Some(&image_buffer))
     }
 }

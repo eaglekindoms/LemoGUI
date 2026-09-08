@@ -9,6 +9,8 @@ pub struct ToggleButton<M: Clone> {
     pub button_label: Label,
     pub pressed: bool,
     pub on_change: Box<dyn Fn(bool) -> M>,
+    hover: bool,
+    armed: bool,
 }
 
 impl<M: Clone + PartialEq> ToggleButton<M> {
@@ -29,6 +31,8 @@ impl<M: Clone + PartialEq> ToggleButton<M> {
             button_label: Label::new_text_label(rect, Style::default().border(BLACK), text.into()),
             pressed: false,
             on_change: Box::new(on_change),
+            hover: false,
+            armed: false,
         }
     }
 
@@ -46,19 +50,25 @@ impl<M: Clone + PartialEq + 'static> From<ToggleButton<M>> for Component<M> {
 
 impl<M: Clone + PartialEq> ComponentModel<M> for ToggleButton<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
+        let idle = if self.pressed { LIGHT_BLUE } else { LIGHT_WHITE };
+        let hover = LIGHT_BLUE;
+        let fill = if self.armed && self.hover {
+            hover.darken(0.75)
+        } else if self.hover {
+            if self.pressed {
+                hover.darken(0.85)
+            } else {
+                hover
+            }
+        } else {
+            idle
+        };
         let label = Label::new_text_label(
             self.button_label.size,
-            if self.pressed {
-                Style::default()
-                    .back_color(LIGHT_BLUE)
-                    .border(BLACK)
-                    .font_color(BLACK)
-            } else {
-                Style::default()
-                    .back_color(LIGHT_WHITE)
-                    .border(BLACK)
-                    .font_color(BLACK)
-            },
+            Style::default()
+                .back_color(fill)
+                .border(BLACK)
+                .font_color(BLACK),
             self.button_label.text.clone().unwrap_or_default(),
         );
         label.draw(paint_brush, font_map);
@@ -70,6 +80,11 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ToggleButton<M> {
             .button_label
             .size
             .contain_coord(event_context.get_cursor_pos());
+        let prev_hover = self.hover;
+        let prev_armed = self.armed;
+        self.hover = hover;
+        sync_armed(event_context, hover, &mut self.armed);
+        let visual = self.hover != prev_hover || self.armed != prev_armed;
         if let EventType::Mouse(Mouse::Left) = g_event.event {
             if g_event.state == State::Pressed && hover {
                 self.pressed = !self.pressed;
@@ -77,6 +92,6 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ToggleButton<M> {
                 return true;
             }
         }
-        false
+        visual
     }
 }

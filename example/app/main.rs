@@ -21,6 +21,10 @@ enum DialogKind {
     OpenDoc,
     SaveDoc,
     OpenFont,
+    OpenImage {
+        display: ImageDisplay,
+        embed: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -47,6 +51,10 @@ enum Msg {
     Paste,
     SelectAll,
     AddFont,
+    InsertImage {
+        display: ImageDisplay,
+        embed: bool,
+    },
     MenuToggle(Option<usize>),
     DialogDir(String),
     DialogSelect(Option<usize>),
@@ -63,7 +71,7 @@ struct Editor {
     menu_open: Option<usize>,
     undo: Vec<Rc<RichDocument>>,
     redo: Vec<Rc<RichDocument>>,
-    clipboard: Vec<StyledChar>,
+    clipboard: Vec<RichAtom>,
     file_path: Option<String>,
     dialog: Option<DialogKind>,
     dialog_dir: String,
@@ -205,8 +213,10 @@ impl Instance for Editor {
     fn new() -> Self {
         let mut doc = RichDocument::from_plain("在此输入富文本");
         doc.current_style = TextStyle::default().with_size(16.0);
-        for ch in &mut doc.chars {
-            ch.style = doc.current_style;
+        for atom in &mut doc.atoms {
+            if let RichAtom::Char(ch) = atom {
+                ch.style = doc.current_style;
+            }
         }
         Editor {
             doc: Rc::new(doc),
@@ -237,6 +247,10 @@ impl Instance for Editor {
                 DialogKind::OpenFont => {
                     self.file_dialog(FileDialogMode::Open, Some(".ttf,.otf".into()))
                 }
+                DialogKind::OpenImage { .. } => self.file_dialog(
+                    FileDialogMode::Open,
+                    Some(".png,.jpg,.jpeg,.gif,.bmp,.webp".into()),
+                ),
             };
             return Panel::new().push(dialog);
         }
@@ -287,9 +301,45 @@ impl Instance for Editor {
             self.menu_open == Some(2),
         )
         .item_width(110);
+        let insert = Menu::new(
+            "插入",
+            Rectangle::new(168.0, 0.0, 56, menu_h),
+            vec![
+                MenuItem::new(
+                    "图片链接（行内）…",
+                    Msg::InsertImage {
+                        display: ImageDisplay::Inline,
+                        embed: false,
+                    },
+                ),
+                MenuItem::new(
+                    "图片链接（独占一行）…",
+                    Msg::InsertImage {
+                        display: ImageDisplay::Block,
+                        embed: false,
+                    },
+                ),
+                MenuItem::new(
+                    "图片文件（行内）…",
+                    Msg::InsertImage {
+                        display: ImageDisplay::Inline,
+                        embed: true,
+                    },
+                ),
+                MenuItem::new(
+                    "图片文件（独占一行）…",
+                    Msg::InsertImage {
+                        display: ImageDisplay::Block,
+                        embed: true,
+                    },
+                ),
+            ],
+            self.menu_open == Some(3),
+        )
+        .item_width(200);
         let menu_bar = MenuBar::new(
             Rectangle::new(0.0, 0.0, 900, menu_h),
-            vec![file, edit, format],
+            vec![file, edit, format, insert],
             Msg::MenuToggle,
         );
 
@@ -345,13 +395,18 @@ impl Instance for Editor {
         .action(Msg::New);
 
         let viewport = Rectangle::new(12.0, 72.0, 876, 516);
-        let area = RichTextArea::new(
+        let mut area = RichTextArea::new(
             Rectangle::new(12.0, 72.0, 860, 516),
             Rc::clone(&self.doc),
             Msg::Doc,
         )
         .clipboard(|| Msg::Copy, || Msg::Cut, || Msg::Paste)
         .scroll_state(self.scroll.clone());
+        if let Some(path) = &self.file_path {
+            if let Some(dir) = std::path::Path::new(path).parent() {
+                area = area.base_dir(dir.to_string_lossy().into_owned());
+            }
+        }
         let viewer = ScrollViewer::new(viewport, area, self.scroll.clone(), Msg::Scroll);
 
         Panel::new()
@@ -503,6 +558,10 @@ impl Instance for Editor {
                 self.menu_open = None;
             }
             Msg::AddFont => self.open_dialog(DialogKind::OpenFont),
+            Msg::InsertImage { display, embed } => self.open_dialog(DialogKind::OpenImage {
+                display: *display,
+                embed: *embed,
+            }),
             Msg::MenuToggle(open) => {
                 self.menu_open = *open;
                 if open.is_some() {
@@ -552,6 +611,17 @@ impl Instance for Editor {
                                 let id = (d.fonts.len() - 1) as u8;
                                 d.apply_to_selection(|s| s.font = id);
                             });
+                        }
+                    }
+                    Some(DialogKind::OpenImage { display, embed }) => {
+                        if embed {
+                            if let Ok(bytes) = std::fs::read(path) {
+                                let source = ImageSource::Embedded(Rc::from(bytes));
+                                self.mutate_doc(|d| d.insert_image(source, display));
+                            }
+                        } else {
+                            let source = ImageSource::Path(path.clone());
+                            self.mutate_doc(|d| d.insert_image(source, display));
                         }
                     }
                     None => {}

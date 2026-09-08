@@ -76,6 +76,9 @@ pub struct MenuBar<M: Clone> {
     pub bounds: Rectangle,
     pub menus: Vec<Menu<M>>,
     pub on_toggle: Box<dyn Fn(Option<usize>) -> M>,
+    hover_title: Option<usize>,
+    hover_item: Option<(usize, usize)>,
+    armed: bool,
 }
 
 impl<M: Clone + PartialEq> MenuBar<M> {
@@ -88,6 +91,9 @@ impl<M: Clone + PartialEq> MenuBar<M> {
             bounds,
             menus: menus.into_iter().collect(),
             on_toggle: Box::new(on_toggle),
+            hover_title: None,
+            hover_item: None,
+            armed: false,
         }
     }
 
@@ -132,18 +138,23 @@ impl<M: Clone + PartialEq> ComponentModel<M> for MenuBar<M> {
             &bar_shape,
             Style::default().back_color(LIGHT_WHITE).border(BLACK),
         );
-        for menu in &self.menus {
-            let title_style = if menu.open {
-                Style::default()
-                    .back_color(LIGHT_BLUE)
-                    .border(BLACK)
-                    .font_color(BLACK)
+        for (mi, menu) in self.menus.iter().enumerate() {
+            let title_hover = self.hover_title == Some(mi);
+            let title_fill = if menu.open {
+                pointer_fill(
+                    &Style::default()
+                        .back_color(LIGHT_BLUE)
+                        .hover_color(LIGHT_BLUE),
+                    title_hover,
+                    self.armed,
+                )
             } else {
-                Style::default()
-                    .back_color(LIGHT_WHITE)
-                    .border(BLACK)
-                    .font_color(BLACK)
+                pointer_fill(&Style::default(), title_hover, self.armed)
             };
+            let title_style = Style::default()
+                .back_color(title_fill)
+                .border(BLACK)
+                .font_color(BLACK);
             let title_shape: Box<dyn ShapeGraph> = Box::new(menu.bounds);
             paint_brush.draw_shape(&title_shape, title_style);
             paint_brush.draw_text(
@@ -158,7 +169,12 @@ impl<M: Clone + PartialEq> ComponentModel<M> for MenuBar<M> {
                 paint_brush.draw_shape(&bg, Style::default().back_color(WHITE).border(BLACK));
                 for (i, item) in menu.items.iter().enumerate() {
                     let row = menu.item_rect(i);
-                    let row_style = Style::default().back_color(WHITE).font_color(BLACK);
+                    let fill = pointer_fill(
+                        &Style::default().back_color(WHITE).hover_color(LIGHT_BLUE),
+                        self.hover_item == Some((mi, i)),
+                        self.armed,
+                    );
+                    let row_style = Style::default().back_color(fill).font_color(BLACK);
                     let row_shape: Box<dyn ShapeGraph> = Box::new(row);
                     paint_brush.draw_shape(&row_shape, row_style);
                     paint_brush.draw_text(
@@ -177,6 +193,19 @@ impl<M: Clone + PartialEq> ComponentModel<M> for MenuBar<M> {
         let cursor = event_context.get_cursor_pos();
         let on_title = self.hit_title(cursor);
         let on_item = self.hit_item(cursor);
+        let prev_title = self.hover_title;
+        let prev_item = self.hover_item;
+        let prev_armed = self.armed;
+        self.hover_title = on_title;
+        self.hover_item = on_item;
+        sync_armed(
+            event_context,
+            on_title.is_some() || on_item.is_some(),
+            &mut self.armed,
+        );
+        let visual = self.hover_title != prev_title
+            || self.hover_item != prev_item
+            || self.armed != prev_armed;
 
         if let EventType::Mouse(Mouse::Left) = g_event.event {
             if g_event.state == State::Pressed {
@@ -201,6 +230,6 @@ impl<M: Clone + PartialEq> ComponentModel<M> for MenuBar<M> {
                 }
             }
         }
-        false
+        visual
     }
 }

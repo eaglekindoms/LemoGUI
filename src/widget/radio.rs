@@ -12,6 +12,8 @@ pub struct RadioGroup<M: Clone> {
     pub selected: usize,
     /// 选中项变化回调
     pub on_change: Box<dyn Fn(usize) -> M>,
+    hover_index: Option<usize>,
+    armed: bool,
 }
 
 impl<M: Clone + PartialEq> RadioGroup<M> {
@@ -43,6 +45,8 @@ impl<M: Clone + PartialEq> RadioGroup<M> {
             options: option_rects.into_iter().zip(labels).collect(),
             selected: 0,
             on_change: Box::new(on_change),
+            hover_index: None,
+            armed: false,
         }
     }
 
@@ -66,10 +70,16 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RadioGroup<M> {
                 rect.position.y + rect.height as f32 / 2.0,
                 rect.width as f32 / 2.0,
             );
+            let hover = self.hover_index == Some(i);
+            let fill = pointer_fill(
+                &Style::default().back_color(WHITE).hover_color(LIGHT_BLUE),
+                hover,
+                self.armed,
+            );
             let outer_shape: Box<dyn ShapeGraph> = Box::new(circle);
             paint_brush.draw_shape(
                 &outer_shape,
-                Style::default().back_color(WHITE).border(BLACK),
+                Style::default().back_color(fill).border(BLACK),
             );
             if i == self.selected {
                 let inner = Circle::new(
@@ -90,12 +100,18 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RadioGroup<M> {
     fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
         let g_event = event_context.get_event();
         let cursor = event_context.get_cursor_pos();
+        let hover_index = self.options.iter().position(|(rect, label)| {
+            rect.contain_coord(cursor) || label.size.contain_coord(cursor)
+        });
+        let prev_hover = self.hover_index;
+        let prev_armed = self.armed;
+        self.hover_index = hover_index;
+        sync_armed(event_context, hover_index.is_some(), &mut self.armed);
+        let visual = self.hover_index != prev_hover || self.armed != prev_armed;
         if let EventType::Mouse(Mouse::Left) = g_event.event {
             if g_event.state == State::Pressed {
-                for (i, (rect, label)) in self.options.iter().enumerate() {
-                    if (rect.contain_coord(cursor) || label.size.contain_coord(cursor))
-                        && i != self.selected
-                    {
+                if let Some(i) = hover_index {
+                    if i != self.selected {
                         self.selected = i;
                         event_context.send_message((self.on_change)(i));
                         return true;
@@ -103,8 +119,6 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RadioGroup<M> {
                 }
             }
         }
-        self.options
-            .iter()
-            .any(|(rect, label)| rect.contain_coord(cursor) || label.size.contain_coord(cursor))
+        visual
     }
 }

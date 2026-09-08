@@ -8,6 +8,8 @@ use crate::graphic::style::Style;
 pub enum ShapeType {
     /// 纹理
     TEXTURE,
+    /// 彩色图像
+    IMAGE,
     /// 圆角
     ROUND,
     /// 线框

@@ -14,6 +14,8 @@ pub struct Checkbox<M: Clone> {
     pub checked: bool,
     /// 状态变化回调
     pub on_change: Box<dyn Fn(bool) -> M>,
+    hover: bool,
+    armed: bool,
 }
 
 impl<M: Clone + PartialEq> Checkbox<M> {
@@ -35,6 +37,8 @@ impl<M: Clone + PartialEq> Checkbox<M> {
             text_label: Label::new_text_label(text_rect, Style::default(), text),
             checked: false,
             on_change: Box::new(on_change),
+            hover: false,
+            armed: false,
         }
     }
 
@@ -53,6 +57,8 @@ impl<M: Clone + PartialEq> Checkbox<M> {
             text_label: Label::new_text_label(text_rect, style, text.into()),
             checked: false,
             on_change: Box::new(on_change),
+            hover: false,
+            armed: false,
         }
     }
 
@@ -74,7 +80,12 @@ impl<M: Clone + PartialEq + 'static> From<Checkbox<M>> for Component<M> {
 
 impl<M: Clone + PartialEq> ComponentModel<M> for Checkbox<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
-        let box_style = Style::default().border(BLACK).back_color(WHITE);
+        let fill = pointer_fill(
+            &Style::default().back_color(WHITE).hover_color(LIGHT_BLUE),
+            self.hover,
+            self.armed,
+        );
+        let box_style = Style::default().border(BLACK).back_color(fill);
         let shape: Box<dyn ShapeGraph> = Box::new(self.box_rect);
         paint_brush.draw_shape(&shape, box_style);
         if self.checked {
@@ -93,6 +104,11 @@ impl<M: Clone + PartialEq> ComponentModel<M> for Checkbox<M> {
     fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
         let g_event = event_context.get_event();
         let hover = self.is_hover(event_context.get_cursor_pos());
+        let prev_hover = self.hover;
+        let prev_armed = self.armed;
+        self.hover = hover;
+        sync_armed(event_context, hover, &mut self.armed);
+        let visual = self.hover != prev_hover || self.armed != prev_armed;
         if let EventType::Mouse(Mouse::Left) = g_event.event {
             if g_event.state == State::Pressed && hover {
                 self.checked = !self.checked;
@@ -100,6 +116,6 @@ impl<M: Clone + PartialEq> ComponentModel<M> for Checkbox<M> {
                 return true;
             }
         }
-        hover
+        visual
     }
 }

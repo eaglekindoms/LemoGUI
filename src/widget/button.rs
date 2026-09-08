@@ -14,6 +14,7 @@ pub struct Button<M: Clone> {
     pub button_label: Label,
     /// 控件状态
     pub bind_event: BindEvent<M>,
+    armed: bool,
 }
 
 impl<'a, M: Clone + PartialEq> Button<M> {
@@ -21,6 +22,7 @@ impl<'a, M: Clone + PartialEq> Button<M> {
         Self {
             button_label: Label::new_text_label(rect, style, text.into()),
             bind_event: BindEvent::default(),
+            armed: false,
         }
     }
 
@@ -31,6 +33,7 @@ impl<'a, M: Clone + PartialEq> Button<M> {
         Self {
             button_label: Label::new_text_label(rect, style, text),
             bind_event: BindEvent::default(),
+            armed: false,
         }
     }
 
@@ -51,16 +54,14 @@ impl<'a, M: Clone + PartialEq> Button<M> {
         }
         false
     }
-    fn action_listener(&mut self, event_context: &mut dyn EventContext<M>, mouse: Mouse) -> bool {
-        if mouse == self.bind_event.mouse {
-            return component::action_animation(
-                event_context,
-                &mut self.button_label.style,
-                &self.button_label.size,
-                self.bind_event.message.clone(),
-            );
-        }
-        false
+    fn action_listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
+        action_animation(
+            event_context,
+            &mut self.button_label.style,
+            &self.button_label.size,
+            self.bind_event.message.clone(),
+            &mut self.armed,
+        )
     }
 }
 
@@ -79,11 +80,14 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Button<M> {
         let mut mouse_listener = false;
         let g_event = event_context.get_event();
         match g_event.event {
-            EventType::Mouse(mouse) => {
-                mouse_listener = self.action_listener(event_context, mouse);
+            EventType::Mouse(mouse) if mouse == self.bind_event.mouse => {
+                mouse_listener = self.action_listener(event_context);
             }
             EventType::KeyBoard(key_code) => {
                 key_listener = self.key_listener(event_context, key_code);
+            }
+            EventType::Other => {
+                mouse_listener = self.action_listener(event_context);
             }
             _ => {}
         }

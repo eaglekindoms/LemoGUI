@@ -31,6 +31,7 @@ impl PipelineState {
         glob_pipeline.set_pipeline::<CircleVertex>(device);
         glob_pipeline.set_pipeline::<PointVertex>(device);
         glob_pipeline.set_pipeline::<TextureVertex>(device);
+        glob_pipeline.set_pipeline::<ColorImageVertex>(device);
         glob_pipeline
     }
     /// 创建渲染管道

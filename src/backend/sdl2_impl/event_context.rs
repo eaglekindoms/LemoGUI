@@ -163,6 +163,11 @@ where
         }
         container.commit();
         if dirty {
+            event_context.set_event(GEvent {
+                event: EventType::Other,
+                state: State::None,
+            });
+            container.listener(&mut event_context);
             gpu_context.present(&mut container, &mut font_map);
             if let Some((pos, h)) = container.ime_caret() {
                 event_context.set_ime_position(pos, h);

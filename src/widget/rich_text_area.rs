@@ -1,4 +1,6 @@
 use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
+use std::path::Path;
 use std::rc::Rc;
 
 use crate::event::*;
@@ -9,6 +11,8 @@ use crate::widget::*;
 
 const PAD: f32 = 8.0;
 const LINE_GAP: f32 = 4.0;
+const HANDLE: f32 = 10.0;
+const MIN_IMG: f32 = 24.0;
 
 #[derive(Clone, Copy)]
 struct GlyphPos {
@@ -17,6 +21,14 @@ struct GlyphPos {
     y: f32,
     w: f32,
     h: f32,
+}
+
+#[derive(Clone, Copy)]
+struct ResizeDrag {
+    index: usize,
+    start_x: f32,
+    start_w: f32,
+    live_w: f32,
 }
 
 /// 多行富文本编辑区（文档快照用 Rc，拖选等瞬时状态留在 Cell）
@@ -32,10 +44,13 @@ pub struct RichTextArea<M: Clone> {
     sel_anchor: Cell<Option<usize>>,
     is_focus: Cell<bool>,
     dragging: Cell<bool>,
+    resize: Cell<Option<ResizeDrag>>,
     layout_cache: RefCell<Vec<GlyphPos>>,
     layout_from: RefCell<Option<Rc<RichDocument>>>,
     layout_width: Cell<f32>,
     content_h: Cell<f32>,
+    base_dir: Option<String>,
+    image_cache: RefCell<HashMap<String, Option<ImageRaw>>>,
 }
 
 impl<M: Clone + PartialEq> RichTextArea<M> {
@@ -48,6 +63,7 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
             sel_anchor: Cell::new(doc.sel_anchor),
             is_focus: Cell::new(doc.is_focus),
             dragging: Cell::new(false),
+            resize: Cell::new(None),
             bounds,
             doc,
             on_change: Box::new(on_change),
@@ -59,11 +75,21 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
             layout_from: RefCell::new(None),
             layout_width: Cell::new(0.0),
             content_h: Cell::new(0.0),
+            base_dir: None,
+            image_cache: RefCell::new(HashMap::new()),
         }
     }
 
     pub fn scroll_state(mut self, state: Rc<ScrollState>) -> Self {
         self.scroll = Some(state);
+        self
+    }
+
+    pub fn base_dir(mut self, dir: impl Into<String>) -> Self {
+        let dir = dir.into();
+        if !dir.is_empty() {
+            self.base_dir = Some(dir);
+        }
         self
     }
 
@@ -120,7 +146,7 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
 
     fn selection(&self) -> Option<(usize, usize)> {
         let a = self.sel_anchor.get()?;
-        let len = self.doc.chars.len();
+        let len = self.doc.len();
         let caret = self.caret.get().min(len);
         let lo = a.min(caret).min(len);
         let hi = a.max(caret).min(len);
@@ -150,59 +176,143 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
                 .unwrap_or(false)
     }
 
+    fn resolve_image_path(&self, path: &str) -> String {
+        let p = Path::new(path);
+        if p.is_absolute() {
+            return path.to_string();
+        }
+        match &self.base_dir {
+            Some(dir) => Path::new(dir).join(p).to_string_lossy().into_owned(),
+            None => path.to_string(),
+        }
+    }
+
+    fn image_cache_key(img: &RichImage) -> String {
+        match &img.source {
+            ImageSource::Path(p) => format!("p:{p}"),
+            ImageSource::Embedded(b) => format!("e:{:p}", Rc::as_ptr(b)),
+        }
+    }
+
+    fn decode_image(&self, img: &RichImage) -> Option<ImageRaw> {
+        let key = Self::image_cache_key(img);
+        if let Some(cached) = self.image_cache.borrow().get(&key) {
+            return cached.clone();
+        }
+        let decoded = match &img.source {
+            ImageSource::Path(p) => ImageRaw::try_from_path(&self.resolve_image_path(p)),
+            ImageSource::Embedded(b) => ImageRaw::try_from_bytes(b),
+        };
+        self.image_cache.borrow_mut().insert(key, decoded.clone());
+        decoded
+    }
+
+    fn image_extent(&self, index: usize, img: &RichImage, max_w: f32) -> (f32, f32) {
+        let (ow, oh) = match self.decode_image(img) {
+            Some(raw) => (raw.width.max(1) as f32, raw.height.max(1) as f32),
+            None => (120.0, 80.0),
+        };
+        let cap = max_w.max(MIN_IMG);
+        let mut w = img.width.unwrap_or(ow.min(cap));
+        if let Some(drag) = self.resize.get() {
+            if drag.index == index {
+                w = drag.live_w;
+            }
+        }
+        w = w.clamp(MIN_IMG, cap);
+        let h = oh * (w / ow);
+        (w, h)
+    }
+
     fn relayout(&self, font_map: &mut GCharMap) -> (Vec<GlyphPos>, f32) {
         self.sync_fonts(font_map);
         let max_w = self.content_width();
-        let mut out = Vec::with_capacity(self.doc.chars.len() + 1);
+        let mut out = Vec::with_capacity(self.doc.len() + 1);
         let mut x = 0.0f32;
         let mut y = 0.0f32;
         let mut line_h = 0.0f32;
 
-        for (i, sc) in self.doc.chars.iter().enumerate() {
-            if sc.ch == '\n' {
-                let h = line_h.max(sc.style.size);
-                out.push(GlyphPos {
-                    index: i,
-                    x,
-                    y,
-                    w: 0.0,
-                    h,
-                });
-                y += h + LINE_GAP;
-                x = 0.0;
-                line_h = 0.0;
-                continue;
+        for (i, atom) in self.doc.atoms.iter().enumerate() {
+            match atom {
+                RichAtom::Image(img) if img.display == ImageDisplay::Block => {
+                    if x > 0.0 {
+                        y += line_h + LINE_GAP;
+                    }
+                    let (w, h) = self.image_extent(i, img, max_w);
+                    out.push(GlyphPos {
+                        index: i,
+                        x: 0.0,
+                        y,
+                        w,
+                        h,
+                    });
+                    y += h + LINE_GAP;
+                    x = 0.0;
+                    line_h = 0.0;
+                }
+                RichAtom::Image(img) => {
+                    let (w, h) = self.image_extent(i, img, max_w);
+                    if x + w > max_w && x > 0.0 {
+                        y += line_h + LINE_GAP;
+                        x = 0.0;
+                        line_h = 0.0;
+                    }
+                    out.push(GlyphPos {
+                        index: i,
+                        x,
+                        y,
+                        w,
+                        h,
+                    });
+                    x += w;
+                    line_h = line_h.max(h);
+                }
+                RichAtom::Char(sc) if sc.ch == '\n' => {
+                    let h = line_h.max(sc.style.size);
+                    out.push(GlyphPos {
+                        index: i,
+                        x,
+                        y,
+                        w: 0.0,
+                        h,
+                    });
+                    y += h + LINE_GAP;
+                    x = 0.0;
+                    line_h = 0.0;
+                }
+                RichAtom::Char(sc) => {
+                    let m = font_map.metrics_font(sc.ch, sc.style.size, sc.style.font);
+                    let mut w = m.advance as f32;
+                    if sc.style.bold {
+                        w += 1.0;
+                    }
+                    let h = m.scale as f32;
+                    if x + w > max_w && x > 0.0 {
+                        y += line_h + LINE_GAP;
+                        x = 0.0;
+                        line_h = 0.0;
+                    }
+                    out.push(GlyphPos {
+                        index: i,
+                        x,
+                        y,
+                        w,
+                        h,
+                    });
+                    x += w;
+                    line_h = line_h.max(h);
+                }
             }
-            let m = font_map.metrics_font(sc.ch, sc.style.size, sc.style.font);
-            let mut w = m.advance as f32;
-            if sc.style.bold {
-                w += 1.0;
-            }
-            let h = m.scale as f32;
-            if x + w > max_w && x > 0.0 {
-                y += line_h + LINE_GAP;
-                x = 0.0;
-                line_h = 0.0;
-            }
-            out.push(GlyphPos {
-                index: i,
-                x,
-                y,
-                w,
-                h,
-            });
-            x += w;
-            line_h = line_h.max(h);
         }
         let end_h = line_h.max(self.doc.current_style.size);
         out.push(GlyphPos {
-            index: self.doc.chars.len(),
+            index: self.doc.len(),
             x,
             y,
             w: 0.0,
             h: end_h,
         });
-        apply_line_align(&mut out, &self.doc.chars, max_w);
+        apply_line_align(&mut out, &self.doc.atoms, max_w);
         let content_h = y + end_h + PAD;
         (out, content_h)
     }
@@ -259,7 +369,7 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
             if d < best_d {
                 best_d = d;
                 if local.x > g.x + g.w * 0.5 {
-                    best_index = (g.index + 1).min(self.doc.chars.len());
+                    best_index = (g.index + 1).min(self.doc.len());
                 } else {
                     best_index = g.index;
                 }
@@ -308,7 +418,7 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
                 best = g.index;
             }
         }
-        self.caret.set(best.min(self.doc.chars.len()));
+        self.caret.set(best.min(self.doc.len()));
         self.sel_anchor.set(None);
     }
 
@@ -327,9 +437,9 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
             if self.sel_anchor.get().is_none() {
                 self.sel_anchor.set(Some(self.caret.get()));
             }
-            self.caret.set(idx.min(self.doc.chars.len()));
+            self.caret.set(idx.min(self.doc.len()));
         } else {
-            self.caret.set(idx.min(self.doc.chars.len()));
+            self.caret.set(idx.min(self.doc.len()));
             self.sel_anchor.set(None);
         }
     }
@@ -349,6 +459,98 @@ impl<M: Clone + PartialEq> RichTextArea<M> {
     fn sync_ime(&self, event_context: &mut dyn EventContext<M>) {
         let (pos, h) = self.caret_screen();
         event_context.set_ime_position(pos, h);
+    }
+
+    fn image_selected(&self, index: usize) -> bool {
+        if !self.is_focus.get() {
+            return false;
+        }
+        if self.caret.get() == index {
+            return true;
+        }
+        self.selection()
+            .map(|(lo, hi)| index >= lo && index < hi)
+            .unwrap_or(false)
+    }
+
+    fn glyph_screen_rect(&self, g: &GlyphPos) -> Rectangle {
+        let origin = self.origin();
+        let scroll = self.scroll_px(self.content_h.get());
+        Rectangle::new(
+            origin.x + g.x,
+            origin.y + g.y - scroll,
+            g.w.max(1.0) as u32,
+            g.h.max(1.0) as u32,
+        )
+    }
+
+    fn handle_rect(img: &Rectangle) -> Rectangle {
+        let s = HANDLE as u32;
+        Rectangle::new(
+            img.position.x + img.width as f32 - HANDLE,
+            img.position.y + img.height as f32 - HANDLE,
+            s,
+            s,
+        )
+    }
+
+    fn hit_resize_handle(&self, cursor: Point<f32>) -> Option<usize> {
+        let layout = self.layout_cache.borrow();
+        for g in layout.iter() {
+            if g.index >= self.doc.len() {
+                continue;
+            }
+            if !matches!(self.doc.atoms.get(g.index), Some(RichAtom::Image(_))) {
+                continue;
+            }
+            if !self.visible(g, self.content_h.get()) {
+                continue;
+            }
+            let img = self.glyph_screen_rect(g);
+            if Self::handle_rect(&img).contain_coord(cursor) {
+                return Some(g.index);
+            }
+        }
+        None
+    }
+
+    fn hit_image(&self, cursor: Point<f32>) -> Option<(usize, f32)> {
+        let layout = self.layout_cache.borrow();
+        for g in layout.iter() {
+            if g.index >= self.doc.len() {
+                continue;
+            }
+            if !matches!(self.doc.atoms.get(g.index), Some(RichAtom::Image(_))) {
+                continue;
+            }
+            if !self.visible(g, self.content_h.get()) {
+                continue;
+            }
+            if self.glyph_screen_rect(g).contain_coord(cursor) {
+                return Some((g.index, g.w));
+            }
+        }
+        None
+    }
+
+    fn apply_resize(&self, cursor: Point<f32>) {
+        let Some(mut drag) = self.resize.get() else {
+            return;
+        };
+        let cap = self.content_width().max(MIN_IMG);
+        drag.live_w = (drag.start_w + cursor.x - drag.start_x).clamp(MIN_IMG, cap);
+        self.resize.set(Some(drag));
+        *self.layout_from.borrow_mut() = None;
+    }
+
+    fn commit_resize(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
+        let Some(drag) = self.resize.take() else {
+            return false;
+        };
+        *self.layout_from.borrow_mut() = None;
+        self.edit(|d| d.set_image_width(drag.index, drag.live_w));
+        self.emit(event_context);
+        true
     }
 }
 
@@ -395,40 +597,73 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
         let mut i = 0;
         while i < layout.len() {
             let g = layout[i];
-            if g.index >= self.doc.chars.len() {
+            if g.index >= self.doc.len() {
                 break;
             }
-            let sc = &self.doc.chars[g.index];
-            if sc.ch == '\n' || !self.visible(&g, content_h) {
-                i += 1;
-                continue;
-            }
-            let style = sc.style;
-            let line_y = g.y;
-            let start_x = g.x;
-            let mut text = String::new();
-            while i < layout.len() {
-                let gi = layout[i];
-                if gi.index >= self.doc.chars.len() {
-                    break;
+            match &self.doc.atoms[g.index] {
+                RichAtom::Image(img) => {
+                    if self.visible(&g, content_h) {
+                        let rect = Rectangle::new(
+                            origin.x + g.x,
+                            origin.y + g.y - scroll,
+                            g.w.max(1.0) as u32,
+                            g.h.max(1.0) as u32,
+                        );
+                        if let Some(raw) = self.decode_image(img) {
+                            paint_brush.draw_image(&rect, raw);
+                        } else {
+                            let shape: Box<dyn ShapeGraph> = Box::new(rect);
+                            paint_brush.draw_shape(
+                                &shape,
+                                Style::default().back_color(LIGHT_WHITE).border(BLACK),
+                            );
+                        }
+                        if self.image_selected(g.index) {
+                            let handle = Self::handle_rect(&rect);
+                            let hs: Box<dyn ShapeGraph> = Box::new(handle);
+                            paint_brush.draw_shape(
+                                &hs,
+                                Style::default().back_color(BLACK).no_border(),
+                            );
+                        }
+                    }
+                    i += 1;
                 }
-                let sci = &self.doc.chars[gi.index];
-                if sci.ch == '\n' || sci.style != style || (gi.y - line_y).abs() > 0.1 {
-                    break;
+                RichAtom::Char(sc) if sc.ch == '\n' || !self.visible(&g, content_h) => {
+                    i += 1;
                 }
-                if !self.visible(&gi, content_h) {
-                    break;
+                RichAtom::Char(sc) => {
+                    let style = sc.style;
+                    let line_y = g.y;
+                    let start_x = g.x;
+                    let mut text = String::new();
+                    while i < layout.len() {
+                        let gi = layout[i];
+                        if gi.index >= self.doc.len() {
+                            break;
+                        }
+                        match &self.doc.atoms[gi.index] {
+                            RichAtom::Char(sci)
+                                if sci.ch != '\n'
+                                    && sci.style == style
+                                    && (gi.y - line_y).abs() <= 0.1
+                                    && self.visible(&gi, content_h) =>
+                            {
+                                text.push(sci.ch);
+                                i += 1;
+                            }
+                            _ => break,
+                        }
+                    }
+                    if !text.is_empty() {
+                        paint_brush.draw_styled_text(
+                            font_map,
+                            Point::new(origin.x + start_x, origin.y + line_y - scroll),
+                            &text,
+                            style,
+                        );
+                    }
                 }
-                text.push(sci.ch);
-                i += 1;
-            }
-            if !text.is_empty() {
-                paint_brush.draw_styled_text(
-                    font_map,
-                    Point::new(origin.x + start_x, origin.y + line_y - scroll),
-                    &text,
-                    style,
-                );
             }
         }
 
@@ -472,6 +707,32 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                 if g_event.state == State::Pressed {
                     if hover {
                         self.is_focus.set(true);
+                        if let Some(idx) = self.hit_resize_handle(cursor) {
+                            let w = self
+                                .hit_image(cursor)
+                                .map(|(_, w)| w)
+                                .unwrap_or(MIN_IMG);
+                            self.resize.set(Some(ResizeDrag {
+                                index: idx,
+                                start_x: cursor.x,
+                                start_w: w,
+                                live_w: w,
+                            }));
+                            self.dragging.set(false);
+                            self.sel_anchor.set(Some(idx));
+                            self.caret.set(idx + 1);
+                            return true;
+                        }
+                        if let Some((idx, _)) = self.hit_image(cursor) {
+                            self.resize.set(None);
+                            self.dragging.set(false);
+                            self.sel_anchor.set(Some(idx));
+                            self.caret.set(idx + 1);
+                            self.sync_ime(event_context);
+                            self.sync_and_emit(event_context);
+                            return true;
+                        }
+                        self.resize.set(None);
                         self.dragging.set(true);
                         self.apply_pointer(cursor, false);
                         self.sel_anchor.set(Some(self.caret.get()));
@@ -481,15 +742,21 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                     if self.is_focus.get() {
                         self.is_focus.set(false);
                         self.dragging.set(false);
+                        self.resize.set(None);
                         self.sync_and_emit(event_context);
                     }
                     return false;
-                } else if g_event.state == State::Released && self.dragging.get() {
-                    self.apply_pointer(cursor, true);
-                    self.dragging.set(false);
-                    self.sync_ime(event_context);
-                    self.sync_and_emit(event_context);
-                    return true;
+                } else if g_event.state == State::Released {
+                    if self.commit_resize(event_context) {
+                        return true;
+                    }
+                    if self.dragging.get() {
+                        self.apply_pointer(cursor, true);
+                        self.dragging.set(false);
+                        self.sync_ime(event_context);
+                        self.sync_and_emit(event_context);
+                        return true;
+                    }
                 }
             }
             EventType::ReceivedCharacter(c) if self.is_focus.get() => {
@@ -535,7 +802,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                     }
                     KeyCode::Right => {
                         let c = self.caret.get();
-                        if c < self.doc.chars.len() {
+                        if c < self.doc.len() {
                             self.caret.set(c + 1);
                             self.sel_anchor.set(None);
                             self.sync_ime(event_context);
@@ -578,6 +845,10 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
                     _ => {}
                 }
             }
+            EventType::Other if self.resize.get().is_some() => {
+                self.apply_resize(cursor);
+                return true;
+            }
             EventType::Other if self.dragging.get() && self.is_focus.get() => {
                 self.apply_pointer(cursor, true);
                 self.sync_ime(event_context);
@@ -589,7 +860,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for RichTextArea<M> {
     }
 }
 
-fn apply_line_align(layout: &mut [GlyphPos], chars: &[StyledChar], max_w: f32) {
+fn apply_line_align(layout: &mut [GlyphPos], atoms: &[RichAtom], max_w: f32) {
     let mut i = 0;
     while i < layout.len() {
         let line_y = layout[i].y;
@@ -598,10 +869,10 @@ fn apply_line_align(layout: &mut [GlyphPos], chars: &[StyledChar], max_w: f32) {
             i += 1;
         }
         let first = layout[start].index;
-        let align = chars
-            .get(first)
-            .map(|c| c.style.align)
-            .unwrap_or(Align::Left);
+        let align = match atoms.get(first) {
+            Some(RichAtom::Char(c)) => c.style.align,
+            _ => Align::Left,
+        };
         let mut line_w = 0.0f32;
         for g in &layout[start..i] {
             line_w = line_w.max(g.x + g.w);

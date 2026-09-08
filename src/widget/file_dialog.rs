@@ -42,6 +42,11 @@ pub struct FileDialog<M: Clone> {
     on_dir: Box<dyn Fn(String) -> M>,
     on_select: Box<dyn Fn(Option<usize>) -> M>,
     on_filename: Box<dyn Fn(String) -> M>,
+    hover_row: Option<usize>,
+    hover_confirm: bool,
+    hover_cancel: bool,
+    hover_filename: bool,
+    armed: bool,
 }
 
 impl<M: Clone + PartialEq> FileDialog<M> {
@@ -77,6 +82,11 @@ impl<M: Clone + PartialEq> FileDialog<M> {
             on_dir: Box::new(on_dir),
             on_select: Box::new(on_select),
             on_filename: Box::new(on_filename),
+            hover_row: None,
+            hover_confirm: false,
+            hover_cancel: false,
+            hover_filename: false,
+            armed: false,
         }
     }
 
@@ -174,6 +184,17 @@ impl<M: Clone + PartialEq> FileDialog<M> {
         )
     }
 
+    fn hit_row(&self, cursor: Point<f32>, entries: &[DirEntry]) -> Option<usize> {
+        let list = self.list_rect();
+        if !list.contain_coord(cursor) {
+            return None;
+        }
+        let offset = self.list_offset(entries.len());
+        let vis_i = ((cursor.y - list.position.y) as u32 / ROW_H.max(1)) as usize;
+        let abs = offset + vis_i;
+        (abs < entries.len()).then_some(abs)
+    }
+
     fn confirm_path(&self, entries: &[DirEntry]) -> Option<String> {
         match self.mode {
             FileDialogMode::Open => {
@@ -258,12 +279,18 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
             .enumerate()
         {
             let row = self.row_rect(vi);
-            let selected = self.selected == Some(abs);
-            let style = if selected {
-                Style::default().back_color(LIGHT_BLUE).font_color(BLACK)
+            let hover = self.hover_row == Some(abs);
+            let idle = if self.selected == Some(abs) {
+                LIGHT_BLUE
             } else {
-                Style::default().back_color(WHITE).font_color(BLACK)
+                WHITE
             };
+            let fill = pointer_fill(
+                &Style::default().back_color(idle).hover_color(LIGHT_BLUE),
+                hover,
+                self.armed,
+            );
+            let style = Style::default().back_color(fill).font_color(BLACK);
             let row_shape: Box<dyn ShapeGraph> = Box::new(row);
             paint_brush.draw_shape(&row_shape, style);
             let label = match entry.kind {
@@ -276,29 +303,36 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
 
         if self.mode == FileDialogMode::Save {
             let fr = self.filename_rect();
+            let fill = pointer_fill(
+                &Style::default().back_color(WHITE).hover_color(LIGHT_BLUE),
+                self.hover_filename,
+                self.armed,
+            );
             let fr_shape: Box<dyn ShapeGraph> = Box::new(fr);
             paint_brush.draw_shape(
                 &fr_shape,
-                Style::default().back_color(WHITE).border(BLACK),
+                Style::default().back_color(fill).border(BLACK),
             );
             paint_brush.draw_text(font_map, &fr, &self.filename, BLACK);
         }
 
+        let ok_fill = pointer_fill(&Style::default(), self.hover_confirm, self.armed);
         let ok: Box<dyn ShapeGraph> = Box::new(self.confirm_rect());
         paint_brush.draw_shape(
             &ok,
             Style::default()
-                .back_color(LIGHT_WHITE)
+                .back_color(ok_fill)
                 .border(BLACK)
                 .font_color(BLACK),
         );
         paint_brush.draw_text(font_map, &self.confirm_rect(), "确定", BLACK);
 
+        let cancel_fill = pointer_fill(&Style::default(), self.hover_cancel, self.armed);
         let cancel: Box<dyn ShapeGraph> = Box::new(self.cancel_rect());
         paint_brush.draw_shape(
             &cancel,
             Style::default()
-                .back_color(LIGHT_WHITE)
+                .back_color(cancel_fill)
                 .border(BLACK)
                 .font_color(BLACK),
         );
@@ -309,27 +343,46 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
         let g_event = event_context.get_event();
         let cursor = event_context.get_cursor_pos();
         let on_overlay = self.bounds.contain_coord(cursor);
+        let entries = self.list_entries();
+        let on_row = self.hit_row(cursor, &entries);
+        let on_confirm = self.confirm_rect().contain_coord(cursor);
+        let on_cancel = self.cancel_rect().contain_coord(cursor);
+        let on_filename =
+            self.mode == FileDialogMode::Save && self.filename_rect().contain_coord(cursor);
+
+        let prev_row = self.hover_row;
+        let prev_confirm = self.hover_confirm;
+        let prev_cancel = self.hover_cancel;
+        let prev_filename = self.hover_filename;
+        let prev_armed = self.armed;
+        self.hover_row = on_row;
+        self.hover_confirm = on_confirm;
+        self.hover_cancel = on_cancel;
+        self.hover_filename = on_filename;
+        sync_armed(
+            event_context,
+            on_row.is_some() || on_confirm || on_cancel || on_filename,
+            &mut self.armed,
+        );
+        let visual = self.hover_row != prev_row
+            || self.hover_confirm != prev_confirm
+            || self.hover_cancel != prev_cancel
+            || self.hover_filename != prev_filename
+            || self.armed != prev_armed;
 
         match g_event.event {
             EventType::Mouse(Mouse::Left) if g_event.state == State::Pressed => {
-                if self.confirm_rect().contain_coord(cursor) {
-                    let entries = self.list_entries();
+                if on_confirm {
                     if let Some(path) = self.confirm_path(&entries) {
                         event_context.send_message((self.on_confirm)(path));
                     }
                     return true;
                 }
-                if self.cancel_rect().contain_coord(cursor) {
+                if on_cancel {
                     event_context.send_message((self.on_cancel)());
                     return true;
                 }
-                let list = self.list_rect();
-                if list.contain_coord(cursor) {
-                    let entries = self.list_entries();
-                    let offset = self.list_offset(entries.len());
-                    let rel_y = cursor.y - list.position.y;
-                    let vis_i = (rel_y as u32 / ROW_H.max(1)) as usize;
-                    let abs = offset + vis_i;
+                if let Some(abs) = on_row {
                     if let Some(entry) = entries.get(abs) {
                         match entry.kind {
                             EntryKind::Parent | EntryKind::Dir => {
@@ -342,7 +395,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
                     }
                     return true;
                 }
-                return on_overlay;
+                return on_overlay || visual;
             }
             EventType::ReceivedCharacter(c) if self.mode == FileDialogMode::Save => {
                 if c == '\u{8}' || c == '\u{7f}' || c == '\r' || c.is_control() {
@@ -364,7 +417,6 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
             EventType::KeyBoard(Some(KeyCode::Return | KeyCode::NumpadEnter))
                 if g_event.state == State::Pressed =>
             {
-                let entries = self.list_entries();
                 if let Some(path) = self.confirm_path(&entries) {
                     event_context.send_message((self.on_confirm)(path));
                 }
@@ -372,7 +424,7 @@ impl<M: Clone + PartialEq> ComponentModel<M> for FileDialog<M> {
             }
             _ => {}
         }
-        false
+        visual
     }
 }
 

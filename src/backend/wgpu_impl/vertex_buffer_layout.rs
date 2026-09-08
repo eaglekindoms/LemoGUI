@@ -69,7 +69,7 @@ pub trait VertexLayout: Sized {
 /// 由形状类型获取指定的索引模式
 fn get_fill_topology_by_type(shape_type: ShapeType) -> PrimitiveTopology {
     match shape_type {
-        ShapeType::TEXTURE => TriangleStrip,
+        ShapeType::TEXTURE | ShapeType::IMAGE => TriangleStrip,
         ShapeType::ROUND => TriangleStrip,
         ShapeType::BORDER => LineStrip,
         ShapeType::POINT => TriangleList,

@@ -31,4 +31,9 @@ impl RGBA {
     pub fn to_vec(&self) -> [f32; 4] {
         [self.0, self.1, self.2, self.3]
     }
+
+    /// 压暗 RGB，alpha 不变
+    pub fn darken(self, t: f32) -> Self {
+        RGBA(self.0 * t, self.1 * t, self.2 * t, self.3)
+    }
 }

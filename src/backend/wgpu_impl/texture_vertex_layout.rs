@@ -82,3 +82,62 @@ impl TextureVertex {
         vertex_buffer
     }
 }
+
+/// 彩色 RGBA 图像顶点（与字形纹理同布局，独立管线）
+#[repr(C)]
+#[derive(Copy, Default, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct ColorImageVertex {
+    pub position: [f32; 2],
+    pub tex_coords: [f32; 2],
+    pub color: [f32; 4],
+    pub skew: f32,
+    pub _pad: [f32; 3],
+}
+
+impl VertexLayout for ColorImageVertex {
+    fn set_vertex_desc<'a>() -> VertexBufferLayout<'a> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<ColorImageVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Instance,
+            attributes: &TEXTURE_ATTRS,
+        }
+    }
+
+    fn get_shape_type() -> ShapeType {
+        ShapeType::IMAGE
+    }
+
+    fn get_shader(device: &Device) -> ShaderModule {
+        device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("color image shader"),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader_c/image_color.wgsl"
+            )))),
+        })
+    }
+
+    fn set_pipeline_layout(device: &Device) -> PipelineLayout {
+        let texture_bind_group_layout = device.create_bind_group_layout(DEFAULT_BIND_GROUP_LAYOUT);
+        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Color Image Pipeline Layout"),
+            bind_group_layouts: &[Some(&texture_bind_group_layout)],
+            immediate_size: 0,
+        })
+    }
+}
+
+impl ColorImageVertex {
+    pub fn new(gpu_context: &WGPUContext, rect: &Rectangle, tint: RGBA) -> VertexBuffer {
+        let sc_desc = gpu_context.get_surface_size();
+        let (t_x, t_y, t_w, t_h) = rect.get_coord(sc_desc.x, sc_desc.y);
+        let vect: Vec<ColorImageVertex> = vec![ColorImageVertex {
+            position: [t_x, t_y],
+            tex_coords: [t_w, t_h],
+            color: tint.to_vec(),
+            skew: 0.0,
+            _pad: [0.0; 3],
+        }];
+        VertexBuffer::create_vertex_buf::<ColorImageVertex>(&gpu_context.device, vect, RECT_INDEX)
+    }
+}

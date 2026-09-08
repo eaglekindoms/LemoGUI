@@ -13,6 +13,9 @@ pub struct ComboBox<M: Clone> {
     pub item_height: u32,
     pub on_select: Box<dyn Fn(usize) -> M>,
     pub on_toggle: Box<dyn Fn(bool) -> M>,
+    hover_closed: bool,
+    hover_row: Option<usize>,
+    armed: bool,
 }
 
 impl<M: Clone + PartialEq> ComboBox<M> {
@@ -40,6 +43,9 @@ impl<M: Clone + PartialEq> ComboBox<M> {
             item_height: 26,
             on_select: Box::new(on_select),
             on_toggle: Box::new(on_toggle),
+            hover_closed: false,
+            hover_row: None,
+            armed: false,
         }
     }
 
@@ -62,6 +68,15 @@ impl<M: Clone + PartialEq> ComboBox<M> {
             self.item_height,
         )
     }
+
+    fn hit_row(&self, cursor: Point<f32>) -> Option<usize> {
+        if !self.open || !self.dropdown_rect().contain_coord(cursor) {
+            return None;
+        }
+        let rel_y = cursor.y - self.dropdown_rect().position.y;
+        let index = rel_y as usize / self.item_height.max(1) as usize;
+        (index < self.items.len()).then_some(index)
+    }
 }
 
 impl<M: Clone + PartialEq + 'static> From<ComboBox<M>> for Component<M> {
@@ -72,8 +87,13 @@ impl<M: Clone + PartialEq + 'static> From<ComboBox<M>> for Component<M> {
 
 impl<M: Clone + PartialEq> ComponentModel<M> for ComboBox<M> {
     fn draw(&self, paint_brush: &mut dyn PaintBrush, font_map: &mut GCharMap) {
+        let closed_fill = pointer_fill(
+            &Style::default().back_color(WHITE).hover_color(LIGHT_BLUE),
+            self.hover_closed,
+            self.armed && self.hover_row.is_none(),
+        );
         let closed_style = Style::default()
-            .back_color(WHITE)
+            .back_color(closed_fill)
             .border(BLACK)
             .font_color(BLACK);
         let box_shape: Box<dyn ShapeGraph> = Box::new(self.bounds);
@@ -90,11 +110,14 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ComboBox<M> {
             paint_brush.draw_shape(&bg, Style::default().back_color(WHITE).border(BLACK));
             for (i, item) in self.items.iter().enumerate() {
                 let row = self.item_rect(i);
-                let style = if i == self.selected {
-                    Style::default().back_color(LIGHT_BLUE).font_color(BLACK)
-                } else {
-                    Style::default().back_color(WHITE).font_color(BLACK)
-                };
+                let hover = self.hover_row == Some(i);
+                let idle = if i == self.selected { LIGHT_BLUE } else { WHITE };
+                let fill = pointer_fill(
+                    &Style::default().back_color(idle).hover_color(LIGHT_BLUE),
+                    hover,
+                    self.armed,
+                );
+                let style = Style::default().back_color(fill).font_color(BLACK);
                 let row_shape: Box<dyn ShapeGraph> = Box::new(row);
                 paint_brush.draw_shape(&row_shape, style);
                 paint_brush.draw_text(font_map, &row, item.as_str(), style.get_font_color());
@@ -106,7 +129,16 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ComboBox<M> {
         let g_event = event_context.get_event();
         let cursor = event_context.get_cursor_pos();
         let on_box = self.bounds.contain_coord(cursor);
-        let on_drop = self.open && self.dropdown_rect().contain_coord(cursor);
+        let on_row = self.hit_row(cursor);
+        let prev_closed = self.hover_closed;
+        let prev_row = self.hover_row;
+        let prev_armed = self.armed;
+        self.hover_closed = on_box;
+        self.hover_row = on_row;
+        sync_armed(event_context, on_box || on_row.is_some(), &mut self.armed);
+        let visual = self.hover_closed != prev_closed
+            || self.hover_row != prev_row
+            || self.armed != prev_armed;
         if let EventType::Mouse(Mouse::Left) = g_event.event {
             if g_event.state == State::Pressed {
                 if on_box {
@@ -114,20 +146,16 @@ impl<M: Clone + PartialEq> ComponentModel<M> for ComboBox<M> {
                     event_context.send_message((self.on_toggle)(next));
                     return true;
                 }
-                if on_drop {
-                    let rel_y = cursor.y - self.dropdown_rect().position.y;
-                    let index = (rel_y as usize / self.item_height as usize).min(self.items.len());
-                    if index < self.items.len() {
-                        event_context.send_message((self.on_select)(index));
-                        return true;
-                    }
+                if let Some(index) = on_row {
+                    event_context.send_message((self.on_select)(index));
+                    return true;
                 }
-                if self.open && !on_box && !on_drop {
+                if self.open && !on_box && on_row.is_none() {
                     event_context.send_message((self.on_toggle)(false));
                     return true;
                 }
             }
         }
-        false
+        visual
     }
 }

@@ -133,6 +133,11 @@ where
             }
             WindowEvent::RedrawRequested => {
                 self.container.commit();
+                self.event_context.set_event(GEvent {
+                    event: EventType::Other,
+                    state: State::None,
+                });
+                self.container.listener(&mut self.event_context);
                 self.gpu_context
                     .present(&mut self.container, &mut self.font_map);
                 if let Some((pos, h)) = self.container.ime_caret() {
