@@ -3,6 +3,7 @@ struct VertexInput {
 	@location(0) pos: vec2<f32>,
 	@location(1) size: vec2<f32>,
 	@location(2) color: vec4<f32>,
+	@location(3) skew: f32,
 	@builtin(vertex_index) gl_VertexIndex: u32,
 };
 
@@ -26,10 +27,11 @@ fn vs_main(input: VertexInput) -> VertexOutput  {
 										vec2<f32>(1.0, 1.0));
     var pos: vec2<f32> = input.pos;
     var size: vec2<f32> = input.size;
+    var skew: f32 = input.skew;
 
     var positions: array<vec2<f32>,4u> =
-                    array<vec2<f32>,4u>(pos,
-                            vec2<f32>((pos[0u]+ size[0u]), pos[1u]),
+                    array<vec2<f32>,4u>(vec2<f32>(pos[0u] + skew, pos[1u]),
+                            vec2<f32>((pos[0u]+ size[0u] + skew), pos[1u]),
                             vec2<f32>(pos[0u], (pos[1u] - size[1u])),
                             vec2<f32>((pos[0u] + size[0u]), (pos[1u] - size[1u])));
     let coord: vec2<f32> = positions[gl_VertexIndex];

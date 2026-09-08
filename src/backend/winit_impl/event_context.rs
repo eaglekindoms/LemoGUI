@@ -24,7 +24,8 @@ pub struct WEventContext<M: 'static> {
     window_event: Option<GEvent>,
     /// 自定义事件
     message: Option<M>,
-    /// 自定义事件广播器
+    /// 保留代理以免改 EventLoop 泛型；消息已同帧写入 message
+    #[allow(dead_code)]
     message_channel: EventLoopProxy<M>,
 }
 
@@ -79,8 +80,8 @@ impl<M> EventContext<M> for WEventContext<M> {
         self.message = message;
     }
 
-    fn send_message(&self, message: M) {
-        self.message_channel.send_event(message).ok();
+    fn send_message(&mut self, message: M) {
+        self.message = Some(message);
     }
 }
 
@@ -97,12 +98,11 @@ where
     C: ComponentModel<M> + 'static,
     M: 'static + Debug,
 {
-    fn resumed(&mut self, _event_loop: &ActiveEventLoop) {}
-
-    fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: M) {
-        self.event_context.set_message(Some(event));
-        println!("{:?}", self.event_context.get_message());
+    fn resumed(&mut self, _event_loop: &ActiveEventLoop) {
+        self.event_context.window.request_redraw();
     }
+
+    fn user_event(&mut self, _event_loop: &ActiveEventLoop, _event: M) {}
 
     fn window_event(
         &mut self,
@@ -123,12 +123,14 @@ where
             WindowEvent::Resized(new_size) => {
                 let size = Point::new(new_size.width, new_size.height);
                 self.gpu_context.update_surface_configure(size);
+                self.event_context.window.request_redraw();
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.event_context
                     .set_cursor_pos(Point::new(position.x as f32, position.y as f32));
             }
             WindowEvent::RedrawRequested => {
+                self.container.commit();
                 self.gpu_context
                     .present(&mut self.container, &mut self.font_map);
                 return;
@@ -138,8 +140,7 @@ where
 
         self.event_context.set_event(event.into());
         if self.container.listener(&mut self.event_context) {
-            self.gpu_context
-                .present(&mut self.container, &mut self.font_map);
+            self.event_context.window.request_redraw();
         }
     }
 }

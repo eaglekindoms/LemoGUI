@@ -8,18 +8,34 @@ use crate::widget::*;
 /// 作用：用作gui控件的容器
 pub struct Frame<M: PartialEq + Clone, I: Instance<M = M>> {
     pub display_panel: Vec<(I, Panel<M>)>,
+    needs_layout: bool,
 }
 
 impl<M: Clone + PartialEq, I: Instance<M = M>> Frame<M, I> {
     pub fn new() -> Self {
         Self {
             display_panel: Vec::new(),
+            needs_layout: false,
         }
     }
 
     pub fn add_instance(&mut self, instance: I) {
         let layout = instance.layout();
         self.display_panel.push((instance, layout));
+    }
+
+    fn relayout_dirty(&mut self) {
+        if !self.needs_layout {
+            return;
+        }
+        self.needs_layout = false;
+        let mut rebuilt: Vec<(I, Panel<M>)> = Vec::with_capacity(self.display_panel.len());
+        while let Some((instance, _)) = self.display_panel.pop() {
+            let panel = instance.layout();
+            rebuilt.push((instance, panel));
+        }
+        rebuilt.reverse();
+        self.display_panel = rebuilt;
     }
 }
 
@@ -32,27 +48,21 @@ impl<M: Clone + PartialEq, I: Instance<M = M>> ComponentModel<M> for Frame<M, I>
 
     fn listener(&mut self, event_context: &mut dyn EventContext<M>) -> bool {
         let mut is_update = false;
-        let mut updated_instance: Vec<(I, Panel<M>)> = Vec::with_capacity(self.display_panel.len());
-        let mut updated_index = Vec::with_capacity(self.display_panel.len());
-        let mut i = 0;
         for (instance, panel) in self.display_panel.as_mut_slice() {
             if panel.listener(event_context) {
                 is_update = true;
             }
             if event_context.get_message().is_some() {
                 instance.update(event_context.get_message().unwrap());
-                updated_index.push(i);
-                // 清除消息，防止重复发送
                 event_context.set_message(None);
+                self.needs_layout = true;
+                is_update = true;
             }
-            i += 1;
         }
-        for index in updated_index {
-            let (instance, _) = self.display_panel.remove(index);
-            let panel = instance.layout();
-            updated_instance.push((instance, panel));
-        }
-        self.display_panel.append(&mut updated_instance);
         is_update
+    }
+
+    fn commit(&mut self) {
+        self.relayout_dirty();
     }
 }

@@ -18,6 +18,10 @@ name = "show_shap"
 path = "example/show_shape.rs"
 
 [[example]]
+name = "rich_editor"
+path = "example/app/main.rs"
+
+[[example]]
 name = "test_graph_algo"
 path = "example/proto/test_algo.rs"
 

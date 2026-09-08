@@ -51,7 +51,7 @@ impl<'a, M: Clone + PartialEq> Button<M> {
         }
         false
     }
-    fn action_listener(&mut self, event_context: &dyn EventContext<M>, mouse: Mouse) -> bool {
+    fn action_listener(&mut self, event_context: &mut dyn EventContext<M>, mouse: Mouse) -> bool {
         if mouse == self.bind_event.mouse {
             return component::action_animation(
                 event_context,

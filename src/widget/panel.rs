@@ -42,6 +42,6 @@ impl<'a, M: Clone + PartialEq> ComponentModel<M> for Panel<M> {
                 is_listener = true;
             }
         }
-        return is_listener;
+        is_listener
     }
 }

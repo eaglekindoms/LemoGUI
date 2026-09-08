@@ -18,6 +18,15 @@ pub trait PaintBrush {
         text_color: RGBA,
     );
 
+    /// 按样式绘制一段文本，返回推进宽度
+    fn draw_styled_text(
+        &mut self,
+        font_map: &mut GCharMap,
+        origin: Point<f32>,
+        text: &str,
+        style: TextStyle,
+    ) -> f32;
+
     /// 绘制图像
     fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw);
 }

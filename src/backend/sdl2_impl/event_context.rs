@@ -1,7 +1,5 @@
 use std::fmt::Debug;
 
-use futures::channel::mpsc;
-use futures::{task, Future, StreamExt};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::video::Window;
 use sdl2::{EventPump, EventSubsystem};
@@ -23,19 +21,16 @@ pub struct SEventContext<M: 'static> {
     window_event: Option<GEvent>,
     /// 自定义事件
     message: Option<M>,
-    /// 自定义事件广播器
-    message_channel: EventSubsystem,
 }
 
 impl<M: 'static> SEventContext<M> {
     pub fn new(window: Window, event_channel: EventSubsystem) -> SEventContext<M> {
-        event_channel.register_custom_event::<M>().unwrap();
+        let _ = event_channel.register_custom_event::<M>();
         SEventContext {
             window,
             cursor_pos: Point::new(-1.0, -1.0),
             window_event: None,
             message: None,
-            message_channel: event_channel,
         }
     }
 }
@@ -53,7 +48,13 @@ impl<M> EventContext<M> for SEventContext<M> {
     /// 设置鼠标图标
     fn set_cursor_icon(&mut self, _cursor: Cursor) {}
     /// 设置输入框位置
-    fn set_ime_position(&mut self) {}
+    fn set_ime_position(&mut self) {
+        let text_input = self.window.subsystem().text_input();
+        text_input.start();
+        let x = self.cursor_pos.x as i32;
+        let y = self.cursor_pos.y as i32;
+        text_input.set_rect(sdl2::rect::Rect::new(x, y, 20, 20));
+    }
 
     fn set_event(&mut self, event: GEvent) {
         self.window_event = Some(event)
@@ -79,8 +80,8 @@ impl<M> EventContext<M> for SEventContext<M> {
         self.message = message;
     }
     /// 发送自定义事件消息
-    fn send_message(&self, message: M) {
-        self.message_channel.push_custom_event(message).unwrap();
+    fn send_message(&mut self, message: M) {
+        self.message = Some(message);
     }
 }
 
@@ -123,86 +124,106 @@ pub(crate) async fn init<M: 'static + Debug>(setting: Setting) -> DisplayWindow<
 }
 
 /// 运行窗口实例
-pub(crate) fn run<C, M>(window: DisplayWindow<M>, container: C)
+pub(crate) fn run<C, M>(window: DisplayWindow<M>, mut container: C)
 where
     C: ComponentModel<M> + 'static,
     M: 'static + Debug,
 {
-    let (sender, receiver) = mpsc::unbounded();
-    let mut instance_listener = Box::pin(event_listener(
-        window.gpu_context,
-        window.event_context,
-        window.font_map,
-        container,
-        receiver,
-    ));
-    let mut context = task::Context::from_waker(task::noop_waker_ref());
+    let mut gpu_context = window.gpu_context;
+    let mut event_context = window.event_context;
+    let mut font_map = window.font_map;
     let mut event_pump: EventPump = window.event_loop;
+    gpu_context.present(&mut container, &mut font_map);
     loop {
-        for event in event_pump.poll_iter() {
-            sender.unbounded_send(event).unwrap();
-            let poll = instance_listener.as_mut().poll(&mut context);
-            match poll {
-                task::Poll::Pending => {
-                    // println!("--------pending--------");
+        let mut events: Vec<Event> = event_pump.poll_iter().collect();
+        if events.is_empty() {
+            match event_pump.wait_event_timeout(16) {
+                Some(event) => {
+                    events.push(event);
+                    events.extend(event_pump.poll_iter());
                 }
-                task::Poll::Ready(_) => {
-                    // println!("--------ready--------");
-                }
-            };
+                None => continue,
+            }
+        }
+        let mut dirty = false;
+        for event in events {
+            if dispatch_event(
+                event,
+                &mut gpu_context,
+                &mut event_context,
+                &mut container,
+            ) {
+                dirty = true;
+            }
+        }
+        container.commit();
+        if dirty {
+            gpu_context.present(&mut container, &mut font_map);
         }
     }
 }
 
-/// 事件监听方法
-async fn event_listener<C, M>(
-    mut gpu_context: GPUContext,
-    mut event_context: SEventContext<M>,
-    mut font_map: GCharMap,
-    mut container: C,
-    mut receiver: mpsc::UnboundedReceiver<sdl2::event::Event>,
-) where
+fn dispatch_event<C, M>(
+    event: Event,
+    gpu_context: &mut GPUContext,
+    event_context: &mut SEventContext<M>,
+    container: &mut C,
+) -> bool
+where
     C: ComponentModel<M> + 'static,
     M: 'static + Debug,
 {
-    while let Some(event) = receiver.next().await {
-        if event.is_user_event() {
-            event_context.set_message(event.as_user_event_type::<M>());
-            log::debug!("customer event: {:?}", event_context.get_message());
-        }
-        if event.get_window_id() == Some(event_context.window.id()) {
-            match event {
-                Event::Window { win_event, .. } => match win_event {
-                    WindowEvent::Resized(width, height)
-                    | WindowEvent::SizeChanged(width, height) => {
-                        let new_size = Point::new(width as u32, height as u32);
-                        gpu_context.update_surface_configure(new_size);
-                    }
-                    WindowEvent::Close => {
-                        println!("----- Close window -----");
-                        ::std::process::exit(0);
-                    }
-                    _ => gpu_context.present(&mut container, &mut font_map),
-                },
-                Event::Quit { .. } => {
-                    println!("----- Close window -----");
-                    ::std::process::exit(0);
-                }
-                Event::MouseMotion { x, y, .. } => {
-                    event_context.set_cursor_pos(Point::new(x as f32, y as f32))
-                }
-                Event::MouseButtonDown { .. }
-                | Event::MouseButtonUp { .. }
-                | Event::KeyUp { .. }
-                | Event::KeyDown { .. }
-                | Event::TextInput { .. } => {
-                    event_context.set_event(event.into());
-                    if container.listener(&mut event_context) {
-                        gpu_context.present(&mut container, &mut font_map)
-                    }
-                }
-                _ => {}
+    if event.is_user_event() {
+        return false;
+    }
+    if event.get_window_id() != Some(event_context.window.id()) {
+        return false;
+    }
+    match event {
+        Event::Window { win_event, .. } => match win_event {
+            WindowEvent::Resized(width, height) | WindowEvent::SizeChanged(width, height) => {
+                let new_size = Point::new(width as u32, height as u32);
+                gpu_context.update_surface_configure(new_size);
+                true
             }
+            WindowEvent::Close => {
+                println!("----- Close window -----");
+                ::std::process::exit(0);
+            }
+            _ => false,
+        },
+        Event::Quit { .. } => {
+            println!("----- Close window -----");
+            ::std::process::exit(0);
         }
+        Event::MouseMotion { x, y, .. } => {
+            event_context.set_cursor_pos(Point::new(x as f32, y as f32));
+            event_context.set_event(GEvent {
+                event: EventType::Other,
+                state: State::None,
+            });
+            container.listener(event_context)
+        }
+        Event::TextInput { text, .. } => {
+            let mut dirty = false;
+            for c in text.chars() {
+                event_context.set_event(GEvent {
+                    event: EventType::ReceivedCharacter(c),
+                    state: State::None,
+                });
+                if container.listener(event_context) {
+                    dirty = true;
+                }
+            }
+            dirty
+        }
+        Event::MouseButtonDown { .. }
+        | Event::MouseButtonUp { .. }
+        | Event::KeyUp { .. }
+        | Event::KeyDown { .. } => {
+            event_context.set_event(event.into());
+            container.listener(event_context)
+        }
+        _ => false,
     }
 }

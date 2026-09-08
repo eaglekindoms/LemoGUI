@@ -44,11 +44,7 @@ impl Default for Setting {
         Setting {
             title: "untitled".to_string(),
             icon_path: None,
-            font_path: concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/res/SourceHanSansCN-Regular.otf"
-            )
-            .into(),
+            font_path: crate::graphic::base::DEFAULT_FONT_PATH.into(),
             size: Point::new(40., 40.),
         }
     }

@@ -84,6 +84,64 @@ impl PaintBrush for RenderUtil<'_> {
         }
     }
 
+    fn draw_styled_text(
+        &mut self,
+        font_map: &mut GCharMap,
+        origin: Point<f32>,
+        text: &str,
+        style: TextStyle,
+    ) -> f32 {
+        let start_x = origin.x;
+        let mut x = origin.x;
+        let bucket = quantize_size(style.size);
+        let skew = if style.italic {
+            bucket as f32 * 0.22
+        } else {
+            0.0
+        };
+        for c in text.chars() {
+            if c == '\n' || c == '\r' {
+                continue;
+            }
+            let c_font = font_map.character_texture_at(
+                c,
+                style.size,
+                style.font,
+                &mut self.g_texture,
+                &self.context.device,
+                &self.context.queue,
+            );
+            let c_buffer = c_font.texture.as_ref().unwrap();
+            let w = c_buffer.width;
+            let h = c_buffer.height;
+            let c_rect = Rectangle::new(x, origin.y, w, h);
+            let vertex =
+                TextureVertex::new_with_skew(&self.context, &c_rect, style.color, skew);
+            vertex.render(self, Some(c_buffer));
+            if style.bold {
+                let bold_rect = Rectangle::new(x + 1.0, origin.y, w, h);
+                let bold_vertex =
+                    TextureVertex::new_with_skew(&self.context, &bold_rect, style.color, skew);
+                bold_vertex.render(self, Some(c_buffer));
+            }
+            x += w as f32;
+            if style.bold {
+                x += 1.0;
+            }
+        }
+        let width = x - start_x;
+        if style.underline && width > 1.0 {
+            let line_y = origin.y + bucket as f32 * 0.85;
+            let line = Rectangle::new(start_x, line_y, width as u32, 2);
+            let shape: Box<dyn ShapeGraph> = Box::new(line);
+            self.draw_shape(
+                &shape,
+                Style::default().back_color(style.color).no_border(),
+            );
+        }
+        width
+    }
+
     fn draw_image(&mut self, image_rect: &Rectangle, image: ImageRaw) {
         let image_buffer =
             self.g_texture

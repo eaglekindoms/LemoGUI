@@ -13,6 +13,8 @@ pub trait ComponentModel<M> {
     fn listener(&mut self, _event_context: &mut dyn EventContext<M>) -> bool {
         false
     }
+    /// 一批事件处理完后调用：延迟的 layout 在此落地
+    fn commit(&mut self) {}
 }
 
 /// 封装组件接口
@@ -36,7 +38,7 @@ impl<M> std::fmt::Debug for Component<M> {
 
 /// 键鼠单击动画效果
 pub fn action_animation<M>(
-    event_context: &dyn EventContext<M>,
+    event_context: &mut dyn EventContext<M>,
     style: &mut Style,
     position: &Rectangle,
     message: Option<M>,
@@ -49,10 +51,12 @@ pub fn action_animation<M>(
         if event_context.get_event().state == State::Pressed {
             style.display_color(hover_color);
             event_context.send_message(message);
+            return true;
         } else if event_context.get_event().state == State::Released {
             style.display_color(back_color);
+            return true;
         }
-        return true;
+        return false;
     }
     return false;
 }

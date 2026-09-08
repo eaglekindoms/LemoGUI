@@ -19,6 +19,6 @@ pub trait EventContext<M> {
     fn get_message(&self) -> Option<&M>;
     /// 设置自定义消息
     fn set_message(&mut self, message: Option<M>);
-    /// 发送自定义事件消息
-    fn send_message(&self, message: M);
+    /// 发送自定义事件消息（同帧写入，供 Frame 立刻 update）
+    fn send_message(&mut self, message: M);
 }
